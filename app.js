@@ -1,7 +1,7 @@
 /* 家计簿 — offline bookkeeping web app. Data lives only in this browser (localStorage). */
 'use strict';
 (() => {
-  const APP_VERSION = '1.0.1';
+  const APP_VERSION = '1.0.2';
   const STORE_KEY = 'kakeibo:data';
   const PREV_KEY = 'kakeibo:data:prev';
   const UI_KEY = 'kakeibo:ui';
@@ -1142,7 +1142,16 @@
   const secure = location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
   if ('serviceWorker' in navigator && secure) {
     const hadController = !!navigator.serviceWorker.controller;
-    navigator.serviceWorker.register('./sw.js').catch(() => {});
+    const swReg = navigator.serviceWorker.register('./sw.js');
+    swReg.catch(() => {});
+    /* iOS brings a home-screen app back to the front without reloading it, so check for a new
+       version on every return as well (at most once a minute), not only on a cold start. */
+    let lastCheck = Date.now();
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden || Date.now() - lastCheck < 60 * 1000) return;
+      lastCheck = Date.now();
+      swReg.then((r) => r.update()).catch(() => {});
+    });
     let reloading = false;
     navigator.serviceWorker.addEventListener('controllerchange', () => {
       if (!hadController || reloading) return;
