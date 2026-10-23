@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>家计簿</title>
+<meta name="description" content="离线记账：收支和资产一目了然，数据只保存在你的手机上">
+<meta name="theme-color" content="#f4f4f2" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0e0e0f" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="家计簿">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="format-detection" content="telephone=no">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div id="app">
+  <main id="view" class="view" aria-live="polite"></main>
+  <nav class="tabbar" aria-label="主菜单">
+    <button data-act="tab" data-tab="home"><svg class="ti" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 3.5V12h8.5"/></svg><span class="tl">家计</span></button>
+    <button data-act="tab" data-tab="list"><svg class="ti" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 7h11M9 12h11M9 17h11"/><path d="M4.5 7h.01M4.5 12h.01M4.5 17h.01" stroke-width="2.6"/></svg><span class="tl">明细</span></button>
+    <button class="plus" data-act="add" aria-label="记一笔"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
+    <button data-act="tab" data-tab="assets"><svg class="ti" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5.5" width="18" height="14" rx="3"/><path d="M3 10h18M15.5 14.5h2.5"/></svg><span class="tl">资产</span></button>
+    <button data-act="tab" data-tab="settings"><svg class="ti" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2.2"/><circle cx="9" cy="17" r="2.2"/></svg><span class="tl">设置</span></button>
+  </nav>
+</div>
+<div id="sheet-root"></div>
+<div id="modal-root"></div>
+<div id="toast" role="status"></div>
+<noscript>需要开启 JavaScript 才能使用。</noscript>
+<script src="app.js" defer></script>
+</body>
+</html>
