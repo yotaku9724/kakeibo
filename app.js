@@ -1,7 +1,7 @@
 /* 家计簿 — offline bookkeeping web app. Data lives only in this browser (localStorage). */
 'use strict';
 (() => {
-  const APP_VERSION = '1.0.0';
+  const APP_VERSION = '1.0.1';
   const STORE_KEY = 'kakeibo:data';
   const PREV_KEY = 'kakeibo:data:prev';
   const UI_KEY = 'kakeibo:ui';
@@ -339,7 +339,7 @@
   }
   function topNotices() {
     if (!data.entries.length) {
-      return `<section class="card welcome"><h2>👋 欢迎使用家计簿</h2><p>数据只保存在这台手机上，没网也能用。先在「设置」里把账户改成你自己的，填好开始时的余额；有备份的话也可以直接导入。</p><div class="btn-pair"><button class="btn ghost" data-act="go-settings">设置账户</button><button class="btn primary" data-act="paste-import">导入备份</button></div></section>`;
+      return `<section class="card welcome"><h2>👋 欢迎使用家计簿</h2><p>数据只保存在这台手机上，没网也能用。先在「设置」里把账户改成你自己的，填好现在的余额；有备份的话也可以直接导入。</p><div class="btn-pair"><button class="btn ghost" data-act="go-settings">设置账户</button><button class="btn primary" data-act="paste-import">导入备份</button></div></section>`;
     }
     const days = backupDays();
     if (data.entries.length >= 10 && (days === null || days >= 30)) {
@@ -527,10 +527,12 @@
   }
 
   function renderSettings() {
+    const bal = balances(todayStr());
     const accRows = data.accounts.map((a) => {
       const T = ACC_TYPES[a.type];
-      const init = a.type === 'credit' ? `开始时待还 ${yen(-a.initial)}` : `开始时余额 ${yen(a.initial)}`;
-      return `<button class="list-row" data-act="acc-edit" data-id="${a.id}"><i class="badge" style="background:${T.color}">${T.icon}</i><span class="lr-main"><span class="lr-title">${esc(a.name)}${a.hidden ? '<em class="tag">已停用</em>' : ''}</span><span class="lr-sub">${T.name} · ${init}</span></span><span class="chev">›</span></button>`;
+      const cur = bal.get(a.id) ?? a.initial;
+      const now = a.type === 'credit' && cur <= 0 ? `待还 ${yen(-cur)}` : `余额 ${yen(cur)}`;
+      return `<button class="list-row" data-act="acc-edit" data-id="${a.id}"><i class="badge" style="background:${T.color}">${T.icon}</i><span class="lr-main"><span class="lr-title">${esc(a.name)}${a.hidden ? '<em class="tag">已停用</em>' : ''}</span><span class="lr-sub">${T.name} · ${now}</span></span><span class="chev">›</span></button>`;
     }).join('');
     const cats = data.categories.filter((c) => c.kind === ui.setKind);
     const catRows = cats.map((c) => `<button class="list-row" data-act="cat-edit" data-id="${c.id}"><i class="emoji">${esc(c.icon)}</i><span class="lr-main"><span class="lr-title">${esc(c.name)}${c.hidden ? '<em class="tag">已停用</em>' : ''}</span></span><span class="chev">›</span></button>`).join('');
@@ -731,18 +733,26 @@
   }
 
   /* ================= settings forms ================= */
+  /* The account form asks for today's balance (what the bank / card app shows);
+     the stored starting balance is solved from it so recorded entries stay as they are. */
+  const balLabel = (credit) => (credit ? '现在的待还金额' : '现在的余额');
+  const balHint = (credit) => (credit
+    ? '打开信用卡 App，看现在还没还的金额，填正数。之后刷卡会自动累加，还卡时记一笔「转移」。'
+    : '今天这个账户里实际有多少钱（看银行或钱包 App）。已经记过的收支会自动算进去。');
   function accFormHTML(a) {
     const isNew = !a;
     const x = a || { id: '', name: '', type: 'bank', initial: 0, hidden: false };
     const credit = x.type === 'credit';
-    const initVal = x.initial ? fmt(credit ? -x.initial : x.initial) : '';
+    const cur = isNew ? 0 : (balances(todayStr()).get(x.id) ?? x.initial);
+    const shown = credit ? -cur : cur;
+    const initVal = shown ? (shown < 0 ? '-' : '') + fmt(shown) : '';
     return `<div class="form" data-type="${x.type}">
       <div class="f-top"><button class="icon-btn" data-act="close-sheet" aria-label="关闭">✕</button><div class="e-title">${isNew ? '添加账户' : '编辑账户'}</div><button class="text-btn strong" data-act="acc-save" data-id="${x.id}">保存</button></div>
       <div class="f-body">
         <label class="field"><span>名称</span><input type="text" id="f-name" value="${esc(x.name)}" maxlength="24" placeholder="例如：三菱UFJ銀行"></label>
         <div class="field"><span>类型</span><div class="type-grid">${ACC_ORDER.map((t) => `<button class="type-opt ${t === x.type ? 'on' : ''}" data-act="pick-type" data-v="${t}"><i style="background:${ACC_TYPES[t].color}">${ACC_TYPES[t].icon}</i>${ACC_TYPES[t].name}</button>`).join('')}</div></div>
-        <label class="field"><span id="f-init-label">${credit ? '开始记账时的待还金额' : '开始记账时的余额'}</span><input type="text" id="f-init" inputmode="numeric" value="${initVal}" placeholder="0"></label>
-        <p class="hint" id="f-init-hint">${credit ? '还没还的刷卡金额，填正数。之后用这张卡消费会自动累加，还卡时记一笔「转移」。' : '记第一笔之前，这个账户里有多少钱。'}</p>
+        <label class="field"><span id="f-init-label">${balLabel(credit)}</span><input type="text" id="f-init" inputmode="numeric" value="${initVal}" placeholder="0"></label>
+        <p class="hint" id="f-init-hint">${balHint(credit)}</p>
         ${isNew ? '' : `<label class="switch-row"><span>停用（不在选择列表里出现）</span><input type="checkbox" id="f-hidden" ${x.hidden ? 'checked' : ''}></label>
         <div class="f-row"><button class="btn ghost sm" data-act="move-item" data-what="acc" data-id="${x.id}" data-v="-1">上移</button><button class="btn ghost sm" data-act="move-item" data-what="acc" data-id="${x.id}" data-v="1">下移</button><span class="grow"></span><button class="btn ghost sm danger" data-act="acc-del" data-id="${x.id}">删除</button></div>`}
       </div>
@@ -771,8 +781,11 @@
     if (!name) { shake($('#f-name', sheetEl)); return toast('请输入名称'); }
     if (data.accounts.some((a) => a.name === name && a.id !== id)) return toast('已经有同名账户');
     const type = form.dataset.type;
-    const raw = parseInt(($('#f-init', sheetEl).value || '').replace(/[^\d]/g, ''), 10) || 0;
-    const initial = type === 'credit' ? -raw : raw;
+    const str = ($('#f-init', sheetEl).value || '').trim();
+    const n = (parseInt(str.replace(/[^\d]/g, ''), 10) || 0) * (/^[-−－]/.test(str) ? -1 : 1);
+    const now = type === 'credit' ? -n : n;
+    const moved = id ? (balances(todayStr()).get(id) ?? 0) - accIdx.get(id).initial : 0;
+    const initial = now - moved;
     if (id) {
       const a = accIdx.get(id);
       Object.assign(a, { name, type, initial, hidden: $('#f-hidden', sheetEl) ? $('#f-hidden', sheetEl).checked : a.hidden });
@@ -1060,8 +1073,8 @@
         form.dataset.type = v;
         $$('.type-opt', sheetEl).forEach((b) => b.classList.toggle('on', b.dataset.v === v));
         const credit = v === 'credit';
-        $('#f-init-label', sheetEl).textContent = credit ? '开始记账时的待还金额' : '开始记账时的余额';
-        $('#f-init-hint', sheetEl).textContent = credit ? '还没还的刷卡金额，填正数。之后用这张卡消费会自动累加，还卡时记一笔「转移」。' : '记第一笔之前，这个账户里有多少钱。';
+        $('#f-init-label', sheetEl).textContent = balLabel(credit);
+        $('#f-init-hint', sheetEl).textContent = balHint(credit);
         break;
       }
       case 'pick-kind': {
