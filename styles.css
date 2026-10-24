@@ -57,6 +57,8 @@ body {
   -webkit-text-size-adjust: 100%;
   overscroll-behavior: none;
 }
+/* Japanese UI: Japanese glyph shapes for kanji */
+html:lang(ja) body { font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans CJK JP", "Noto Sans JP", system-ui, sans-serif; }
 button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; touch-action: manipulation; }
 input, select, textarea { font: inherit; color: inherit; }
 svg { display: block; }
@@ -111,6 +113,8 @@ svg { display: block; }
 .seg { display: inline-flex; background: var(--line2); border-radius: 10px; padding: 2px; gap: 2px; }
 .seg button { padding: 5px 12px; border-radius: 8px; font-size: 13.5px; color: var(--ink2); font-weight: 600; min-height: 30px; }
 .seg button.on { background: var(--card); color: var(--ink); box-shadow: 0 1px 3px rgba(0,0,0,.12); }
+.seg.full { display: flex; }
+.seg.full button { flex: 1; min-height: 38px; font-size: 15px; }
 
 /* donut + ranking */
 .donut-wrap { display: flex; justify-content: center; padding: 4px 0 8px; }
