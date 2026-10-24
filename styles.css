@@ -236,6 +236,9 @@ svg { display: block; }
 .icon-btn:active { background: var(--line2); }
 .switch-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 44px; font-weight: 600; }
 .switch-row input { width: 22px; height: 22px; accent-color: var(--accent); flex: none; }
+.switch-row small { display: block; margin-top: 2px; font-size: 12px; font-weight: 400; color: var(--muted); line-height: 1.45; }
+.adj-note { color: var(--accent-ink); background: var(--accent-soft); border-radius: 10px; padding: 8px 10px; font-weight: 650; }
+.adj-note[hidden] { display: none; }
 .backup-state { margin: 0 0 12px; font-size: 14px; color: var(--ink2); }
 .backup-state b { color: var(--ink); }
 .about { text-align: center; font-size: 13px; color: var(--ink2); }

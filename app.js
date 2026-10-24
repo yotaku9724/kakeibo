@@ -1,7 +1,7 @@
 /* 家计簿 — offline bookkeeping web app. Data lives only in this browser (localStorage). */
 'use strict';
 (() => {
-  const APP_VERSION = '1.0.2';
+  const APP_VERSION = '1.0.3';
   const STORE_KEY = 'kakeibo:data';
   const PREV_KEY = 'kakeibo:data:prev';
   const UI_KEY = 'kakeibo:ui';
@@ -36,6 +36,13 @@
   const fmt = (n) => Math.abs(Math.round(n)).toLocaleString('ja-JP');
   const yen = (n) => (n < 0 ? '−¥' : '¥') + fmt(n);
   const yenSigned = (n) => (n > 0 ? '+¥' : n < 0 ? '−¥' : '¥') + fmt(n);
+  /* "-1,234" → -1234; null when the field is empty */
+  const readSigned = (s) => {
+    s = String(s || '').trim();
+    if (!/\d/.test(s)) return null;
+    return (parseInt(s.replace(/[^\d]/g, ''), 10) || 0) * (/^[-−－]/.test(s) ? -1 : 1);
+  };
+  const signedStr = (n) => (n ? (n < 0 ? '-' : '') + fmt(n) : '');
   const pct = (v, t) => (t ? (v / t) * 100 : 0).toFixed(1) + '%';
   const trimNum = (x) => String(x >= 100 ? Math.round(x) : Math.round(x * 10) / 10);
   const compact = (n) => {
@@ -100,6 +107,7 @@
     out.categories = d.categories.filter((c) => c && c.name).map((c) => ({
       id: String(c.id || uid()), name: String(c.name).slice(0, 20), kind: c.kind === 'in' ? 'in' : 'out',
       icon: String(c.icon || (c.kind === 'in' ? '💰' : '📦')).slice(0, 8), hidden: !!c.hidden,
+      ...(c.sys === 'adj-in' || c.sys === 'adj-out' ? { sys: c.sys } : {}),
     }));
     out.accounts = d.accounts.filter((a) => a && a.name).map((a) => ({
       id: String(a.id || uid()), name: String(a.name).slice(0, 24), type: ACC_TYPES[a.type] ? a.type : 'other',
@@ -733,27 +741,58 @@
   }
 
   /* ================= settings forms ================= */
-  /* The account form asks for today's balance (what the bank / card app shows);
-     the stored starting balance is solved from it so recorded entries stay as they are. */
+  /* The account form asks for today's balance (what the bank / card app shows). For an existing
+     account the difference from the recorded balance is booked today as 特殊收入 / 特殊支出
+     (or, with the switch off, folded into the starting balance so it never shows up as income/spending). */
   const balLabel = (credit) => (credit ? '现在的待还金额' : '现在的余额');
   const balHint = (credit) => (credit
     ? '打开信用卡 App，看现在还没还的金额，填正数。之后刷卡会自动累加，还卡时记一笔「转移」。'
-    : '今天这个账户里实际有多少钱（看银行或钱包 App）。已经记过的收支会自动算进去。');
+    : '今天这个账户里实际有多少钱（看银行或钱包 App）。');
+  const ADJ = { in: { sys: 'adj-in', name: '特殊收入' }, out: { sys: 'adj-out', name: '特殊支出' } };
+  function adjCat(kind) {
+    const spec = ADJ[kind];
+    let c = data.categories.find((x) => x.sys === spec.sys) || data.categories.find((x) => x.name === spec.name && x.kind === kind);
+    if (!c) { c = { id: uid(), name: spec.name, kind, icon: '⚖️', hidden: false }; data.categories.push(c); }
+    c.sys = spec.sys;
+    return c;
+  }
+  /* typed balance minus recorded balance for the open account form (0 when unchanged or new) */
+  function accFormDiff() {
+    const form = $('.form', sheetEl);
+    if (!form || !form.dataset.id) return 0;
+    const n = readSigned($('#f-init', sheetEl).value);
+    if (n === null) return 0;
+    const now = form.dataset.type === 'credit' ? -n : n;
+    return now - (balances(todayStr()).get(form.dataset.id) ?? 0);
+  }
+  function updateAdjNote() {
+    const note = $('#f-adj-note', sheetEl);
+    if (!note) return;
+    const diff = accFormDiff();
+    note.hidden = !diff;
+    if (!diff) return;
+    const credit = $('.form', sheetEl).dataset.type === 'credit';
+    const what = credit ? `待还比记录${diff < 0 ? '多' : '少'}` : `比记录${diff > 0 ? '多' : '少'}`;
+    note.textContent = `${what} ${yen(Math.abs(diff))}，` + ($('#f-adj', sheetEl).checked
+      ? `保存后记一笔今天的「${ADJ[diff > 0 ? 'in' : 'out'].name}」`
+      : '保存后直接改开始时的余额，不算收支');
+  }
   function accFormHTML(a) {
     const isNew = !a;
     const x = a || { id: '', name: '', type: 'bank', initial: 0, hidden: false };
     const credit = x.type === 'credit';
     const cur = isNew ? 0 : (balances(todayStr()).get(x.id) ?? x.initial);
-    const shown = credit ? -cur : cur;
-    const initVal = shown ? (shown < 0 ? '-' : '') + fmt(shown) : '';
-    return `<div class="form" data-type="${x.type}">
+    const initVal = signedStr(credit ? -cur : cur);
+    return `<div class="form" data-type="${x.type}" data-id="${x.id}">
       <div class="f-top"><button class="icon-btn" data-act="close-sheet" aria-label="关闭">✕</button><div class="e-title">${isNew ? '添加账户' : '编辑账户'}</div><button class="text-btn strong" data-act="acc-save" data-id="${x.id}">保存</button></div>
       <div class="f-body">
         <label class="field"><span>名称</span><input type="text" id="f-name" value="${esc(x.name)}" maxlength="24" placeholder="例如：三菱UFJ銀行"></label>
         <div class="field"><span>类型</span><div class="type-grid">${ACC_ORDER.map((t) => `<button class="type-opt ${t === x.type ? 'on' : ''}" data-act="pick-type" data-v="${t}"><i style="background:${ACC_TYPES[t].color}">${ACC_TYPES[t].icon}</i>${ACC_TYPES[t].name}</button>`).join('')}</div></div>
         <label class="field"><span id="f-init-label">${balLabel(credit)}</span><input type="text" id="f-init" inputmode="numeric" value="${initVal}" placeholder="0"></label>
         <p class="hint" id="f-init-hint">${balHint(credit)}</p>
-        ${isNew ? '' : `<label class="switch-row"><span>停用（不在选择列表里出现）</span><input type="checkbox" id="f-hidden" ${x.hidden ? 'checked' : ''}></label>
+        ${isNew ? '' : `<p class="hint adj-note" id="f-adj-note" hidden></p>
+        <label class="switch-row"><span>差额记为特殊收入 / 支出<small>关掉的话直接改开始时的余额，不算收支（适合第一次设置）</small></span><input type="checkbox" id="f-adj" checked></label>
+        <label class="switch-row"><span>停用（不在选择列表里出现）</span><input type="checkbox" id="f-hidden" ${x.hidden ? 'checked' : ''}></label>
         <div class="f-row"><button class="btn ghost sm" data-act="move-item" data-what="acc" data-id="${x.id}" data-v="-1">上移</button><button class="btn ghost sm" data-act="move-item" data-what="acc" data-id="${x.id}" data-v="1">下移</button><span class="grow"></span><button class="btn ghost sm danger" data-act="acc-del" data-id="${x.id}">删除</button></div>`}
       </div>
     </div>`;
@@ -781,20 +820,32 @@
     if (!name) { shake($('#f-name', sheetEl)); return toast('请输入名称'); }
     if (data.accounts.some((a) => a.name === name && a.id !== id)) return toast('已经有同名账户');
     const type = form.dataset.type;
-    const str = ($('#f-init', sheetEl).value || '').trim();
-    const n = (parseInt(str.replace(/[^\d]/g, ''), 10) || 0) * (/^[-−－]/.test(str) ? -1 : 1);
-    const now = type === 'credit' ? -n : n;
-    const moved = id ? (balances(todayStr()).get(id) ?? 0) - accIdx.get(id).initial : 0;
-    const initial = now - moved;
+    let made = null;
     if (id) {
       const a = accIdx.get(id);
-      Object.assign(a, { name, type, initial, hidden: $('#f-hidden', sheetEl) ? $('#f-hidden', sheetEl).checked : a.hidden });
+      const diff = accFormDiff();
+      Object.assign(a, { name, type, hidden: $('#f-hidden', sheetEl) ? $('#f-hidden', sheetEl).checked : a.hidden });
+      if (diff && $('#f-adj', sheetEl).checked) {
+        const kind = diff > 0 ? 'in' : 'out';
+        made = { id: uid(), date: todayStr(), amount: Math.abs(diff), kind, cat: adjCat(kind).id, acc: id, to: null, memo: '', ts: Date.now() };
+        data.entries.push(made);
+      } else if (diff) {
+        a.initial += diff;
+      }
     } else {
-      data.accounts.push({ id: uid(), name, type, initial, hidden: false });
+      const n = readSigned($('#f-init', sheetEl).value) || 0;
+      data.accounts.push({ id: uid(), name, type, initial: type === 'credit' ? -n : n, hidden: false });
     }
     commit();
     closeSheet();
-    toast('已保存');
+    if (!made) return toast('已保存');
+    const label = `${ADJ[made.kind].name} ${made.kind === 'in' ? '+' : '−'}${yen(made.amount)}`;
+    toast(`已记一笔今天的${label}`, { label: '撤销', fn: () => {
+      const i = data.entries.indexOf(made);
+      if (i >= 0) data.entries.splice(i, 1);
+      commit();
+      toast('已撤销');
+    } });
   }
   function saveCatForm(id) {
     const form = $('.form', sheetEl);
@@ -1070,11 +1121,18 @@
       case 'cat-edit': openSheet('cat', catFormHTML(id ? catIdx.get(id) : null)); break;
       case 'pick-type': {
         const form = $('.form', sheetEl);
+        const wasCredit = form.dataset.type === 'credit';
         form.dataset.type = v;
         $$('.type-opt', sheetEl).forEach((b) => b.classList.toggle('on', b.dataset.v === v));
         const credit = v === 'credit';
+        if (form.dataset.id && wasCredit !== credit) {
+          /* 待还 and 余额 have opposite signs: keep the same balance when switching to / from a card */
+          const inp = $('#f-init', sheetEl), n = readSigned(inp.value);
+          if (n !== null) inp.value = signedStr(-n);
+        }
         $('#f-init-label', sheetEl).textContent = balLabel(credit);
         $('#f-init-hint', sheetEl).textContent = balHint(credit);
+        updateAdjNote();
         break;
       }
       case 'pick-kind': {
@@ -1102,6 +1160,7 @@
   document.addEventListener('input', (ev) => {
     const el = ev.target;
     if (el.dataset.input === 'memo' && draft) draft.memo = el.value;
+    else if (el.id === 'f-init') updateAdjNote();
   });
   document.addEventListener('change', (ev) => {
     const el = ev.target;
@@ -1109,6 +1168,8 @@
       draft.date = /^\d{4}-\d{2}-\d{2}$/.test(el.value) ? el.value : todayStr();
       const t = $('.date-text', sheetEl);
       if (t) t.textContent = shortDate(draft.date);
+    } else if (el.id === 'f-adj') {
+      updateAdjNote();
     } else if (el.dataset.input === 'autoadd') {
       ui.autoAdd = el.checked; saveUI(); toast(el.checked ? '下次打开会直接进入「记一笔」' : '已关闭');
     } else if (el.id === 'file-in' && el.files && el.files[0]) {
