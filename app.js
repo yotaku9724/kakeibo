@@ -1,7 +1,7 @@
 /* 家计簿 — offline bookkeeping web app. Data lives only in this browser (localStorage). */
 'use strict';
 (() => {
-  const APP_VERSION = '1.0.5';
+  const APP_VERSION = '1.0.6';
   const STORE_KEY = 'kakeibo:data';
   const PREV_KEY = 'kakeibo:data:prev';
   const UI_KEY = 'kakeibo:ui';
@@ -1064,7 +1064,7 @@
         <label class="field"><span id="f-init-label">${balLabel(credit)}</span><input type="text" id="f-init" inputmode="numeric" value="${initVal}" placeholder="0"></label>
         <p class="hint" id="f-init-hint">${balHint(credit)}</p>
         ${isNew ? '' : `<p class="hint adj-note" id="f-adj-note" hidden></p>
-        <label class="switch-row"><span>${tr('acc.adjSwitch')}<small>${tr('acc.adjSwitchSub')}</small></span><input type="checkbox" id="f-adj" checked></label>
+        <label class="switch-row"><span>${tr('acc.adjSwitch')}<small>${tr('acc.adjSwitchSub')}</small></span><input type="checkbox" id="f-adj" ${data.entries.length ? 'checked' : ''}></label>
         <label class="switch-row"><span>${tr('common.hide')}</span><input type="checkbox" id="f-hidden" ${x.hidden ? 'checked' : ''}></label>
         <div class="f-row"><button class="btn ghost sm" data-act="sort-accs">${tr('sort.btn')}</button><span class="grow"></span><button class="btn ghost sm danger" data-act="acc-del" data-id="${x.id}">${tr('common.delete')}</button></div>`}
       </div>
