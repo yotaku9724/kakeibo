@@ -1,7 +1,7 @@
 /* 家计簿 — offline bookkeeping web app. Data lives only in this browser (localStorage). */
 'use strict';
 (() => {
-  const APP_VERSION = '1.0.4';
+  const APP_VERSION = '1.0.5';
   const STORE_KEY = 'kakeibo:data';
   const PREV_KEY = 'kakeibo:data:prev';
   const UI_KEY = 'kakeibo:ui';
@@ -115,6 +115,9 @@
       'assets.future': '另有 {n} 笔未来日期的记录，到那天才会计入余额。', 'assets.noAcc': '还没有账户，去「设置」添加',
       'assets.trend': '净资产推移', 'assets.monthEnd': '每月月底', 'assets.trendWait': '从下个月开始，这里会显示每个月月底的净资产。',
       'assets.comp': '资产构成', 'assets.noPositive': '还没有正余额的账户',
+      'assets.accounts': '账户', 'sort.btn': '排序', 'sort.title': '调整账户顺序', 'sort.done': '完成', 'sort.saved': '顺序已保存',
+      'sort.hint': '按住右边的 ≡ 上下拖动，可以调整分组的顺序，也可以调整分组里每个账户的顺序。记一笔、设置和资产页都按这个顺序显示。',
+      'sort.dragGroup': '拖动调整分组顺序', 'sort.dragItem': '拖动调整顺序',
       'set.accounts': '账户', 'set.noAcc': '还没有账户',
       'set.cardHint': '信用卡的余额是负数，表示还没还的钱。还卡时记一笔「转移」：转出选银行，转入选信用卡。',
       'set.categories': '分类', 'set.noCat': '还没有分类', 'set.addOut': '＋ 添加支出分类', 'set.addIn': '＋ 添加收入分类',
@@ -182,6 +185,9 @@
       'assets.future': '未来の日付の記録が{n}件あります。その日になると残高に反映されます。', 'assets.noAcc': '口座がありません。「設定」で追加してください',
       'assets.trend': '純資産の推移', 'assets.monthEnd': '各月末', 'assets.trendWait': '来月から、毎月末の純資産がここに表示されます。',
       'assets.comp': '資産の内訳', 'assets.noPositive': 'プラス残高の口座はまだありません',
+      'assets.accounts': '口座', 'sort.btn': '並べ替え', 'sort.title': '口座の並べ替え', 'sort.done': '完了', 'sort.saved': '並び順を保存しました',
+      'sort.hint': '右の ≡ を押したまま上下にドラッグすると、グループの順番も、グループ内の口座の順番も変えられます。入力画面・設定・資産ページはこの順番で表示されます。',
+      'sort.dragGroup': 'ドラッグしてグループを並べ替え', 'sort.dragItem': 'ドラッグして並べ替え',
       'set.accounts': '口座', 'set.noAcc': '口座がありません',
       'set.cardHint': 'クレジットカードの残高はマイナス（未払い分）で表示されます。カードを支払ったら「振替」で、振替元に銀行、振替先にカードを選んで記録します。',
       'set.categories': 'カテゴリ', 'set.noCat': 'カテゴリがありません', 'set.addOut': '＋ 支出カテゴリを追加', 'set.addIn': '＋ 収入カテゴリを追加',
@@ -251,6 +257,9 @@
       'assets.noAcc': 'No accounts yet. Add one in Settings',
       'assets.trend': 'Net worth by month', 'assets.monthEnd': 'Month-end', 'assets.trendWait': 'From next month, your month-end net worth will appear here.',
       'assets.comp': 'Asset mix', 'assets.noPositive': 'No accounts with a positive balance yet',
+      'assets.accounts': 'Accounts', 'sort.btn': 'Reorder', 'sort.title': 'Reorder accounts', 'sort.done': 'Done', 'sort.saved': 'Order saved',
+      'sort.hint': 'Hold ≡ on the right and drag up or down to reorder the groups, or the accounts inside a group. New entry, Settings and Assets all use this order.',
+      'sort.dragGroup': 'Drag to reorder group', 'sort.dragItem': 'Drag to reorder',
       'set.accounts': 'Accounts', 'set.noAcc': 'No accounts yet',
       'set.cardHint': 'Card balances show as negative (money owed). When you pay a card, record a Transfer from your bank to the card.',
       'set.categories': 'Categories', 'set.noCat': 'No categories yet', 'set.addOut': '＋ Add expense category', 'set.addIn': '＋ Add income category',
@@ -326,6 +335,11 @@
   /* stacked-bar order follows the palette's validated adjacency (slot 1→5) */
   const COMP_ORDER = ['securities', 'bank', 'ewallet', 'cash', 'other'];
   const ACC_ORDER = ['bank', 'cash', 'ewallet', 'credit', 'securities', 'other'];
+  /* the user's group (account type) order: known types once each, missing ones appended */
+  const normTypeOrder = (o) => {
+    const seen = (Array.isArray(o) ? o : []).filter((t, i, arr) => ACC_TYPES[t] && arr.indexOf(t) === i);
+    return [...seen, ...ACC_ORDER.filter((t) => !seen.includes(t))];
+  };
   const typeName = (t) => tr('type.' + t);
   const kindName = (k) => tr('kind.' + k);
   /* CSV keeps the Google Sheet's column values whatever the UI language */
@@ -346,6 +360,7 @@
       app: 'kakeibo', version: 1,
       categories: DEFAULT_CATS.map(([name, kind, icon]) => ({ id: uid(), name, kind, icon, hidden: false })),
       accounts: DEFAULT_ACCS.map(([name, type]) => ({ id: uid(), name, type, initial: 0, hidden: false })),
+      typeOrder: [...ACC_ORDER],
       entries: [],
       meta: { createdAt: new Date().toISOString(), lastBackup: null },
     };
@@ -363,6 +378,8 @@
       id: String(a.id || uid()), name: String(a.name).slice(0, 24), type: ACC_TYPES[a.type] ? a.type : 'other',
       initial: Math.round(Number(a.initial) || 0), hidden: !!a.hidden,
     }));
+    /* data from before group ordering existed: keep the order the accounts were already listed in */
+    out.typeOrder = normTypeOrder(Array.isArray(d.typeOrder) ? d.typeOrder : out.accounts.map((a) => a.type));
     out.entries = d.entries
       .filter((e) => e && /^\d{4}-\d{2}-\d{2}$/.test(e.date) && Number(e.amount) > 0 && ['out', 'in', 'move'].includes(e.kind))
       .map((e) => ({
@@ -418,7 +435,6 @@
     compKind: savedUI.compKind === 'in' ? 'in' : 'out',
     trendCat: savedUI.trendCat || null,
     trendTip: null,
-    lastAcc: savedUI.lastAcc && typeof savedUI.lastAcc === 'object' ? savedUI.lastAcc : {},
     lastAccAny: savedUI.lastAccAny || null,
     autoAdd: savedUI.autoAdd !== false,
     filter: { kind: 'all', cat: null, acc: null },
@@ -427,7 +443,7 @@
   function saveUI() {
     try {
       localStorage.setItem(UI_KEY, JSON.stringify({
-        compKind: ui.compKind, trendCat: ui.trendCat, lastAcc: ui.lastAcc, lastAccAny: ui.lastAccAny, autoAdd: ui.autoAdd, lang: LANG,
+        compKind: ui.compKind, trendCat: ui.trendCat, lastAccAny: ui.lastAccAny, autoAdd: ui.autoAdd, lang: LANG,
       }));
     } catch (e) { /* ignore */ }
   }
@@ -474,8 +490,14 @@
   const cmpDesc = (a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : (b.ts || 0) - (a.ts || 0));
   const usedAcc = (id) => data.entries.filter((e) => e.acc === id || e.to === id).length;
   const usedCat = (id) => data.entries.filter((e) => e.cat === id).length;
-  const activeAccs = (keep) => data.accounts.filter((a) => !a.hidden || a.id === keep);
-  const firstAcc = () => { const a = data.accounts.find((x) => !x.hidden); return a ? a.id : null; };
+  /* accounts in the user's order: group (account type) order first, then their order inside the group */
+  function orderedAccs(list = data.accounts) {
+    const pos = new Map(data.accounts.map((a, i) => [a.id, i]));
+    const t = data.typeOrder;
+    return [...list].sort((a, b) => t.indexOf(a.type) - t.indexOf(b.type) || pos.get(a.id) - pos.get(b.id));
+  }
+  const activeAccs = (keep) => orderedAccs(data.accounts.filter((a) => !a.hidden || a.id === keep));
+  const firstAcc = () => { const a = orderedAccs().find((x) => !x.hidden); return a ? a.id : null; };
 
   /* ================= small components ================= */
   const header = (title, right = '') => `<header class="top"><h1>${title}</h1>${right}</header>`;
@@ -745,7 +767,7 @@
     const delta = hasPrev ? net - pnet : null;
     const future = data.entries.filter((e) => e.date > t).length;
     const shown = data.accounts.filter((a) => !a.hidden || (bal.get(a.id) || 0) !== 0);
-    const groups = ACC_ORDER.map((type) => ({ type, list: shown.filter((a) => a.type === type) })).filter((g) => g.list.length);
+    const groups = data.typeOrder.map((type) => ({ type, list: shown.filter((a) => a.type === type) })).filter((g) => g.list.length);
     const cards = groups.map((g) => `<div class="acc-group"><div class="ag-title">${typeName(g.type)}</div>${g.list.map((a) => accCard(a, bal.get(a.id) || 0, cm)).join('')}</div>`).join('');
 
     const months = monthsBetween(sm > cm ? cm : sm, cm).slice(-12);
@@ -778,7 +800,7 @@
         </div>
         ${future ? `<p class="hint">${tr('assets.future', { n: future })}</p>` : ''}
       </section>
-      ${cards || `<section class="card"><div class="empty">${tr('assets.noAcc')}</div></section>`}
+      ${cards ? `<div class="ag-bar"><h2>${tr('assets.accounts')}</h2><button class="text-btn strong" data-act="sort-accs">${tr('sort.btn')}</button></div>${cards}` : `<section class="card"><div class="empty">${tr('assets.noAcc')}</div></section>`}
       <section class="card"><div class="card-head"><h2>${tr('assets.trend')}</h2><span class="muted" style="font-size:12.5px">${tr('assets.monthEnd')}</span></div>${trend}</section>
       <section class="card"><div class="card-head"><h2>${tr('assets.comp')}</h2></div>${comp}</section>
       <div class="spacer"></div>`;
@@ -786,7 +808,7 @@
 
   function renderSettings() {
     const bal = balances(todayStr());
-    const accRows = data.accounts.map((a) => {
+    const accRows = orderedAccs().map((a) => {
       const T = ACC_TYPES[a.type];
       const cur = bal.get(a.id) ?? a.initial;
       const now = a.type === 'credit' && cur <= 0 ? `${tr('owed')} ${yen(-cur)}` : `${tr('balance')} ${yen(cur)}`;
@@ -797,7 +819,7 @@
     const days = backupDays();
     const bstate = days === null ? tr('set.bNever') : `${tr('set.bLast')}<b>${days === 0 ? tr('set.bToday') : tr('set.bDays', { n: days })}</b>`;
     return `${header(tr('tab.settings'))}
-      <section class="card"><div class="card-head"><h2>${tr('set.accounts')}</h2><button class="text-btn strong" data-act="acc-edit">${tr('common.add')}</button></div>
+      <section class="card"><div class="card-head"><h2>${tr('set.accounts')}</h2><div class="head-btns"><button class="text-btn" data-act="sort-accs">${tr('sort.btn')}</button><button class="text-btn strong" data-act="acc-edit">${tr('common.add')}</button></div></div>
         <div class="list">${accRows || `<div class="empty">${tr('set.noAcc')}</div>`}</div>
         <p class="hint">${tr('set.cardHint')}</p>
       </section>
@@ -963,7 +985,6 @@
     };
     if (existing) Object.assign(existing, rec); else data.entries.push(rec);
     ui.lastAccAny = d.kind === 'move' ? ui.lastAccAny : d.acc;
-    if (d.kind !== 'move') ui.lastAcc[d.cat] = d.acc;
     saveUI();
     saveData();
     const c = catIdx.get(rec.cat);
@@ -1045,7 +1066,7 @@
         ${isNew ? '' : `<p class="hint adj-note" id="f-adj-note" hidden></p>
         <label class="switch-row"><span>${tr('acc.adjSwitch')}<small>${tr('acc.adjSwitchSub')}</small></span><input type="checkbox" id="f-adj" checked></label>
         <label class="switch-row"><span>${tr('common.hide')}</span><input type="checkbox" id="f-hidden" ${x.hidden ? 'checked' : ''}></label>
-        <div class="f-row"><button class="btn ghost sm" data-act="move-item" data-what="acc" data-id="${x.id}" data-v="-1">${tr('common.up')}</button><button class="btn ghost sm" data-act="move-item" data-what="acc" data-id="${x.id}" data-v="1">${tr('common.down')}</button><span class="grow"></span><button class="btn ghost sm danger" data-act="acc-del" data-id="${x.id}">${tr('common.delete')}</button></div>`}
+        <div class="f-row"><button class="btn ghost sm" data-act="sort-accs">${tr('sort.btn')}</button><span class="grow"></span><button class="btn ghost sm danger" data-act="acc-del" data-id="${x.id}">${tr('common.delete')}</button></div>`}
       </div>
     </div>`;
   }
@@ -1119,22 +1140,88 @@
     toast(tr('common.saved'));
   }
   function moveItem(what, id, dir) {
-    if (what === 'acc') {
-      const arr = data.accounts, i = arr.findIndex((a) => a.id === id), j = i + dir;
-      if (i < 0 || j < 0 || j >= arr.length) return;
-      [arr[i], arr[j]] = [arr[j], arr[i]];
-    } else {
-      const arr = data.categories, i = arr.findIndex((c) => c.id === id);
-      if (i < 0) return;
-      const kind = arr[i].kind;
-      let j = i + dir;
-      while (j >= 0 && j < arr.length && arr[j].kind !== kind) j += dir;
-      if (j < 0 || j >= arr.length) return;
-      [arr[i], arr[j]] = [arr[j], arr[i]];
-    }
+    /* categories only; accounts are ordered in the reorder sheet */
+    const arr = data.categories, i = arr.findIndex((c) => c.id === id);
+    if (i < 0) return;
+    const kind = arr[i].kind;
+    let j = i + dir;
+    while (j >= 0 && j < arr.length && arr[j].kind !== kind) j += dir;
+    if (j < 0 || j >= arr.length) return;
+    [arr[i], arr[j]] = [arr[j], arr[i]];
     commit();
     toast(tr(dir < 0 ? 'common.movedUp' : 'common.movedDown'));
   }
+
+  /* ================= account order (drag to reorder) ================= */
+  function sortHTML() {
+    const groups = data.typeOrder.map((type) => ({ type, list: data.accounts.filter((a) => a.type === type) })).filter((g) => g.list.length);
+    const item = (a) => `<div class="sort-item" data-id="${a.id}"><i class="badge" style="background:${ACC_TYPES[a.type].color}">${ACC_TYPES[a.type].icon}</i><span class="si-name">${esc(a.name)}${a.hidden ? `<em class="tag">${tr('common.hiddenTag')}</em>` : ''}</span><span class="drag-h" aria-label="${tr('sort.dragItem')}">≡</span></div>`;
+    return `<div class="form sorter">
+      <div class="f-top"><span class="e-sp"></span><div class="e-title">${tr('sort.title')}</div><button class="text-btn strong" data-act="close-sheet">${tr('sort.done')}</button></div>
+      <div class="f-body">
+        <p class="hint sort-hint">${tr('sort.hint')}</p>
+        <div class="sort-groups" data-sort="groups">${groups.map((g) => `<section class="sort-group" data-id="${g.type}"><div class="sg-head"><span class="sg-name">${typeName(g.type)}</span><span class="drag-h" aria-label="${tr('sort.dragGroup')}">≡</span></div><div class="sort-list" data-sort="accs">${g.list.map(item).join('')}</div></section>`).join('')}</div>
+      </div></div>`;
+  }
+  /* write the order shown in a dragged list back to the data */
+  function commitSort(list) {
+    if (list.dataset.sort === 'groups') {
+      const types = Array.from(list.children).map((g) => g.dataset.id);
+      data.typeOrder = [...types, ...data.typeOrder.filter((t) => !types.includes(t))];
+    } else {
+      /* the group's accounts take the same slots in data.accounts, in their new order */
+      const ids = Array.from(list.children).map((x) => x.dataset.id);
+      const want = new Set(ids), byId = new Map(data.accounts.map((a) => [a.id, a]));
+      const slots = [];
+      data.accounts.forEach((a, i) => { if (want.has(a.id)) slots.push(i); });
+      slots.forEach((slot, k) => { data.accounts[slot] = byId.get(ids[k]); });
+    }
+    reindex();
+    saveData();
+    render();
+  }
+  /* Pointer events cover touch on iOS too: the ≡ handle has touch-action: none, so dragging it never scrolls. */
+  let drag = null;
+  const midY = (el) => { const r = el.getBoundingClientRect(); return r.top + r.height / 2; };
+  document.addEventListener('pointerdown', (ev) => {
+    const h = ev.target.closest && ev.target.closest('.drag-h');
+    if (!h || drag) return;
+    const item = h.closest('.sort-item, .sort-group');
+    if (!item) return;
+    ev.preventDefault();
+    try { h.setPointerCapture(ev.pointerId); } catch (e) { /* not an active pointer */ }
+    drag = { item, list: item.parentElement, id: ev.pointerId, startY: ev.clientY, top: item.getBoundingClientRect().top, moved: false };
+    item.classList.add('dragging');
+  });
+  document.addEventListener('pointermove', (ev) => {
+    if (!drag || ev.pointerId !== drag.id) return;
+    ev.preventDefault();
+    const { item, list } = drag;
+    item.style.transform = `translateY(${ev.clientY - drag.startY}px)`;
+    for (let guard = 0; guard < 50; guard++) {
+      const mid = midY(item), next = item.nextElementSibling, prev = item.previousElementSibling;
+      if (next && mid > midY(next)) list.insertBefore(next, item);
+      else if (prev && mid < midY(prev)) list.insertBefore(item, prev);
+      else break;
+      /* the row moved in the list: re-anchor it so it stays under the finger */
+      item.style.transform = 'none';
+      const top = item.getBoundingClientRect().top;
+      drag.startY += top - drag.top;
+      drag.top = top;
+      item.style.transform = `translateY(${ev.clientY - drag.startY}px)`;
+      drag.moved = true;
+    }
+  }, { passive: false });
+  const endDrag = (ev) => {
+    if (!drag || ev.pointerId !== drag.id) return;
+    const { item, list, moved } = drag;
+    drag = null;
+    item.style.transform = '';
+    item.classList.remove('dragging');
+    if (moved) { commitSort(list); toast(tr('sort.saved')); }
+  };
+  document.addEventListener('pointerup', endDrag);
+  document.addEventListener('pointercancel', endDrag);
   async function deleteAcc(id) {
     const n = usedAcc(id);
     if (n) return toast(tr('acc.inUse', { n }));
@@ -1154,7 +1241,7 @@
 
   /* ================= backup / import / export ================= */
   function backupJSON() {
-    return JSON.stringify({ app: 'kakeibo', version: 1, exportedAt: new Date().toISOString(), categories: data.categories, accounts: data.accounts, entries: data.entries, meta: { createdAt: data.meta.createdAt } });
+    return JSON.stringify({ app: 'kakeibo', version: 1, exportedAt: new Date().toISOString(), categories: data.categories, accounts: data.accounts, typeOrder: data.typeOrder, entries: data.entries, meta: { createdAt: data.meta.createdAt } });
   }
   function markBackup() { data.meta.lastBackup = new Date().toISOString(); saveData(); render(); }
   function downloadBlob(text, name, type) {
@@ -1354,10 +1441,9 @@
         else if (draft.cat && (!catIdx.has(draft.cat) || catIdx.get(draft.cat).kind !== v)) draft.cat = null;
         renderEntry(); break;
       case 'pick-cat': {
+        /* choosing a category never changes the payment method; only the user does */
         draft.cat = id;
         setChipOn('.cat-cell', 'id', id);
-        const la = ui.lastAcc[id];
-        if (la && accIdx.has(la) && !accIdx.get(la).hidden) { draft.acc = la; setChipOn('[data-row="acc"] .acc-chip', 'id', la); }
         break;
       }
       case 'pick-acc': {
@@ -1401,6 +1487,7 @@
       case 'acc-del': deleteAcc(id); break;
       case 'cat-del': deleteCat(id); break;
       case 'move-item': moveItem(el.dataset.what, id, Number(v)); break;
+      case 'sort-accs': openSheet('sort', sortHTML()); break;
       /* data */
       case 'export': exportBackup(); break;
       case 'copy-backup': copyBackup(); break;
