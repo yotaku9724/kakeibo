@@ -1,7 +1,7 @@
 /* 家计簿 — offline bookkeeping web app. Data lives only in this browser (localStorage). */
 'use strict';
 (() => {
-  const APP_VERSION = '1.0.6';
+  const APP_VERSION = '1.0.7';
   const STORE_KEY = 'kakeibo:data';
   const PREV_KEY = 'kakeibo:data:prev';
   const UI_KEY = 'kakeibo:ui';
@@ -140,10 +140,10 @@
       'acc.oweHint': '打开信用卡 App，看现在还没还的金额，填正数。之后刷卡会自动累加，还卡时记一笔「转移」。',
       'acc.adjSwitch': '差额记为特殊收入 / 支出', 'acc.adjSwitchSub': '关掉的话直接改开始时的余额，不算收支（适合第一次设置）',
       'acc.dupe': '已经有同名账户', 'acc.inUse': '有 {n} 笔记录用到这个账户，不能删除，可以改成「停用」', 'acc.delAsk': '删除这个账户？',
-      'adj.in': '特殊收入', 'adj.out': '特殊支出',
       'adj.more': '比记录多 {v}', 'adj.less': '比记录少 {v}', 'adj.oweMore': '待还比记录多 {v}', 'adj.oweLess': '待还比记录少 {v}',
       'adj.book': '，保存后记一笔今天的「{c}」', 'adj.initial': '，保存后直接改开始时的余额，不算收支', 'adj.done': '已记一笔今天的{c} {v}',
       'cat.add': '添加分类', 'cat.edit': '编辑分类', 'cat.kind': '收支', 'cat.locked': '（已有记录，不能更改）', 'cat.namePh': '例如：咖啡',
+      'name.hint': '只改{l}界面显示的名称，其他语言的名称不变。', 'name.hintNew': '其他语言还没单独改名之前，也会显示这个名称。',
       'cat.icon': '图标（点下面选，或输入任意表情）',
       'cat.dupe': '已经有同名分类', 'cat.inUse': '有 {n} 笔记录用到这个分类，不能删除，可以改成「停用」', 'cat.delAsk': '删除这个分类？',
       'bk.exported': '备份已导出', 'bk.copied': '备份文本已复制，可以粘贴到备忘录或聊天里保存', 'bk.csvDone': 'CSV 已导出',
@@ -211,10 +211,10 @@
       'acc.oweHint': 'カード会社のアプリで今の未払い額を確認し、プラスの数字で入力します。カードで払うと自動で増え、支払ったら「振替」で記録します。',
       'acc.adjSwitch': '差額を特殊収入 / 特殊支出として記録', 'acc.adjSwitchSub': 'オフにすると開始時の残高だけを変更し、収支には含めません（初回設定向け）',
       'acc.dupe': '同じ名前の口座があります', 'acc.inUse': 'この口座を使っている記録が{n}件あるため削除できません。「非表示」にできます', 'acc.delAsk': 'この口座を削除しますか？',
-      'adj.in': '特殊収入', 'adj.out': '特殊支出',
       'adj.more': '記録より {v} 多い', 'adj.less': '記録より {v} 少ない', 'adj.oweMore': '未払いが記録より {v} 多い', 'adj.oweLess': '未払いが記録より {v} 少ない',
       'adj.book': '。保存すると今日の「{c}」として記録します', 'adj.initial': '。保存すると開始時の残高だけを変更し、収支には含めません', 'adj.done': '今日の{c} {v} を記録しました',
       'cat.add': 'カテゴリを追加', 'cat.edit': 'カテゴリを編集', 'cat.kind': '収支', 'cat.locked': '（記録があるため変更できません）', 'cat.namePh': '例：カフェ',
+      'name.hint': '{l}表示の名前だけが変わります。ほかの言語の名前はそのままです。', 'name.hintNew': 'ほかの言語で名前を付けるまでは、この名前が表示されます。',
       'cat.icon': 'アイコン（下から選ぶか、好きな絵文字を入力）',
       'cat.dupe': '同じ名前のカテゴリがあります', 'cat.inUse': 'このカテゴリを使っている記録が{n}件あるため削除できません。「非表示」にできます', 'cat.delAsk': 'このカテゴリを削除しますか？',
       'bk.exported': 'バックアップを書き出しました', 'bk.copied': 'バックアップをコピーしました。メモやチャットに貼り付けて保存できます', 'bk.csvDone': 'CSVを書き出しました',
@@ -280,13 +280,13 @@
       'acc.balNow': 'Balance now', 'acc.oweNow': 'Amount owed now',
       'acc.balHint': 'How much is actually in this account today (check your bank or wallet app).',
       'acc.oweHint': 'Check your card app for the amount owed now and enter it as a positive number. Card spending adds to it; record a Transfer when you pay.',
-      'acc.adjSwitch': 'Record the difference as special income / expense', 'acc.adjSwitchSub': 'Turn off to change only the starting balance, without counting it as income or spending (good for first-time setup)',
+      'acc.adjSwitch': 'Record the difference as an adjustment', 'acc.adjSwitchSub': 'Turn off to change only the starting balance, without counting it as income or spending (good for first-time setup)',
       'acc.dupe': 'An account with this name already exists', 'acc.inUse': '{n} entries use this account, so it can’t be deleted. You can hide it instead.',
       'acc.inUse1': '1 entry uses this account, so it can’t be deleted. You can hide it instead.', 'acc.delAsk': 'Delete this account?',
-      'adj.in': 'Special income', 'adj.out': 'Special expense',
       'adj.more': '{v} more than recorded', 'adj.less': '{v} less than recorded', 'adj.oweMore': 'Owed {v} more than recorded', 'adj.oweLess': 'Owed {v} less than recorded',
       'adj.book': '. Saving records it today as “{c}”', 'adj.initial': '. Saving changes only the starting balance, not counted as income or spending', 'adj.done': 'Recorded {c} {v} today',
       'cat.add': 'Add category', 'cat.edit': 'Edit category', 'cat.kind': 'Type', 'cat.locked': ' (has entries, can’t change)', 'cat.namePh': 'e.g. Coffee',
+      'name.hint': 'Changes the {l} name only. Other languages keep their own names.', 'name.hintNew': 'Other languages show this name until you rename it there.',
       'cat.icon': 'Icon (pick below or type any emoji)',
       'cat.dupe': 'A category with this name already exists', 'cat.inUse': '{n} entries use this category, so it can’t be deleted. You can hide it instead.',
       'cat.inUse1': '1 entry uses this category, so it can’t be deleted. You can hide it instead.', 'cat.delAsk': 'Delete this category?',
@@ -304,8 +304,23 @@
     },
   };
   const HTML_LANG = { zh: 'zh-CN', ja: 'ja', en: 'en' };
+  const LANG_NAME = { zh: '中文', ja: '日本語', en: 'English' };
   let LANG = (() => {
-    try { const v = (JSON.parse(localStorage.getItem(UI_KEY) || '{}') || {}).lang; return I18N[v] ? v : 'zh'; } catch (e) { return 'zh'; }
+    try {
+      const v = (JSON.parse(localStorage.getItem(UI_KEY) || '{}') || {}).lang;
+      if (I18N[v]) return v;
+      /* first launch on this phone: follow the phone's language */
+      if (!localStorage.getItem(STORE_KEY)) {
+        for (const l of navigator.languages || [navigator.language]) {
+          const s = String(l || '').toLowerCase();
+          if (s.startsWith('ja')) return 'ja';
+          if (s.startsWith('zh')) return 'zh';
+          if (s.startsWith('en')) return 'en';
+        }
+        return 'en';
+      }
+    } catch (e) { /* storage unavailable */ }
+    return 'zh';
   })();
   function tr(key, p) {
     const dict = I18N[LANG] || I18N.zh;
@@ -346,20 +361,78 @@
   const CSV_KIND = { out: '支出', in: '收入', move: '转移' };
   const EMOJIS = ['🍚', '🍜', '🍱', '☕', '🍺', '🍰', '🛒', '🧻', '🧴', '🎮', '🎬', '🎵', '📚', '✏️', '🚃', '🚕', '⛽', '✈️', '🏠', '🏦', '💡', '💧', '🔥', '📱', '💻', '👕', '💄', '💇', '💊', '🏥', '🏋️', '🎁', '🐶', '👶', '🧾', '☂️', '📦', '💴', '💰', '🎉', '📈', '🪙'];
 
-  const DEFAULT_CATS = [
-    ['餐饮', 'out', '🍚'], ['日用品', 'out', '🧻'], ['兴趣娱乐', 'out', '🎮'], ['交际', 'out', '🍻'], ['交通', 'out', '🚃'],
-    ['服装美容', 'out', '👕'], ['健康医疗', 'out', '💊'], ['学习教育', 'out', '📚'], ['水电燃气', 'out', '💡'], ['通信', 'out', '📱'],
-    ['住房', 'out', '🏠'], ['税金社保', 'out', '🧾'], ['保险', 'out', '☂️'], ['特别支出', 'out', '🎁'], ['其他支出', 'out', '📦'],
-    ['工资', 'in', '💴'], ['奖金', 'in', '🎉'], ['副业', 'in', '💻'], ['投资收益', 'in', '📈'], ['其他收入', 'in', '💰'],
-  ];
-  const DEFAULT_ACCS = [['现金', 'cash'], ['银行账户', 'bank'], ['信用卡', 'credit'], ['电子钱包', 'ewallet']];
+  /* Built-in categories and accounts have a name in every UI language. Items the user adds are
+     named in the language active at the time (lang0); other languages show that name until the
+     item is renamed while that language is active. A rename only changes the current language. */
+  const BASE_CATS = {
+    food: { kind: 'out', icon: '🍚', zh: '餐饮', ja: '食費', en: 'Food' },
+    daily: { kind: 'out', icon: '🧻', zh: '日用品', ja: '日用品', en: 'Household' },
+    hobby: { kind: 'out', icon: '🎮', zh: '兴趣娱乐', ja: '趣味・娯楽', en: 'Hobbies' },
+    social: { kind: 'out', icon: '🍻', zh: '交际', ja: '交際費', en: 'Social' },
+    transport: { kind: 'out', icon: '🚃', zh: '交通', ja: '交通費', en: 'Transport' },
+    clothes: { kind: 'out', icon: '👕', zh: '服装美容', ja: '衣服・美容', en: 'Clothes & beauty' },
+    health: { kind: 'out', icon: '💊', zh: '健康医疗', ja: '健康・医療', en: 'Health' },
+    study: { kind: 'out', icon: '📚', zh: '学习教育', ja: '教養・教育', en: 'Education' },
+    utilities: { kind: 'out', icon: '💡', zh: '水电燃气', ja: '水道・光熱費', en: 'Utilities' },
+    phone: { kind: 'out', icon: '📱', zh: '通信', ja: '通信費', en: 'Phone & internet' },
+    housing: { kind: 'out', icon: '🏠', zh: '住房', ja: '住宅', en: 'Housing' },
+    tax: { kind: 'out', icon: '🧾', zh: '税金社保', ja: '税・社会保障', en: 'Taxes' },
+    insurance: { kind: 'out', icon: '☂️', zh: '保险', ja: '保険', en: 'Insurance' },
+    special: { kind: 'out', icon: '🎁', zh: '特别支出', ja: '特別な支出', en: 'Special spending' },
+    otherOut: { kind: 'out', icon: '📦', zh: '其他支出', ja: 'その他の支出', en: 'Other spending' },
+    salary: { kind: 'in', icon: '💴', zh: '工资', ja: '給与', en: 'Salary' },
+    bonus: { kind: 'in', icon: '🎉', zh: '奖金', ja: '賞与', en: 'Bonus' },
+    side: { kind: 'in', icon: '💻', zh: '副业', ja: '副業', en: 'Side income' },
+    invest: { kind: 'in', icon: '📈', zh: '投资收益', ja: '投資収益', en: 'Investment' },
+    otherIn: { kind: 'in', icon: '💰', zh: '其他收入', ja: 'その他の収入', en: 'Other income' },
+    /* not created up front; recognised so that existing items get their other-language names */
+    mortgage: { kind: 'out', icon: '🏦', zh: '房贷', ja: '住宅ローン', en: 'Mortgage', extra: true },
+    adjIn: { kind: 'in', icon: '⚖️', zh: '特殊收入', ja: '特殊収入', en: 'Adjustment +', extra: true },
+    adjOut: { kind: 'out', icon: '⚖️', zh: '特殊支出', ja: '特殊支出', en: 'Adjustment −', extra: true },
+  };
+  const BASE_ACCS = {
+    cash: { type: 'cash', zh: '现金', ja: '現金', en: 'Cash' },
+    bank: { type: 'bank', zh: '银行账户', ja: '銀行口座', en: 'Bank account' },
+    card: { type: 'credit', zh: '信用卡', ja: 'クレジットカード', en: 'Credit card' },
+    wallet: { type: 'ewallet', zh: '电子钱包', ja: '電子マネー', en: 'E-wallet' },
+  };
+  const BASES = { cat: BASE_CATS, acc: BASE_ACCS };
+  const LANGS = ['zh', 'ja', 'en'];
+  /* name in a language: the user's own name for it, else the built-in one, else the name it was created with */
+  const labelIn = (x, what, lang) => (x.names && x.names[lang]) || (x.base && BASES[what][x.base] && BASES[what][x.base][lang]) || x.name;
+  const cName = (c) => (c ? labelIn(c, 'cat', LANG) : tr('uncat'));
+  const aName = (a) => (a ? labelIn(a, 'acc', LANG) : tr('deletedAcc'));
+  /* every name an item goes by, for matching imported rows */
+  const allLabels = (x, what) => [x.name, ...Object.values(x.names || {}), ...(x.base && BASES[what][x.base] ? LANGS.map((l) => BASES[what][x.base][l]) : [])];
+  function setLabel(x, what, value) {
+    const b = x.base && BASES[what][x.base];
+    const own = LANG === (x.lang0 || 'zh');
+    const names = Object.assign({}, x.names);
+    if (b ? b[LANG] === value : own || value === x.name) {
+      delete names[LANG];
+      if (!b && own) x.name = value;
+    } else names[LANG] = value;
+    if (Object.keys(names).length) x.names = names; else delete x.names;
+  }
+  /* the built-in item an older entry corresponds to, by any of its names */
+  const findBase = (what, name, kindOrType) => Object.keys(BASES[what]).find((k) => {
+    const b = BASES[what][k];
+    return (what === 'cat' ? b.kind : b.type) === kindOrType && LANGS.some((l) => b[l] === name);
+  }) || null;
+  const cleanNames = (n, max) => {
+    const o = {};
+    if (n && typeof n === 'object') for (const l of LANGS) if (typeof n[l] === 'string' && n[l].trim()) o[l] = n[l].trim().slice(0, max);
+    return Object.keys(o).length ? { names: o } : {};
+  };
 
   /* ================= data ================= */
   function defaultData() {
     return {
       app: 'kakeibo', version: 1,
-      categories: DEFAULT_CATS.map(([name, kind, icon]) => ({ id: uid(), name, kind, icon, hidden: false })),
-      accounts: DEFAULT_ACCS.map(([name, type]) => ({ id: uid(), name, type, initial: 0, hidden: false })),
+      categories: Object.keys(BASE_CATS).filter((k) => !BASE_CATS[k].extra)
+        .map((k) => ({ id: uid(), name: BASE_CATS[k][LANG], base: k, lang0: LANG, kind: BASE_CATS[k].kind, icon: BASE_CATS[k].icon, hidden: false })),
+      accounts: Object.keys(BASE_ACCS)
+        .map((k) => ({ id: uid(), name: BASE_ACCS[k][LANG], base: k, lang0: LANG, type: BASE_ACCS[k].type, initial: 0, hidden: false })),
       typeOrder: [...ACC_ORDER],
       entries: [],
       meta: { createdAt: new Date().toISOString(), lastBackup: null },
@@ -369,15 +442,23 @@
   function normalize(d) {
     const out = { app: 'kakeibo', version: 1 };
     out.meta = Object.assign({ createdAt: new Date().toISOString(), lastBackup: null }, d.meta || {});
-    out.categories = d.categories.filter((c) => c && c.name).map((c) => ({
-      id: String(c.id || uid()), name: String(c.name).slice(0, 20), kind: c.kind === 'in' ? 'in' : 'out',
-      icon: String(c.icon || (c.kind === 'in' ? '💰' : '📦')).slice(0, 8), hidden: !!c.hidden,
-      ...(c.sys === 'adj-in' || c.sys === 'adj-out' ? { sys: c.sys } : {}),
-    }));
-    out.accounts = d.accounts.filter((a) => a && a.name).map((a) => ({
-      id: String(a.id || uid()), name: String(a.name).slice(0, 24), type: ACC_TYPES[a.type] ? a.type : 'other',
-      initial: Math.round(Number(a.initial) || 0), hidden: !!a.hidden,
-    }));
+    out.categories = d.categories.filter((c) => c && c.name).map((c) => {
+      const kind = c.kind === 'in' ? 'in' : 'out', name = String(c.name).slice(0, 20);
+      const sys = c.sys === 'adj-in' || c.sys === 'adj-out' ? c.sys : null;
+      const base = BASE_CATS[c.base] && BASE_CATS[c.base].kind === kind ? c.base : sys ? (sys === 'adj-in' ? 'adjIn' : 'adjOut') : findBase('cat', name, kind);
+      return {
+        id: String(c.id || uid()), name, kind, icon: String(c.icon || (kind === 'in' ? '💰' : '📦')).slice(0, 8), hidden: !!c.hidden,
+        lang0: LANGS.includes(c.lang0) ? c.lang0 : 'zh', ...(base ? { base } : {}), ...(sys ? { sys } : {}), ...cleanNames(c.names, 20),
+      };
+    });
+    out.accounts = d.accounts.filter((a) => a && a.name).map((a) => {
+      const type = ACC_TYPES[a.type] ? a.type : 'other', name = String(a.name).slice(0, 24);
+      const base = BASE_ACCS[a.base] && BASE_ACCS[a.base].type === type ? a.base : findBase('acc', name, type);
+      return {
+        id: String(a.id || uid()), name, type, initial: Math.round(Number(a.initial) || 0), hidden: !!a.hidden,
+        lang0: LANGS.includes(a.lang0) ? a.lang0 : 'zh', ...(base ? { base } : {}), ...cleanNames(a.names, 24),
+      };
+    });
     /* data from before group ordering existed: keep the order the accounts were already listed in */
     out.typeOrder = normTypeOrder(Array.isArray(d.typeOrder) ? d.typeOrder : out.accounts.map((a) => a.type));
     out.entries = d.entries
@@ -447,6 +528,7 @@
       }));
     } catch (e) { /* ignore */ }
   }
+  if (savedUI.lang !== LANG) saveUI();
 
   /* ================= aggregates ================= */
   const inMonth = (ym) => data.entries.filter((e) => e.date.slice(0, 7) === ym);
@@ -511,12 +593,12 @@
     const future = e.date > todayStr();
     const fb = future ? `<span class="badge-future">${tr('future')}</span>` : '';
     if (e.kind === 'move') {
-      return `<button class="row ${future ? 'future' : ''}" data-act="edit" data-id="${e.id}"><span class="ic mv">⇄</span><span class="mid"><span class="title">${esc(e.memo || kindName('move'))}${fb}</span><span class="rsub">${esc(a ? a.name : tr('deleted'))} → ${esc(t ? t.name : tr('deleted'))}</span></span><span class="amt mv">${yen(e.amount)}</span></button>`;
+      return `<button class="row ${future ? 'future' : ''}" data-act="edit" data-id="${e.id}"><span class="ic mv">⇄</span><span class="mid"><span class="title">${esc(e.memo || kindName('move'))}${fb}</span><span class="rsub">${esc(a ? aName(a) : tr('deleted'))} → ${esc(t ? aName(t) : tr('deleted'))}</span></span><span class="amt mv">${yen(e.amount)}</span></button>`;
     }
-    const title = e.memo || (c ? c.name : tr('uncat'));
+    const title = e.memo || cName(c);
     const subParts = [];
-    if (e.memo) subParts.push(c ? c.name : tr('uncat'));
-    subParts.push(a ? a.name : tr('deletedAcc'));
+    if (e.memo) subParts.push(cName(c));
+    subParts.push(aName(a));
     return `<button class="row ${future ? 'future' : ''}" data-act="edit" data-id="${e.id}"><span class="ic">${esc(c ? c.icon : '❔')}</span><span class="mid"><span class="title">${esc(title)}${fb}</span><span class="rsub">${esc(subParts.join(' · '))}</span></span><span class="amt ${e.kind === 'in' ? 'in' : ''}">${e.kind === 'in' ? '+' : '−'}${yen(e.amount)}</span></button>`;
   }
 
@@ -662,7 +744,7 @@
     const segs = [];
     let other = 0;
     for (const [id, v] of rows) {
-      if (slots.has(id)) { const c = catIdx.get(id); segs.push({ id, v, name: c ? c.name : tr('uncat'), color: pal[slots.get(id)] }); }
+      if (slots.has(id)) { const c = catIdx.get(id); segs.push({ id, v, name: cName(c), color: pal[slots.get(id)] }); }
       else other += v;
     }
     if (other > 0) segs.push({ id: '_other', v: other, name: tr('other'), color: otherGray() });
@@ -670,7 +752,7 @@
       const c = catIdx.get(id);
       const color = slots.has(id) ? pal[slots.get(id)] : otherGray();
       const act = id === '_none' ? '' : `data-act="filter-cat" data-id="${id}"`;
-      return `<button class="rank-row" ${act}><span class="dot" style="background:${color}"></span><span class="r-icon">${esc(c ? c.icon : '❔')}</span><span class="r-name">${esc(c ? c.name : tr('uncat'))}</span><span class="r-pct">${pct(v, total)}</span><span class="r-amt">${yen(v)}</span><span class="chev">›</span></button>`;
+      return `<button class="rank-row" ${act}><span class="dot" style="background:${color}"></span><span class="r-icon">${esc(c ? c.icon : '❔')}</span><span class="r-name">${esc(cName(c))}</span><span class="r-pct">${pct(v, total)}</span><span class="r-amt">${yen(v)}</span><span class="chev">›</span></button>`;
     }).join('');
     return `<section class="card">
       <div class="card-head"><h2>${tr('comp.title', { k: kindName(kind) })}</h2>${segmented('comp', [['out', kindName('out')], ['in', kindName('in')]], kind)}</div>
@@ -701,13 +783,13 @@
     const avg = recVals.length ? sum(recVals) / recVals.length : 0;
     const tip = ui.trendTip && months.includes(ui.trendTip) ? ui.trendTip : end;
     const tipVal = vals[months.indexOf(tip)];
-    const chips = opts.map((id) => { const x = catIdx.get(id); return `<button class="chip ${id === sel ? 'on' : ''}" data-act="trend-cat" data-id="${id}">${esc(x.icon)} ${esc(x.name)}</button>`; }).join('');
+    const chips = opts.map((id) => { const x = catIdx.get(id); return `<button class="chip ${id === sel ? 'on' : ''}" data-act="trend-cat" data-id="${id}">${esc(x.icon)} ${esc(cName(x))}</button>`; }).join('');
     const multi = months.length >= 2;
     return `<section class="card">
       <div class="card-head"><h2>${tr('trend.title', { k: kindName(kind) })}</h2>${multi ? `<span class="muted" style="font-size:12.5px">${tr('trend.tap')}</span>` : ''}</div>
       <div class="chips">${chips}</div>
       <div class="trend-top">
-        <div><div class="t-label">${ymLabel(tip)} · ${esc(c.name)}</div><div class="t-big">${yen(tipVal)}</div></div>
+        <div><div class="t-label">${ymLabel(tip)} · ${esc(cName(c))}</div><div class="t-big">${yen(tipVal)}</div></div>
         ${multi ? `<div class="avg-box"><div class="t-label">${tr('trend.avg')}</div><div class="t-mid">${yen(avg)}</div></div>` : ''}
       </div>
       ${multi ? barsSVG(months, vals, avg, tip) : `<p class="hint">${tr('trend.wait')}</p>`}
@@ -730,8 +812,8 @@
     if (f.acc) list = list.filter((e) => e.acc === f.acc || e.to === f.acc);
     list.sort(cmpDesc);
     const tags = [];
-    if (f.cat) { const c = catIdx.get(f.cat); tags.push(`<button class="ftag" data-act="clear-filter">${esc(c ? c.icon + ' ' + c.name : tr('list.category'))} <b>✕</b></button>`); }
-    if (f.acc) { const a = accIdx.get(f.acc); tags.push(`<button class="ftag" data-act="clear-filter">${esc(a ? a.name : tr('list.account'))} <b>✕</b></button>`); }
+    if (f.cat) { const c = catIdx.get(f.cat); tags.push(`<button class="ftag" data-act="clear-filter">${esc(c ? c.icon + ' ' + cName(c) : tr('list.category'))} <b>✕</b></button>`); }
+    if (f.acc) { const a = accIdx.get(f.acc); tags.push(`<button class="ftag" data-act="clear-filter">${esc(a ? aName(a) : tr('list.account'))} <b>✕</b></button>`); }
     const out = sumKind(list, 'out'), inc = sumKind(list, 'in');
     const groups = new Map();
     for (const e of list) { if (!groups.has(e.date)) groups.set(e.date, []); groups.get(e.date).push(e); }
@@ -750,9 +832,9 @@
     const T = ACC_TYPES[a.type];
     if (a.type === 'credit') {
       const owe = -v;
-      return `<button class="acc-card" style="--c:${T.color}" data-act="filter-acc" data-id="${a.id}"><div class="ac-top"><span class="ac-name">${esc(a.name)}</span><span class="ac-type">${typeName(a.type)}</span></div><div class="ac-bal"><span class="ac-label">${owe >= 0 ? tr('owed') : tr('balance')}</span>${yen(Math.abs(owe))}</div><div class="ac-foot">${tr('card.usage', { a: yen(cardUsage(a.id, cm)), b: yen(cardUsage(a.id, addMonths(cm, -1))) })}</div></button>`;
+      return `<button class="acc-card" style="--c:${T.color}" data-act="filter-acc" data-id="${a.id}"><div class="ac-top"><span class="ac-name">${esc(aName(a))}</span><span class="ac-type">${typeName(a.type)}</span></div><div class="ac-bal"><span class="ac-label">${owe >= 0 ? tr('owed') : tr('balance')}</span>${yen(Math.abs(owe))}</div><div class="ac-foot">${tr('card.usage', { a: yen(cardUsage(a.id, cm)), b: yen(cardUsage(a.id, addMonths(cm, -1))) })}</div></button>`;
     }
-    return `<button class="acc-card" style="--c:${T.color}" data-act="filter-acc" data-id="${a.id}"><div class="ac-top"><span class="ac-name">${esc(a.name)}</span><span class="ac-type">${typeName(a.type)}</span></div><div class="ac-bal">${yen(v)}</div></button>`;
+    return `<button class="acc-card" style="--c:${T.color}" data-act="filter-acc" data-id="${a.id}"><div class="ac-top"><span class="ac-name">${esc(aName(a))}</span><span class="ac-type">${typeName(a.type)}</span></div><div class="ac-bal">${yen(v)}</div></button>`;
   }
 
   function renderAssets() {
@@ -812,10 +894,10 @@
       const T = ACC_TYPES[a.type];
       const cur = bal.get(a.id) ?? a.initial;
       const now = a.type === 'credit' && cur <= 0 ? `${tr('owed')} ${yen(-cur)}` : `${tr('balance')} ${yen(cur)}`;
-      return `<button class="list-row" data-act="acc-edit" data-id="${a.id}"><i class="badge" style="background:${T.color}">${T.icon}</i><span class="lr-main"><span class="lr-title">${esc(a.name)}${a.hidden ? `<em class="tag">${tr('common.hiddenTag')}</em>` : ''}</span><span class="lr-sub">${typeName(a.type)} · ${now}</span></span><span class="chev">›</span></button>`;
+      return `<button class="list-row" data-act="acc-edit" data-id="${a.id}"><i class="badge" style="background:${T.color}">${T.icon}</i><span class="lr-main"><span class="lr-title">${esc(aName(a))}${a.hidden ? `<em class="tag">${tr('common.hiddenTag')}</em>` : ''}</span><span class="lr-sub">${typeName(a.type)} · ${now}</span></span><span class="chev">›</span></button>`;
     }).join('');
     const cats = data.categories.filter((c) => c.kind === ui.setKind);
-    const catRows = cats.map((c) => `<button class="list-row" data-act="cat-edit" data-id="${c.id}"><i class="emoji">${esc(c.icon)}</i><span class="lr-main"><span class="lr-title">${esc(c.name)}${c.hidden ? `<em class="tag">${tr('common.hiddenTag')}</em>` : ''}</span></span><span class="chev">›</span></button>`).join('');
+    const catRows = cats.map((c) => `<button class="list-row" data-act="cat-edit" data-id="${c.id}"><i class="emoji">${esc(c.icon)}</i><span class="lr-main"><span class="lr-title">${esc(cName(c))}${c.hidden ? `<em class="tag">${tr('common.hiddenTag')}</em>` : ''}</span></span><span class="chev">›</span></button>`).join('');
     const days = backupDays();
     const bstate = days === null ? tr('set.bNever') : `${tr('set.bLast')}<b>${days === 0 ? tr('set.bToday') : tr('set.bDays', { n: days })}</b>`;
     return `${header(tr('tab.settings'))}
@@ -924,7 +1006,7 @@
   function accChips(field, selected, exclude) {
     const list = activeAccs(selected).filter((a) => a.id !== exclude || a.id === selected);
     if (!list.length) return `<div class="hint" style="margin:4px 4px 0">${tr('entry.noAcc')}</div>`;
-    return list.map((a) => { const T = ACC_TYPES[a.type]; return `<button class="acc-chip ${a.id === selected ? 'on' : ''}" data-act="pick-acc" data-field="${field}" data-id="${a.id}"><i style="background:${T.color}">${T.icon}</i>${esc(a.name)}</button>`; }).join('');
+    return list.map((a) => { const T = ACC_TYPES[a.type]; return `<button class="acc-chip ${a.id === selected ? 'on' : ''}" data-act="pick-acc" data-field="${field}" data-id="${a.id}"><i style="background:${T.color}">${T.icon}</i>${esc(aName(a))}</button>`; }).join('');
   }
   function entryHTML() {
     const d = draft;
@@ -935,7 +1017,7 @@
     } else {
       const cats = data.categories.filter((c) => c.kind === d.kind && (!c.hidden || c.id === d.cat));
       body = cats.length
-        ? `<div class="cat-grid">${cats.map((c) => `<button class="cat-cell ${c.id === d.cat ? 'on' : ''}" data-act="pick-cat" data-id="${c.id}"><span class="ce">${esc(c.icon)}</span><span class="cn">${esc(c.name)}</span></button>`).join('')}</div>`
+        ? `<div class="cat-grid">${cats.map((c) => `<button class="cat-cell ${c.id === d.cat ? 'on' : ''}" data-act="pick-cat" data-id="${c.id}"><span class="ce">${esc(c.icon)}</span><span class="cn">${esc(cName(c))}</span></button>`).join('')}</div>`
         : `<div class="empty">${tr('entry.noCat')}</div>`;
     }
     const accRow = d.kind === 'move' ? '' : `<div class="e-label">${d.kind === 'in' ? tr('entry.received') : tr('entry.paid')}</div><div class="acc-row" data-row="acc">${accChips('acc', d.acc, null)}</div>`;
@@ -988,7 +1070,7 @@
     saveUI();
     saveData();
     const c = catIdx.get(rec.cat);
-    const what = rec.kind === 'move' ? `${kindName('move')} ${yen(amount)}` : `${rec.kind === 'in' ? '+' : '−'}${yen(amount)} ${c ? c.name : ''}`;
+    const what = rec.kind === 'move' ? `${kindName('move')} ${yen(amount)}` : `${rec.kind === 'in' ? '+' : '−'}${yen(amount)} ${c ? cName(c) : ''}`;
     if (rec.date.slice(0, 7) !== ui.month) ui.month = rec.date.slice(0, 7);
     if (cont && !existing) {
       draft = { id: null, kind: d.kind, amt: '', cat: null, acc: d.acc, to: d.to, date: d.date, memo: '' };
@@ -1020,13 +1102,16 @@
      (or, with the switch off, folded into the starting balance so it never shows up as income/spending). */
   const balLabel = (credit) => tr(credit ? 'acc.oweNow' : 'acc.balNow');
   const balHint = (credit) => tr(credit ? 'acc.oweHint' : 'acc.balHint');
-  const ADJ_SYS = { in: 'adj-in', out: 'adj-out' };
-  /* the category already in use for corrections keeps its own name; a new one is named in the current language */
-  const adjName = (kind) => { const c = data.categories.find((x) => x.sys === ADJ_SYS[kind]); return c ? c.name : tr('adj.' + kind); };
+  const ADJ_SYS = { in: 'adj-in', out: 'adj-out' }, ADJ_BASE = { in: 'adjIn', out: 'adjOut' };
+  const adjFind = (kind) => data.categories.find((x) => x.sys === ADJ_SYS[kind]) || data.categories.find((x) => x.kind === kind && x.base === ADJ_BASE[kind]);
+  const adjName = (kind) => { const c = adjFind(kind); return c ? cName(c) : BASE_CATS[ADJ_BASE[kind]][LANG]; };
   function adjCat(kind) {
-    const names = Object.values(I18N).map((d) => d['adj.' + kind]);
-    let c = data.categories.find((x) => x.sys === ADJ_SYS[kind]) || data.categories.find((x) => x.kind === kind && names.includes(x.name));
-    if (!c) { c = { id: uid(), name: tr('adj.' + kind), kind, icon: '⚖️', hidden: false }; data.categories.push(c); }
+    let c = adjFind(kind);
+    if (!c) {
+      const b = BASE_CATS[ADJ_BASE[kind]];
+      c = { id: uid(), name: b[LANG], base: ADJ_BASE[kind], lang0: LANG, kind, icon: b.icon, hidden: false };
+      data.categories.push(c);
+    }
     c.sys = ADJ_SYS[kind];
     return c;
   }
@@ -1059,7 +1144,8 @@
     return `<div class="form" data-type="${x.type}" data-id="${x.id}">
       <div class="f-top"><button class="icon-btn" data-act="close-sheet" aria-label="${tr('common.close')}">✕</button><div class="e-title">${isNew ? tr('acc.add') : tr('acc.edit')}</div><button class="text-btn strong" data-act="acc-save" data-id="${x.id}">${tr('common.save')}</button></div>
       <div class="f-body">
-        <label class="field"><span>${tr('common.name')}</span><input type="text" id="f-name" value="${esc(x.name)}" maxlength="24" placeholder="${esc(tr('acc.namePh'))}"></label>
+        <label class="field"><span>${tr('common.name')}</span><input type="text" id="f-name" value="${esc(aName(x))}" maxlength="24" placeholder="${esc(tr('acc.namePh'))}"></label>
+        <p class="hint name-hint">${tr(isNew ? 'name.hintNew' : 'name.hint', { l: LANG_NAME[LANG] })}</p>
         <div class="field"><span>${tr('acc.type')}</span><div class="type-grid">${ACC_ORDER.map((t) => `<button class="type-opt ${t === x.type ? 'on' : ''}" data-act="pick-type" data-v="${t}"><i style="background:${ACC_TYPES[t].color}">${ACC_TYPES[t].icon}</i>${typeName(t)}</button>`).join('')}</div></div>
         <label class="field"><span id="f-init-label">${balLabel(credit)}</span><input type="text" id="f-init" inputmode="numeric" value="${initVal}" placeholder="0"></label>
         <p class="hint" id="f-init-hint">${balHint(credit)}</p>
@@ -1078,7 +1164,8 @@
       <div class="f-top"><button class="icon-btn" data-act="close-sheet" aria-label="${tr('common.close')}">✕</button><div class="e-title">${isNew ? tr('cat.add') : tr('cat.edit')}</div><button class="text-btn strong" data-act="cat-save" data-id="${x.id}">${tr('common.save')}</button></div>
       <div class="f-body">
         <div class="field"><span>${tr('cat.kind')}</span>${kindLocked ? `<div class="muted">${kindName(x.kind)}${tr('cat.locked')}</div>` : `<div class="seg" id="f-kind">${[['out', kindName('out')], ['in', kindName('in')]].map(([v, l]) => `<button class="${v === x.kind ? 'on' : ''}" data-act="pick-kind" data-v="${v}">${l}</button>`).join('')}</div>`}</div>
-        <label class="field"><span>${tr('common.name')}</span><input type="text" id="f-name" value="${esc(x.name)}" maxlength="20" placeholder="${esc(tr('cat.namePh'))}"></label>
+        <label class="field"><span>${tr('common.name')}</span><input type="text" id="f-name" value="${esc(cName(x))}" maxlength="20" placeholder="${esc(tr('cat.namePh'))}"></label>
+        <p class="hint name-hint">${tr(isNew ? 'name.hintNew' : 'name.hint', { l: LANG_NAME[LANG] })}</p>
         <div class="field"><span>${tr('cat.icon')}</span><div class="icon-input"><input type="text" id="f-icon" value="${esc(x.icon)}" maxlength="8"></div>
           <div class="emoji-grid">${EMOJIS.map((e) => `<button data-act="pick-emoji" data-v="${e}">${e}</button>`).join('')}</div></div>
         ${isNew ? '' : `<label class="switch-row"><span>${tr('common.hide')}</span><input type="checkbox" id="f-hidden" ${x.hidden ? 'checked' : ''}></label>
@@ -1091,13 +1178,14 @@
     const form = $('.form', sheetEl);
     const name = $('#f-name', sheetEl).value.trim();
     if (!name) { shake($('#f-name', sheetEl)); return toast(tr('common.enterName')); }
-    if (data.accounts.some((a) => a.name === name && a.id !== id)) return toast(tr('acc.dupe'));
+    if (data.accounts.some((a) => aName(a) === name && a.id !== id)) return toast(tr('acc.dupe'));
     const type = form.dataset.type;
     let made = null;
     if (id) {
       const a = accIdx.get(id);
       const diff = accFormDiff();
-      Object.assign(a, { name, type, hidden: $('#f-hidden', sheetEl) ? $('#f-hidden', sheetEl).checked : a.hidden });
+      setLabel(a, 'acc', name);
+      Object.assign(a, { type, hidden: $('#f-hidden', sheetEl) ? $('#f-hidden', sheetEl).checked : a.hidden });
       if (diff && $('#f-adj', sheetEl).checked) {
         const kind = diff > 0 ? 'in' : 'out';
         made = { id: uid(), date: todayStr(), amount: Math.abs(diff), kind, cat: adjCat(kind).id, acc: id, to: null, memo: '', ts: Date.now() };
@@ -1107,14 +1195,14 @@
       }
     } else {
       const n = readSigned($('#f-init', sheetEl).value) || 0;
-      data.accounts.push({ id: uid(), name, type, initial: type === 'credit' ? -n : n, hidden: false });
+      data.accounts.push({ id: uid(), name, lang0: LANG, type, initial: type === 'credit' ? -n : n, hidden: false });
     }
     commit();
     closeSheet();
     if (!made) return toast(tr('common.saved'));
     const mc = catIdx.get(made.cat);
     const v = `${made.kind === 'in' ? '+' : '−'}${yen(made.amount)}`;
-    toast(tr('adj.done', { c: mc ? mc.name : '', v }), { label: tr('common.undo'), fn: () => {
+    toast(tr('adj.done', { c: mc ? cName(mc) : '', v }), { label: tr('common.undo'), fn: () => {
       const i = data.entries.indexOf(made);
       if (i >= 0) data.entries.splice(i, 1);
       commit();
@@ -1127,12 +1215,13 @@
     const icon = $('#f-icon', sheetEl).value.trim() || '📦';
     const kind = form.dataset.kind === 'in' ? 'in' : 'out';
     if (!name) { shake($('#f-name', sheetEl)); return toast(tr('common.enterName')); }
-    if (data.categories.some((c) => c.name === name && c.kind === kind && c.id !== id)) return toast(tr('cat.dupe'));
+    if (data.categories.some((c) => cName(c) === name && c.kind === kind && c.id !== id)) return toast(tr('cat.dupe'));
     if (id) {
       const c = catIdx.get(id);
-      Object.assign(c, { name, icon, kind: usedCat(id) ? c.kind : kind, hidden: $('#f-hidden', sheetEl) ? $('#f-hidden', sheetEl).checked : c.hidden });
+      setLabel(c, 'cat', name);
+      Object.assign(c, { icon, kind: usedCat(id) ? c.kind : kind, hidden: $('#f-hidden', sheetEl) ? $('#f-hidden', sheetEl).checked : c.hidden });
     } else {
-      data.categories.push({ id: uid(), name, kind, icon, hidden: false });
+      data.categories.push({ id: uid(), name, lang0: LANG, kind, icon, hidden: false });
     }
     ui.setKind = kind;
     commit();
@@ -1155,7 +1244,7 @@
   /* ================= account order (drag to reorder) ================= */
   function sortHTML() {
     const groups = data.typeOrder.map((type) => ({ type, list: data.accounts.filter((a) => a.type === type) })).filter((g) => g.list.length);
-    const item = (a) => `<div class="sort-item" data-id="${a.id}"><i class="badge" style="background:${ACC_TYPES[a.type].color}">${ACC_TYPES[a.type].icon}</i><span class="si-name">${esc(a.name)}${a.hidden ? `<em class="tag">${tr('common.hiddenTag')}</em>` : ''}</span><span class="drag-h" aria-label="${tr('sort.dragItem')}">≡</span></div>`;
+    const item = (a) => `<div class="sort-item" data-id="${a.id}"><i class="badge" style="background:${ACC_TYPES[a.type].color}">${ACC_TYPES[a.type].icon}</i><span class="si-name">${esc(aName(a))}${a.hidden ? `<em class="tag">${tr('common.hiddenTag')}</em>` : ''}</span><span class="drag-h" aria-label="${tr('sort.dragItem')}">≡</span></div>`;
     return `<div class="form sorter">
       <div class="f-top"><span class="e-sp"></span><div class="e-title">${tr('sort.title')}</div><button class="text-btn strong" data-act="close-sheet">${tr('sort.done')}</button></div>
       <div class="f-body">
@@ -1282,7 +1371,7 @@
     const rows = [['日期', '内容', '金额', '收支', '分类', '支付方式', '备注']];
     for (const e of [...data.entries].sort((a, b) => -cmpDesc(a, b))) {
       const a = accIdx.get(e.acc), t = accIdx.get(e.to), c = catIdx.get(e.cat);
-      rows.push([e.date.replace(/-/g, '/'), e.memo, e.amount, CSV_KIND[e.kind], e.kind === 'move' ? (t ? t.name : '') : (c ? c.name : ''), a ? a.name : '', '']);
+      rows.push([e.date.replace(/-/g, '/'), e.memo, e.amount, CSV_KIND[e.kind], e.kind === 'move' ? (t ? labelIn(t, 'acc', 'zh') : '') : (c ? labelIn(c, 'cat', 'zh') : ''), a ? labelIn(a, 'acc', 'zh') : '', '']);
     }
     const csv = '﻿' + rows.map((r) => r.map(csvCell).join(',')).join('\r\n');
     const ok = await shareFile(csv, `kakeibo-${todayStr()}.csv`, 'text/csv');
@@ -1323,14 +1412,22 @@
     let skipped = 0;
     const findAcc = (name) => {
       if (!name) return null;
-      let a = accs.find((x) => x.name === name);
-      if (!a) { a = { id: uid(), name, type: guessAccType(name), initial: 0, hidden: false }; accs.push(a); newAccs.push(a); }
+      let a = accs.find((x) => allLabels(x, 'acc').includes(name));
+      if (!a) {
+        const type = guessAccType(name), base = findBase('acc', name, type);
+        a = { id: uid(), name, lang0: 'zh', type, initial: 0, hidden: false, ...(base ? { base } : {}) };
+        accs.push(a); newAccs.push(a);
+      }
       return a.id;
     };
     const findCat = (name, kind) => {
       if (!name) return null;
-      let c = cats.find((x) => x.name === name && x.kind === kind);
-      if (!c) { c = { id: uid(), name, kind, icon: kind === 'in' ? '💰' : '📦', hidden: false }; cats.push(c); newCats.push(c); }
+      let c = cats.find((x) => x.kind === kind && allLabels(x, 'cat').includes(name));
+      if (!c) {
+        const base = findBase('cat', name, kind);
+        c = { id: uid(), name, lang0: 'zh', kind, icon: base ? BASE_CATS[base].icon : kind === 'in' ? '💰' : '📦', hidden: false, ...(base ? { base } : {}) };
+        cats.push(c); newCats.push(c);
+      }
       return c.id;
     };
     for (const r of rows.slice(hi + 1)) {
@@ -1341,7 +1438,7 @@
       const kt = iKind >= 0 ? r[iKind] : '';
       const catName = iCat >= 0 ? r[iCat] : '';
       let kind = kt === '收入' ? 'in' : kt === '转移' ? 'move' : kt === '支出' ? 'out' : null;
-      if (!kind) kind = cats.some((c) => c.name === catName && c.kind === 'in') ? 'in' : 'out';
+      if (!kind) kind = cats.some((c) => c.kind === 'in' && allLabels(c, 'cat').includes(catName)) ? 'in' : 'out';
       const memo = [iMemo >= 0 ? r[iMemo] : '', iNote >= 0 ? r[iNote] : ''].filter(Boolean).join(' ');
       const accName = iAcc >= 0 ? r[iAcc] : '';
       if (kind === 'move') {

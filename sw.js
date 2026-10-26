@@ -1,5 +1,5 @@
 /* 家计簿 service worker: cache the app shell so it opens without a network. */
-const VERSION = 'kakeibo-1.0.6';
+const VERSION = 'kakeibo-1.0.7';
 const ASSETS = [
   './',
   './index.html',
