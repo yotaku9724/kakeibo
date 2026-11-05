@@ -1,7 +1,7 @@
 /* 家计簿 — offline bookkeeping web app. Data lives only in this browser (localStorage). */
 'use strict';
 (() => {
-  const APP_VERSION = '1.0.7';
+  const APP_VERSION = '1.0.8';
   const STORE_KEY = 'kakeibo:data';
   const PREV_KEY = 'kakeibo:data:prev';
   const UI_KEY = 'kakeibo:ui';
@@ -366,6 +366,7 @@
      item is renamed while that language is active. A rename only changes the current language. */
   const BASE_CATS = {
     food: { kind: 'out', icon: '🍚', zh: '餐饮', ja: '食費', en: 'Food' },
+    coffee: { kind: 'out', icon: '☕', zh: '咖啡', ja: 'カフェ', en: 'Coffee', after: 'food' },
     daily: { kind: 'out', icon: '🧻', zh: '日用品', ja: '日用品', en: 'Household' },
     hobby: { kind: 'out', icon: '🎮', zh: '兴趣娱乐', ja: '趣味・娯楽', en: 'Hobbies' },
     social: { kind: 'out', icon: '🍻', zh: '交际', ja: '交際費', en: 'Social' },
@@ -390,6 +391,9 @@
     adjIn: { kind: 'in', icon: '⚖️', zh: '特殊收入', ja: '特殊収入', en: 'Adjustment +', extra: true },
     adjOut: { kind: 'out', icon: '⚖️', zh: '特殊支出', ja: '特殊支出', en: 'Adjustment −', extra: true },
   };
+  /* built-ins introduced after the first release: added once to existing data, right after `after` */
+  const LATER_CATS = ['coffee'];
+  let laterAdded = false;
   const BASE_ACCS = {
     cash: { type: 'cash', zh: '现金', ja: '現金', en: 'Cash' },
     bank: { type: 'bank', zh: '银行账户', ja: '銀行口座', en: 'Bank account' },
@@ -435,7 +439,7 @@
         .map((k) => ({ id: uid(), name: BASE_ACCS[k][LANG], base: k, lang0: LANG, type: BASE_ACCS[k].type, initial: 0, hidden: false })),
       typeOrder: [...ACC_ORDER],
       entries: [],
-      meta: { createdAt: new Date().toISOString(), lastBackup: null },
+      meta: { createdAt: new Date().toISOString(), lastBackup: null, baseAdded: [...LATER_CATS] },
     };
   }
   const validData = (d) => !!(d && typeof d === 'object' && Array.isArray(d.categories) && Array.isArray(d.accounts) && Array.isArray(d.entries));
@@ -451,6 +455,18 @@
         lang0: LANGS.includes(c.lang0) ? c.lang0 : 'zh', ...(base ? { base } : {}), ...(sys ? { sys } : {}), ...cleanNames(c.names, 20),
       };
     });
+    /* add each later built-in once; one the user deletes afterwards stays deleted */
+    const added = new Set(Array.isArray(out.meta.baseAdded) ? out.meta.baseAdded : []);
+    for (const k of LATER_CATS) {
+      if (added.has(k)) continue;
+      added.add(k);
+      laterAdded = true;
+      if (out.categories.some((c) => c.base === k)) continue;
+      const b = BASE_CATS[k], at = out.categories.findIndex((c) => c.base === b.after);
+      out.categories.splice(at >= 0 ? at + 1 : out.categories.length, 0,
+        { id: uid(), name: b[LANG], kind: b.kind, icon: b.icon, hidden: false, lang0: LANG, base: k });
+    }
+    out.meta.baseAdded = [...added];
     out.accounts = d.accounts.filter((a) => a && a.name).map((a) => {
       const type = ACC_TYPES[a.type] ? a.type : 'other', name = String(a.name).slice(0, 24);
       const base = BASE_ACCS[a.base] && BASE_ACCS[a.base].type === type ? a.base : findBase('acc', name, type);
@@ -499,7 +515,7 @@
   }
 
   let data = loadData();
-  if (!data) { data = defaultData(); saveData(); }
+  if (!data) { data = defaultData(); saveData(); } else if (laterAdded) saveData();
   let catIdx = new Map(), accIdx = new Map();
   function reindex() {
     catIdx = new Map(data.categories.map((c) => [c.id, c]));
@@ -1330,7 +1346,7 @@
 
   /* ================= backup / import / export ================= */
   function backupJSON() {
-    return JSON.stringify({ app: 'kakeibo', version: 1, exportedAt: new Date().toISOString(), categories: data.categories, accounts: data.accounts, typeOrder: data.typeOrder, entries: data.entries, meta: { createdAt: data.meta.createdAt } });
+    return JSON.stringify({ app: 'kakeibo', version: 1, exportedAt: new Date().toISOString(), categories: data.categories, accounts: data.accounts, typeOrder: data.typeOrder, entries: data.entries, meta: { createdAt: data.meta.createdAt, baseAdded: data.meta.baseAdded } });
   }
   function markBackup() { data.meta.lastBackup = new Date().toISOString(); saveData(); render(); }
   function downloadBlob(text, name, type) {
@@ -1684,5 +1700,5 @@
   render();
   const params = new URLSearchParams(location.search);
   if (params.has('add') || (ui.autoAdd && data.entries.length > 0)) openEntry();
-  window.__kakeibo = { get data() { return data; }, ui, render, version: APP_VERSION };
+  window.__kakeibo = { get data() { return data; }, ui, render, version: APP_VERSION, backupJSON };
 })();
