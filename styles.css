@@ -415,3 +415,26 @@ svg { display: block; }
 .ai-steps li + li { margin-top: 6px; }
 .ai-steps a { color: var(--accent-ink); font-weight: 650; word-break: break-all; }
 .ai-remove { margin-top: 14px; }
+
+/* scan results: several transactions found in one image */
+.sheet.full .scanlist { height: 100%; display: flex; flex-direction: column; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 0; }
+.scanlist .f-top { position: sticky; top: 0; z-index: 2; background: var(--bg); padding-top: calc(max(env(safe-area-inset-top), 6px) + 6px); }
+.scanlist .f-body { flex: 1; }
+.scanlist select { width: 100%; min-height: 42px; border: 1px solid var(--line); background: var(--card); border-radius: 12px; padding: 0 12px; font-size: 16px; color: var(--ink); }
+.sl-list { display: flex; flex-direction: column; gap: 10px; margin-top: 14px; }
+.sl-row { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 10px 12px; transition: opacity .15s; }
+.sl-row.off { opacity: .5; }
+.sl-main { display: flex; align-items: center; gap: 10px; min-height: 32px; }
+.sl-main input { width: 22px; height: 22px; flex: none; accent-color: var(--accent); }
+.sl-name { flex: 1; min-width: 0; font-weight: 650; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sl-amt { flex: none; font-weight: 800; font-variant-numeric: tabular-nums; }
+.sl-amt.in { color: var(--in); }
+.sl-meta { display: flex; gap: 8px; margin-top: 8px; }
+.sl-meta .date-chip { min-height: 40px; background: var(--bg); }
+.sl-meta .sl-cat { flex: 1; min-width: 0; min-height: 40px; background: var(--bg); }
+.date-chip.warn { border-color: var(--accent); color: var(--accent-ink); }
+.sl-notes { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 7px; font-size: 12px; color: var(--muted); }
+.sl-notes .tag { margin-left: 0; }
+.tag.warn { color: var(--accent-ink); border-color: var(--accent); }
+.sl-foot { position: sticky; bottom: 0; z-index: 2; background: var(--bg); padding: 10px 16px calc(12px + env(safe-area-inset-bottom)); border-top: 1px solid var(--line); margin-top: 14px; }
+.btn[disabled] { opacity: .45; }
