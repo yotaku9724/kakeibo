@@ -1,7 +1,7 @@
 /* 家计簿 — offline bookkeeping web app. Data lives only in this browser (localStorage). */
 'use strict';
 (() => {
-  const APP_VERSION = '1.0.8';
+  const APP_VERSION = '1.0.9';
   const STORE_KEY = 'kakeibo:data';
   const PREV_KEY = 'kakeibo:data:prev';
   const UI_KEY = 'kakeibo:ui';
@@ -156,6 +156,16 @@
       'paste.exportLabel': '长按全选后复制，保存到备忘录或聊天里', 'paste.importLabel': '把备份文本或 CSV 粘贴到这里',
       'paste.hint': '备份文本（以 { 开头）会覆盖当前数据；CSV（日期,内容,金额,收支,分类,支付方式,备注）会追加到现有记录后面。',
       'sw.ready': '新版本已下载，关闭当前页面后更新',
+      'ai.scan': '拍小票', 'ai.busy': '识别中…', 'ai.title': '拍照识别（AI）', 'ai.setup': '设置密钥', 'ai.change': '更换或删除密钥',
+      'ai.on': '已设置 Gemini 密钥。在「记一笔」里点「📷 拍小票」，就能用照片自动填写。',
+      'ai.off': '拍小票或付款截图，AI 会填好金额、日期、店名和分类，你确认后再保存。需要一个免费的 Gemini API 密钥。',
+      'ai.setupTitle': 'Gemini 密钥', 'ai.keyLabel': 'API 密钥', 'ai.remove': '删除密钥',
+      'ai.step1': '用 Google 账号打开下面的网址，生成一个 API 密钥。', 'ai.step2': '复制密钥，粘贴到下面，点右上角「保存」。',
+      'ai.privacy': '密钥只保存在这台手机上，不会写进备份文件。识别时照片会发送给 Google；免费额度下，Google 可能用这些内容改进产品，也可能有人工查看。支付方式不会被 AI 改，还是你自己选。',
+      'ai.saved': '已保存，可以拍小票了', 'ai.savedUnchecked': '已保存（现在连不上网，没检查密钥）', 'ai.removed': '已删除密钥',
+      'ai.badKey': '这个密钥用不了，请重新复制粘贴', 'ai.enterKey': '请粘贴 API 密钥', 'ai.checking': '正在检查密钥…',
+      'ai.done': '已按照片填好，确认后保存', 'ai.noAmount': '没认出金额，可以重拍或手动输入', 'ai.offline': '没有网络，联网后再试',
+      'ai.quota': '免费额度暂时用完了，过一会儿再试', 'ai.failed': '识别失败：{m}', 'ai.timeout': '识别超时了，请再试一次', 'ai.badImage': '这张图片打不开',
     },
     ja: {
       'app.name': '家計簿', 'nav.label': 'メインメニュー',
@@ -227,6 +237,16 @@
       'paste.exportLabel': '長押しで全選択してコピーし、メモやチャットに保存してください', 'paste.importLabel': 'バックアップのテキストまたはCSVをここに貼り付け',
       'paste.hint': 'バックアップ（{ で始まるテキスト）は今のデータを上書きします。CSV（日期,内容,金额,收支,分类,支付方式,备注）は今の記録に追加されます。',
       'sw.ready': '新しいバージョンをダウンロードしました。この画面を閉じると更新されます',
+      'ai.scan': 'レシート撮影', 'ai.busy': '読み取り中…', 'ai.title': 'レシート読み取り（AI）', 'ai.setup': 'キーを設定', 'ai.change': 'キーの変更・削除',
+      'ai.on': 'Gemini のキーを設定済みです。入力画面の「📷 レシート撮影」から、写真で自動入力できます。',
+      'ai.off': 'レシートや支払い画面を撮ると、AI が金額・日付・店名・カテゴリを入力します。確認してから保存してください。無料の Gemini API キーが必要です。',
+      'ai.setupTitle': 'Gemini API キー', 'ai.keyLabel': 'API キー', 'ai.remove': 'キーを削除',
+      'ai.step1': 'Google アカウントで下のページを開き、API キーを作成します。', 'ai.step2': 'キーをコピーして下に貼り付け、右上の「保存」をタップします。',
+      'ai.privacy': 'キーはこの端末にだけ保存され、バックアップには含まれません。読み取りのとき写真は Google に送信されます。無料枠では、Google が製品の改善に利用したり、人が確認したりする場合があります。支払い方法は AI では変わらず、自分で選びます。',
+      'ai.saved': '保存しました。レシート撮影が使えます', 'ai.savedUnchecked': '保存しました（オフラインのためキーは未確認）', 'ai.removed': 'キーを削除しました',
+      'ai.badKey': 'このキーは使えません。もう一度コピーしてください', 'ai.enterKey': 'API キーを貼り付けてください', 'ai.checking': 'キーを確認しています…',
+      'ai.done': '写真から入力しました。確認して保存してください', 'ai.noAmount': '金額を読み取れませんでした。撮り直すか手入力してください', 'ai.offline': 'オフラインです。接続してから試してください',
+      'ai.quota': '無料枠の上限に達しました。しばらくしてから試してください', 'ai.failed': '読み取りに失敗しました：{m}', 'ai.timeout': '時間切れになりました。もう一度お試しください', 'ai.badImage': 'この画像は開けません',
     },
     en: {
       'app.name': 'Kakeibo', 'nav.label': 'Main menu',
@@ -301,6 +321,16 @@
       'paste.exportLabel': 'Long-press, select all and copy, then keep it in Notes or a chat', 'paste.importLabel': 'Paste backup text or CSV here',
       'paste.hint': 'Backup text (starting with {) replaces all data; CSV (日期,内容,金额,收支,分类,支付方式,备注) is added to your existing entries.',
       'sw.ready': 'Update downloaded. It applies when you close this screen',
+      'ai.scan': 'Scan receipt', 'ai.busy': 'Reading…', 'ai.title': 'Receipt scan (AI)', 'ai.setup': 'Set up key', 'ai.change': 'Change or remove key',
+      'ai.on': 'Your Gemini key is set. Tap “📷 Scan receipt” on the New entry screen to fill it in from a photo.',
+      'ai.off': 'Snap a receipt or a payment screen and AI fills in the amount, date, shop and category for you to check. Needs a free Gemini API key.',
+      'ai.setupTitle': 'Gemini API key', 'ai.keyLabel': 'API key', 'ai.remove': 'Remove key',
+      'ai.step1': 'Open the page below with your Google account and create an API key.', 'ai.step2': 'Copy the key, paste it below and tap Save.',
+      'ai.privacy': 'The key stays on this phone and is never put in backups. Photos are sent to Google to be read; on the free tier Google may use them to improve its products, and people may review them. AI never changes the payment method; you choose it.',
+      'ai.saved': 'Saved. Receipt scan is ready', 'ai.savedUnchecked': 'Saved (offline, so the key wasn’t checked)', 'ai.removed': 'Key removed',
+      'ai.badKey': 'That key doesn’t work. Copy it again', 'ai.enterKey': 'Paste an API key', 'ai.checking': 'Checking the key…',
+      'ai.done': 'Filled in from the photo. Check it, then save', 'ai.noAmount': 'Couldn’t find an amount. Retake or type it in', 'ai.offline': 'You’re offline. Try again when connected',
+      'ai.quota': 'Free quota used up for now. Try again later', 'ai.failed': 'Couldn’t read the photo: {m}', 'ai.timeout': 'Timed out. Please try again', 'ai.badImage': 'Couldn’t open this image',
     },
   };
   const HTML_LANG = { zh: 'zh-CN', ja: 'ja', en: 'en' };
@@ -928,6 +958,10 @@
       <section class="card"><div class="card-head"><h2>${tr('set.prefs')}</h2></div>
         <label class="switch-row"><span>${tr('set.autoAdd')}</span><input type="checkbox" data-input="autoadd" ${ui.autoAdd ? 'checked' : ''}></label>
       </section>
+      <section class="card"><div class="card-head"><h2>${tr('ai.title')}</h2></div>
+        <p class="hint ai-state">${tr(aiKey() ? 'ai.on' : 'ai.off')}</p>
+        <button class="btn ghost full" data-act="ai-setup">${tr(aiKey() ? 'ai.change' : 'ai.setup')}</button>
+      </section>
       <section class="card"><div class="card-head"><h2>${tr('set.backup')}</h2></div>
         <p class="backup-state">${bstate}</p>
         <div class="btn-col">
@@ -968,6 +1002,7 @@
   }
   function closeSheet() {
     if (!sheetRoot.classList.contains('open')) return;
+    if (scanCtrl) { scanCtrl.abort(); scanCtrl = null; }
     sheetRoot.classList.remove('show');
     sheetType = null;
     const el = sheetEl;
@@ -1041,7 +1076,7 @@
     return `<div class="entry">
       <div class="e-top"><button class="icon-btn" data-act="close-sheet" aria-label="${tr('common.close')}">✕</button><div class="e-title">${d.id ? tr('entry.edit') : tr('entry.new')}</div>${d.id ? `<button class="text-btn danger" data-act="del-entry">${tr('common.delete')}</button>` : '<span class="e-sp"></span>'}</div>
       <div class="kinds">${kinds}</div>
-      <div class="amount k-${d.kind} ${d.amt ? '' : 'ph'}"><span class="cur">¥</span><span class="num">${d.amt ? Number(d.amt).toLocaleString('ja-JP') : '0'}</span></div>
+      <div class="amount k-${d.kind} ${d.amt ? '' : 'ph'}">${d.kind === 'move' ? '' : scanButton()}<span class="cur">¥</span><span class="num">${d.amt ? Number(d.amt).toLocaleString('ja-JP') : '0'}</span></div>
       <div class="e-body">${body}</div>
       ${accRow}
       <div class="e-meta"><label class="date-chip">📅 <span class="date-text">${shortDate(d.date)}</span><input type="date" value="${d.date}" data-input="date" aria-label="${tr('entry.date')}"></label><input class="memo" type="text" placeholder="${tr('entry.memo')}" value="${esc(d.memo)}" data-input="memo" maxlength="40" enterkeyhint="done"></div>
@@ -1255,6 +1290,205 @@
     [arr[i], arr[j]] = [arr[j], arr[i]];
     commit();
     toast(tr(dir < 0 ? 'common.movedUp' : 'common.movedDown'));
+  }
+
+  /* ================= receipt scan (Gemini, the user's own key) ================= */
+  /* The key lives in its own storage entry so it never ends up in a backup file. Photos go
+     straight from the phone to Google; nothing passes through any server of ours. */
+  const AI_STORE = 'kakeibo:ai';
+  const AI_BASE = 'https://generativelanguage.googleapis.com/v1beta';
+  /* free-tier models, best first; if Google retires them all, the models list is asked for a current flash model */
+  const AI_MODELS = ['gemini-3.8-flash', 'gemini-3.6-flash', 'gemini-3.5-flash-lite', 'gemini-3.1-flash-lite'];
+  const aiState = () => { try { return JSON.parse(localStorage.getItem(AI_STORE) || '{}') || {}; } catch (e) { return {}; } };
+  const aiKey = () => String(aiState().key || '');
+  function saveAi(patch) { try { localStorage.setItem(AI_STORE, JSON.stringify(Object.assign(aiState(), patch))); } catch (e) { /* storage full */ } }
+  let scanCtrl = null;
+  const scanButton = () => (aiKey()
+    ? `<label class="scan-btn" for="photo-in">📷 <span>${tr('ai.scan')}</span></label><input type="file" id="photo-in" accept="image/*" class="vh">`
+    : `<button class="scan-btn" data-act="ai-setup">📷 <span>${tr('ai.scan')}</span></button>`);
+  function aiFormHTML() {
+    const key = aiKey();
+    return `<div class="form">
+      <div class="f-top"><button class="icon-btn" data-act="close-sheet" aria-label="${tr('common.close')}">✕</button><div class="e-title">${tr('ai.setupTitle')}</div><button class="text-btn strong" data-act="ai-save">${tr('common.save')}</button></div>
+      <div class="f-body">
+        <p class="hint" style="margin-top:0">${tr('ai.off')}</p>
+        <ol class="ai-steps"><li>${tr('ai.step1')}<br><a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a></li><li>${tr('ai.step2')}</li></ol>
+        <label class="field"><span>${tr('ai.keyLabel')}</span><input type="password" id="ai-key" value="${esc(key)}" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="AIza…"></label>
+        <p class="hint">${tr('ai.privacy')}</p>
+        ${key ? `<button class="btn ghost full danger ai-remove" data-act="ai-clear">${tr('ai.remove')}</button>` : ''}
+      </div></div>`;
+  }
+  async function aiFetch(key, path, body, signal) {
+    let r;
+    try {
+      r = await fetch(`${AI_BASE}/${path}`, body
+        ? { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key }, body: JSON.stringify(body), signal }
+        : { headers: { 'x-goog-api-key': key }, signal });
+    } catch (e) {
+      if (e && e.name === 'AbortError') throw e;
+      const err = new Error(navigator.onLine === false ? 'offline' : 'network');
+      err.status = 0;
+      throw err;
+    }
+    let j = null;
+    try { j = await r.json(); } catch (e) { /* not JSON */ }
+    if (!r.ok) {
+      const err = new Error((j && j.error && j.error.message) || `HTTP ${r.status}`);
+      err.status = r.status;
+      throw err;
+    }
+    return j || {};
+  }
+  /* flash models from the account's model list, newest first, full flash before lite */
+  async function aiListModels(key, signal) {
+    const j = await aiFetch(key, 'models?pageSize=200', null, signal);
+    const ver = (n) => Number((/(\d+(?:\.\d+)?)/.exec(n) || [0, 0])[1]);
+    return (j.models || [])
+      .filter((m) => (m.supportedGenerationMethods || []).includes('generateContent'))
+      .map((m) => String(m.name || '').replace(/^models\//, ''))
+      .filter((n) => /flash/.test(n) && !/(live|tts|image|audio|embed|transcrib|translat)/.test(n))
+      .sort((a, b) => ver(b) - ver(a) || /lite/.test(a) - /lite/.test(b));
+  }
+  async function saveAiKey() {
+    const inp = $('#ai-key', sheetEl);
+    const key = String(inp.value || '').trim();
+    if (!key) { shake(inp); return toast(tr('ai.enterKey')); }
+    toast(tr('ai.checking'));
+    try {
+      const names = await aiListModels(key);
+      saveAi({ key, model: AI_MODELS.find((m) => names.includes(m)) || names[0] || '' });
+      toast(tr('ai.saved'));
+    } catch (e) {
+      if ([400, 401, 403].includes(e.status)) { shake(inp); return toast(tr('ai.badKey')); }
+      saveAi({ key });
+      toast(tr('ai.savedUnchecked'));
+    }
+    closeSheet();
+    render();
+  }
+  /* phone photos are large: send a JPEG no longer than 1600px, which still keeps receipt text readable */
+  function shrinkImage(file, max = 1600) {
+    return new Promise((resolve, reject) => {
+      const url = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = () => {
+        const k = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight));
+        const c = document.createElement('canvas');
+        c.width = Math.max(1, Math.round(img.naturalWidth * k));
+        c.height = Math.max(1, Math.round(img.naturalHeight * k));
+        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+        URL.revokeObjectURL(url);
+        const u = c.toDataURL('image/jpeg', 0.85);
+        resolve({ mime: 'image/jpeg', data: u.slice(u.indexOf(',') + 1) });
+      };
+      img.onerror = () => { URL.revokeObjectURL(url); reject(Object.assign(new Error('image'), { status: -1 })); };
+      img.src = url;
+    });
+  }
+  function scanPrompt() {
+    const list = (kind) => data.categories.filter((c) => c.kind === kind && !c.hidden)
+      .map((c) => `${c.id}: ${[...new Set(allLabels(c, 'cat'))].join(' / ')}`).join('\n');
+    return [
+      'Read this photo for a household budget app. It is usually a Japanese receipt, but it can be a payment screen (PayPay, a card app), an invoice or a bill.',
+      'Reply with JSON only, in this shape:',
+      '{"kind": "out" or "in", "amount": integer yen or null, "date": "YYYY-MM-DD" or null, "merchant": string or null, "category": a category id or null}',
+      'amount: the total actually paid, tax included, after discounts (合計, お支払い, ご請求額). Not the subtotal, not 預り or お釣り. Digits only.',
+      'date: the purchase date shown in the image. Convert Japanese era years (令和8年 is 2026). null if no date is shown.',
+      'merchant: the shop or payee name as printed, at most 20 characters.',
+      'category: the id that fits best from the lists below, or null.',
+      `Today is ${todayStr()}.`,
+      'Expense categories:', list('out'), 'Income categories:', list('in'),
+      'If no amount can be read, reply {"amount": null}.',
+    ].join('\n');
+  }
+  async function aiReadReceipt(key, img, signal) {
+    const base = {
+      contents: [{ role: 'user', parts: [{ inline_data: { mime_type: img.mime, data: img.data } }, { text: scanPrompt() }] }],
+      generationConfig: { responseMimeType: 'application/json', thinkingConfig: { thinkingLevel: 'low' } },
+    };
+    const st = aiState();
+    const models = [...new Set([st.model, ...AI_MODELS].filter(Boolean))];
+    let lastErr = null, listed = false;
+    for (let i = 0; i < models.length; i++) {
+      const m = models[i];
+      try {
+        let j;
+        try {
+          j = await aiFetch(key, `models/${encodeURIComponent(m)}:generateContent`, base, signal);
+        } catch (e) {
+          /* a model that does not take the thinking setting: ask again without it */
+          if (e.status !== 400 || !/think/i.test(e.message)) throw e;
+          j = await aiFetch(key, `models/${encodeURIComponent(m)}:generateContent`, { contents: base.contents, generationConfig: { responseMimeType: 'application/json' } }, signal);
+        }
+        if (m !== st.model) saveAi({ model: m });
+        return j;
+      } catch (e) {
+        if (e.name === 'AbortError') throw e;
+        lastErr = e;
+        if (![404, 429, 500, 503].includes(e.status)) throw e;
+        if (i === models.length - 1 && e.status === 404 && !listed) {
+          listed = true;
+          const more = await aiListModels(key, signal).catch(() => []);
+          models.push(...more.filter((x) => !models.includes(x)));
+        }
+      }
+    }
+    throw lastErr || new Error('no model');
+  }
+  function scanResult(j) {
+    const parts = (((j.candidates || [])[0] || {}).content || {}).parts || [];
+    const text = parts.filter((p) => !p.thought).map((p) => p.text || '').join('');
+    const a = text.indexOf('{'), b = text.lastIndexOf('}');
+    if (a < 0 || b <= a) return null;
+    try { return JSON.parse(text.slice(a, b + 1)); } catch (e) { return null; }
+  }
+  function applyScan(o, d) {
+    const amount = Math.round(Number(String(o && o.amount != null ? o.amount : '').replace(/[^\d.]/g, '')));
+    if (!(amount > 0)) return toast(tr('ai.noAmount'));
+    d.kind = o.kind === 'in' ? 'in' : 'out';
+    d.amt = String(Math.min(amount, 9999999999));
+    if (/^\d{4}-\d{2}-\d{2}$/.test(o.date || '') && !isNaN(parseYMD(o.date)) && dayDiff(o.date) <= 1 && dayDiff(o.date) >= -400) d.date = o.date;
+    const cat = data.categories.find((c) => c.id === o.category && c.kind === d.kind && !c.hidden);
+    if (cat) d.cat = cat.id;
+    else if (d.cat && (!catIdx.has(d.cat) || catIdx.get(d.cat).kind !== d.kind)) d.cat = null;
+    /* the shop name goes into the note unless the user already typed their own */
+    const memo = String(o.merchant || '').trim().slice(0, 40);
+    if (memo && (!d.memo || d.memo === d.aiMemo)) { d.memo = memo; d.aiMemo = memo; }
+    /* the payment method is left exactly as the user chose it */
+    renderEntry();
+    toast(tr('ai.done'));
+  }
+  function scanBusy(on) {
+    const b = sheetEl && $('.scan-btn', sheetEl);
+    if (!b) return;
+    b.classList.toggle('busy', on);
+    $('span', b).textContent = tr(on ? 'ai.busy' : 'ai.scan');
+  }
+  async function scanReceipt(file) {
+    const key = aiKey(), d = draft;
+    if (!key) return openSheet('ai', aiFormHTML());
+    if (!d || sheetType !== 'entry' || scanCtrl) return;
+    const ctrl = new AbortController();
+    scanCtrl = ctrl;
+    let timedOut = false;
+    const timer = setTimeout(() => { timedOut = true; ctrl.abort(); }, 60000);
+    scanBusy(true);
+    try {
+      const img = await shrinkImage(file);
+      const j = await aiReadReceipt(key, img, ctrl.signal);
+      if (draft === d && sheetType === 'entry') applyScan(scanResult(j) || {}, d);
+    } catch (e) {
+      if (e.name === 'AbortError') { if (timedOut) toast(tr('ai.timeout')); }
+      else if (e.status === -1) toast(tr('ai.badImage'));
+      else if (e.status === 0) toast(tr(e.message === 'offline' ? 'ai.offline' : 'ai.failed', { m: e.message }));
+      else if (e.status === 429) toast(tr('ai.quota'));
+      else if ([400, 401, 403].includes(e.status) && /key/i.test(e.message)) toast(tr('ai.badKey'));
+      else toast(tr('ai.failed', { m: e.message }));
+    } finally {
+      clearTimeout(timer);
+      if (scanCtrl === ctrl) scanCtrl = null;
+      scanBusy(false);
+    }
   }
 
   /* ================= account order (drag to reorder) ================= */
@@ -1601,6 +1835,9 @@
       case 'cat-del': deleteCat(id); break;
       case 'move-item': moveItem(el.dataset.what, id, Number(v)); break;
       case 'sort-accs': openSheet('sort', sortHTML()); break;
+      case 'ai-setup': openSheet('ai', aiFormHTML()); break;
+      case 'ai-save': saveAiKey(); break;
+      case 'ai-clear': saveAi({ key: '', model: '' }); closeSheet(); render(); toast(tr('ai.removed')); break;
       /* data */
       case 'export': exportBackup(); break;
       case 'copy-backup': copyBackup(); break;
@@ -1626,6 +1863,10 @@
       updateAdjNote();
     } else if (el.dataset.input === 'autoadd') {
       ui.autoAdd = el.checked; saveUI(); toast(tr(el.checked ? 'set.autoOn' : 'set.autoOff'));
+    } else if (el.id === 'photo-in' && el.files && el.files[0]) {
+      const f = el.files[0];
+      el.value = '';
+      scanReceipt(f);
     } else if (el.id === 'file-in' && el.files && el.files[0]) {
       const file = el.files[0];
       const reader = new FileReader();
