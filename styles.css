@@ -429,12 +429,18 @@ svg { display: block; }
 .sl-name { flex: 1; min-width: 0; font-weight: 650; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .sl-amt { flex: none; font-weight: 800; font-variant-numeric: tabular-nums; }
 .sl-amt.in { color: var(--in); }
+.sl-amt.move { color: var(--ink2); }
+.sl-kind { flex: 1; min-width: 0; display: inline-flex; align-items: center; min-height: 40px; padding: 0 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--bg); color: var(--muted); font-weight: 650; font-size: 14px; }
+.sl-move { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+.sl-move select { flex: 1; min-width: 0; min-height: 40px; background: var(--bg); }
+.sl-arrow { flex: none; color: var(--muted); font-weight: 800; }
 .sl-meta { display: flex; gap: 8px; margin-top: 8px; }
 .sl-meta .date-chip { min-height: 40px; background: var(--bg); }
 .sl-meta .sl-cat { flex: 1; min-width: 0; min-height: 40px; background: var(--bg); }
 .date-chip.warn { border-color: var(--accent); color: var(--accent-ink); }
 .sl-notes { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 7px; font-size: 12px; color: var(--muted); }
 .sl-notes .tag { margin-left: 0; }
+.sl-notes:empty { display: none; }
 .tag.warn { color: var(--accent-ink); border-color: var(--accent); }
 .sl-foot { position: sticky; bottom: 0; z-index: 2; background: var(--bg); padding: 10px 16px calc(12px + env(safe-area-inset-bottom)); border-top: 1px solid var(--line); margin-top: 14px; }
 .btn[disabled] { opacity: .45; }

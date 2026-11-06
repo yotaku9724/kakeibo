@@ -1,7 +1,7 @@
 /* 家计簿 — offline bookkeeping web app. Data lives only in this browser (localStorage). */
 'use strict';
 (() => {
-  const APP_VERSION = '1.0.11';
+  const APP_VERSION = '1.0.12';
   const STORE_KEY = 'kakeibo:data';
   const PREV_KEY = 'kakeibo:data:prev';
   const UI_KEY = 'kakeibo:ui';
@@ -160,20 +160,23 @@
       'sw.ready': '新版本已下载，关闭当前页面后更新',
       'ai.scan': '拍小票', 'ai.busy': '识别中…', 'ai.title': '拍照识别（AI）', 'ai.setup': '设置密钥', 'ai.change': '更换或删除密钥',
       'ai.on': '已设置 Gemini 密钥。在「记一笔」里点「📷 拍小票」，就能用照片自动填写。',
-      'ai.off': '拍小票或付款截图（PayPay、微信支付的记录也可以，一张图里有好几笔会列出来一起记），AI 会填好金额、日期、店名和分类，你确认后再保存。需要一个免费的 Gemini API 密钥。',
+      'ai.off': '拍小票，或选付款记录的截图（PayPay、微信支付都行，可以一次选多张，长截图也可以）。AI 会填好金额、日期、店名和分类，你确认后再保存。需要一个免费的 Gemini API 密钥。',
       'ai.setupTitle': 'Gemini 密钥', 'ai.keyLabel': 'API 密钥', 'ai.remove': '删除密钥',
       'ai.step1': '用 Google 账号打开下面的网址，生成一个 API 密钥。', 'ai.step2': '复制密钥，粘贴到下面，点右上角「保存」。',
-      'ai.privacy': '密钥只保存在这台手机上，不会写进备份文件。识别时照片会发送给 Google；免费额度下，Google 可能用这些内容改进产品，也可能有人工查看。支付方式不会被 AI 改，还是你自己选。',
+      'ai.privacy': '密钥只保存在这台手机上，不会写进备份文件。识别时，照片和你的分类、账户名称会发送给 Google；免费额度下，Google 可能用这些内容改进产品，也可能有人工查看。支出和收入的支付方式不会被 AI 改，还是你自己选；チャージ 这类转移的账户由 AI 推测，可以改。',
       'ai.saved': '已保存，可以拍小票了', 'ai.savedUnchecked': '已保存（现在连不上网，没检查密钥）', 'ai.removed': '已删除密钥',
       'ai.badKey': '这个密钥用不了，请重新复制粘贴', 'ai.enterKey': '请粘贴 API 密钥', 'ai.checking': '正在检查密钥…',
       'ai.done': '已按照片填好，确认后保存', 'ai.noAmount': '没认出金额，可以重拍或手动输入', 'ai.offline': '没有网络，联网后再试',
       'ai.quota': '免费额度暂时用完了，过一会儿再试', 'ai.failed': '识别失败：{m}', 'ai.timeout': '识别超时了，请再试一次', 'ai.badImage': '这张图片打不开',
       'ai.doneSkip': '已按照片填好，确认后保存（已跳过：{s}）',
       'scan.found': '识别到 {n} 笔', 'scan.add': '添加 {n} 笔', 'scan.added': '已添加 {n} 笔', 'scan.undone': '已撤销',
-      'scan.dup': '可能已经记过', 'scan.noDate': '没认出日期，请确认', 'scan.pickCat': '选择分类', 'scan.needCat': '勾选的项目里还有没选分类的',
+      'scan.same': '这天已有同金额：{w}', 'scan.twin': '和上面一笔日期、金额相同', 'scan.from': '转出账户', 'scan.to': '转入账户', 'scan.needMove': '勾选的转移还没选好转出和转入账户',
+      'scan.noDate': '没认出日期，请确认', 'scan.pickCat': '选择分类', 'scan.needCat': '勾选的项目里还有没选分类的',
       'scan.skipped': '已跳过：{s}', 'scan.none': '没有可以记的收支（已跳过：{s}）', 'scan.sep': '、',
-      'scan.hint': '都记到上面选的支付方式。金额和备注可以保存后在「明细」里改。',
-      'scan.sk.transfer': '充值/转账 {n} 笔', 'scan.sk.points': '积分 {n} 笔', 'scan.sk.failed': '失败/取消 {n} 笔', 'scan.sk.foreign': '没有日元金额 {n} 笔',
+      'scan.hint': '支出和收入记到上面选的支付方式，转移按每笔选的账户记。金额和备注可以保存后在「明细」里改。',
+      'ai.tooMany': '一次最多选 {n} 张', 'ai.tooLong': '图片太多或太长了，请分几次识别',
+      'dup.ask': '{d} 已经有一笔同样金额的记录：{w}。还要再记一笔吗？', 'dup.go': '仍然记',
+      'scan.sk.points': '积分 {n} 笔', 'scan.sk.failed': '失败/取消 {n} 笔', 'scan.sk.foreign': '没有日元金额 {n} 笔',
     },
     ja: {
       'app.name': '家計簿', 'nav.label': 'メインメニュー',
@@ -247,20 +250,23 @@
       'sw.ready': '新しいバージョンをダウンロードしました。この画面を閉じると更新されます',
       'ai.scan': 'レシート撮影', 'ai.busy': '読み取り中…', 'ai.title': 'レシート読み取り（AI）', 'ai.setup': 'キーを設定', 'ai.change': 'キーの変更・削除',
       'ai.on': 'Gemini のキーを設定済みです。入力画面の「📷 レシート撮影」から、写真で自動入力できます。',
-      'ai.off': 'レシートや支払い画面を撮ると、AI が金額・日付・店名・カテゴリを入力します（PayPay や WeChat Pay の履歴も可。1枚に複数あれば一覧にしてまとめて追加できます）。確認してから保存してください。無料の Gemini API キーが必要です。',
+      'ai.off': 'レシートを撮るか、支払い履歴のスクリーンショット（PayPay、WeChat Pay。複数枚や縦長のスクショも可）を選ぶと、AI が金額・日付・店名・カテゴリを入力します。確認してから保存してください。無料の Gemini API キーが必要です。',
       'ai.setupTitle': 'Gemini API キー', 'ai.keyLabel': 'API キー', 'ai.remove': 'キーを削除',
       'ai.step1': 'Google アカウントで下のページを開き、API キーを作成します。', 'ai.step2': 'キーをコピーして下に貼り付け、右上の「保存」をタップします。',
-      'ai.privacy': 'キーはこの端末にだけ保存され、バックアップには含まれません。読み取りのとき写真は Google に送信されます。無料枠では、Google が製品の改善に利用したり、人が確認したりする場合があります。支払い方法は AI では変わらず、自分で選びます。',
+      'ai.privacy': 'キーはこの端末にだけ保存され、バックアップには含まれません。読み取りのとき、写真とカテゴリ名・口座名が Google に送信されます。無料枠では、Google が製品の改善に利用したり、人が確認したりする場合があります。支出・収入の支払い方法は AI では変わらず、自分で選びます。チャージなど振替の口座は AI が推測し、変更できます。',
       'ai.saved': '保存しました。レシート撮影が使えます', 'ai.savedUnchecked': '保存しました（オフラインのためキーは未確認）', 'ai.removed': 'キーを削除しました',
       'ai.badKey': 'このキーは使えません。もう一度コピーしてください', 'ai.enterKey': 'API キーを貼り付けてください', 'ai.checking': 'キーを確認しています…',
       'ai.done': '写真から入力しました。確認して保存してください', 'ai.noAmount': '金額を読み取れませんでした。撮り直すか手入力してください', 'ai.offline': 'オフラインです。接続してから試してください',
       'ai.quota': '無料枠の上限に達しました。しばらくしてから試してください', 'ai.failed': '読み取りに失敗しました：{m}', 'ai.timeout': '時間切れになりました。もう一度お試しください', 'ai.badImage': 'この画像は開けません',
       'ai.doneSkip': '写真から入力しました。確認して保存してください（スキップ：{s}）',
       'scan.found': '{n}件見つかりました', 'scan.add': '{n}件を追加', 'scan.added': '{n}件を追加しました', 'scan.undone': '元に戻しました',
-      'scan.dup': '記録済みかもしれません', 'scan.noDate': '日付が読み取れません。確認してください', 'scan.pickCat': 'カテゴリを選択', 'scan.needCat': 'チェックした項目にカテゴリを選んでください',
+      'scan.same': 'この日に同じ金額あり：{w}', 'scan.twin': '上の項目と日付・金額が同じ', 'scan.from': '振替元', 'scan.to': '振替先', 'scan.needMove': 'チェックした振替の振替元と振替先を選んでください',
+      'scan.noDate': '日付が読み取れません。確認してください', 'scan.pickCat': 'カテゴリを選択', 'scan.needCat': 'チェックした項目にカテゴリを選んでください',
       'scan.skipped': 'スキップ：{s}', 'scan.none': '記録できる取引がありません（スキップ：{s}）', 'scan.sep': '、',
-      'scan.hint': '支払い方法はすべて上で選んだものになります。金額やメモは保存後に「明細」で変更できます。',
-      'scan.sk.transfer': 'チャージ・振替 {n}件', 'scan.sk.points': 'ポイント {n}件', 'scan.sk.failed': '失敗・取消 {n}件', 'scan.sk.foreign': '円の金額なし {n}件',
+      'scan.hint': '支出・収入は上で選んだ支払い方法に、振替は項目ごとに選んだ口座に記録します。金額やメモは保存後に「明細」で変更できます。',
+      'ai.tooMany': '一度に選べるのは{n}枚までです', 'ai.tooLong': '画像が多すぎるか長すぎます。何回かに分けてください',
+      'dup.ask': '{d}に同じ金額の記録がすでにあります：{w}。もう1件記録しますか？', 'dup.go': '記録する',
+      'scan.sk.points': 'ポイント {n}件', 'scan.sk.failed': '失敗・取消 {n}件', 'scan.sk.foreign': '円の金額なし {n}件',
     },
     en: {
       'app.name': 'Kakeibo', 'nav.label': 'Main menu',
@@ -337,10 +343,10 @@
       'sw.ready': 'Update downloaded. It applies when you close this screen',
       'ai.scan': 'Scan receipt', 'ai.busy': 'Reading…', 'ai.title': 'Receipt scan (AI)', 'ai.setup': 'Set up key', 'ai.change': 'Change or remove key',
       'ai.on': 'Your Gemini key is set. Tap “📷 Scan receipt” on the New entry screen to fill it in from a photo.',
-      'ai.off': 'Snap a receipt or a payment screen (PayPay or WeChat Pay history works too; several transactions in one image are listed so you can add them together) and AI fills in the amount, date, shop and category for you to check. Needs a free Gemini API key.',
+      'ai.off': 'Snap a receipt or pick screenshots of your payment history (PayPay, WeChat Pay; several at once or long screenshots work too) and AI fills in the amount, date, shop and category for you to check. Needs a free Gemini API key.',
       'ai.setupTitle': 'Gemini API key', 'ai.keyLabel': 'API key', 'ai.remove': 'Remove key',
       'ai.step1': 'Open the page below with your Google account and create an API key.', 'ai.step2': 'Copy the key, paste it below and tap Save.',
-      'ai.privacy': 'The key stays on this phone and is never put in backups. Photos are sent to Google to be read; on the free tier Google may use them to improve its products, and people may review them. AI never changes the payment method; you choose it.',
+      'ai.privacy': 'The key stays on this phone and is never put in backups. Photos, along with your category and account names, are sent to Google to be read; on the free tier Google may use them to improve its products, and people may review them. AI never changes the payment method for spending or income; you choose it. For transfers such as top-ups, AI suggests the accounts and you can change them.',
       'ai.saved': 'Saved. Receipt scan is ready', 'ai.savedUnchecked': 'Saved (offline, so the key wasn’t checked)', 'ai.removed': 'Key removed',
       'ai.badKey': 'That key doesn’t work. Copy it again', 'ai.enterKey': 'Paste an API key', 'ai.checking': 'Checking the key…',
       'ai.done': 'Filled in from the photo. Check it, then save', 'ai.noAmount': 'Couldn’t find an amount. Retake or type it in', 'ai.offline': 'You’re offline. Try again when connected',
@@ -348,10 +354,13 @@
       'ai.doneSkip': 'Filled in from the photo. Check it, then save (skipped: {s})',
       'scan.found': 'Found {n} transactions', 'scan.found1': 'Found 1 transaction', 'scan.add': 'Add {n} entries', 'scan.add1': 'Add 1 entry',
       'scan.added': 'Added {n} entries', 'scan.added1': 'Added 1 entry', 'scan.undone': 'Undone',
-      'scan.dup': 'May already be recorded', 'scan.noDate': 'No date found, please check', 'scan.pickCat': 'Choose a category', 'scan.needCat': 'Choose a category for every checked item',
+      'scan.same': 'Same amount already on this day: {w}', 'scan.twin': 'Same date and amount as one above', 'scan.from': 'From', 'scan.to': 'To', 'scan.needMove': 'Choose both accounts for every checked transfer',
+      'scan.noDate': 'No date found, please check', 'scan.pickCat': 'Choose a category', 'scan.needCat': 'Choose a category for every checked item',
       'scan.skipped': 'Skipped: {s}', 'scan.none': 'Nothing to record (skipped: {s})', 'scan.sep': ', ',
-      'scan.hint': 'All of them go to the payment method chosen above. Amounts and notes can be changed later under Entries.',
-      'scan.sk.transfer': '{n} top-ups or transfers', 'scan.sk.transfer1': '1 top-up or transfer', 'scan.sk.points': '{n} points items', 'scan.sk.points1': '1 points item',
+      'scan.hint': 'Spending and income go to the payment method above; transfers use the accounts chosen on each. Amounts and notes can be changed later under Entries.',
+      'ai.tooMany': 'Up to {n} images at a time', 'ai.tooLong': 'Too many or too long images. Please split them up',
+      'dup.ask': 'There is already an entry with the same amount on {d}: {w}. Add this one too?', 'dup.go': 'Add anyway',
+      'scan.sk.points': '{n} points items', 'scan.sk.points1': '1 points item',
       'scan.sk.failed': '{n} failed or cancelled', 'scan.sk.failed1': '1 failed or cancelled', 'scan.sk.foreign': '{n} without a yen amount', 'scan.sk.foreign1': '1 without a yen amount',
     },
   };
@@ -419,6 +428,7 @@
   const BASE_CATS = {
     food: { kind: 'out', icon: '🍚', zh: '餐饮', ja: '食費', en: 'Food' },
     coffee: { kind: 'out', icon: '☕', zh: '咖啡', ja: 'カフェ', en: 'Coffee', after: 'food' },
+    conbini: { kind: 'out', icon: '🏪', zh: '便利店', ja: 'コンビニ', en: 'Convenience store', after: ['coffee', 'food'] },
     daily: { kind: 'out', icon: '🧻', zh: '日用品', ja: '日用品', en: 'Household' },
     hobby: { kind: 'out', icon: '🎮', zh: '兴趣娱乐', ja: '趣味・娯楽', en: 'Hobbies' },
     social: { kind: 'out', icon: '🍻', zh: '交际', ja: '交際費', en: 'Social' },
@@ -444,7 +454,7 @@
     adjOut: { kind: 'out', icon: '⚖️', zh: '特殊支出', ja: '特殊支出', en: 'Adjustment −', extra: true },
   };
   /* built-ins introduced after the first release: added once to existing data, right after `after` */
-  const LATER_CATS = ['coffee'];
+  const LATER_CATS = ['coffee', 'conbini'];
   let laterAdded = false;
   const BASE_ACCS = {
     cash: { type: 'cash', zh: '现金', ja: '現金', en: 'Cash' },
@@ -518,7 +528,9 @@
       added.add(k);
       laterAdded = true;
       if (out.categories.some((c) => c.base === k)) continue;
-      const b = BASE_CATS[k], at = out.categories.findIndex((c) => c.base === b.after);
+      const b = BASE_CATS[k];
+      let at = -1;
+      for (const a of [].concat(b.after || [])) { at = out.categories.findIndex((c) => c.base === a); if (at >= 0) break; }
       out.categories.splice(at >= 0 ? at + 1 : out.categories.length, 0,
         { id: uid(), name: b[LANG], kind: b.kind, icon: b.icon, hidden: false, lang0: LANG, base: k });
     }
@@ -1127,7 +1139,10 @@
   function setChipOn(rowSel, attr, id) {
     $$(rowSel, sheetEl).forEach((b) => b.classList.toggle('on', b.dataset[attr] === id));
   }
-  function saveDraft(cont) {
+  /* "−¥573 便利店 · Seven-Eleven Japan" */
+  const entryDesc = (e) => `${e.kind === 'in' ? '+' : e.kind === 'out' ? '−' : ''}${yen(e.amount)} ${e.kind === 'move' ? kindName('move') : cName(catIdx.get(e.cat))}${e.memo ? ` · ${e.memo}` : ''}`;
+  const sameDayAmount = (date, amount, kind) => data.entries.find((e) => e.date === date && e.amount === amount && e.kind === kind);
+  async function saveDraft(cont) {
     const d = draft;
     const amount = parseInt(d.amt || '0', 10);
     if (!amount) { shake($('.amount', sheetEl)); return toast(tr('entry.needAmount')); }
@@ -1138,6 +1153,11 @@
       if (d.to === d.acc) return toast(tr('entry.same'));
     }
     const existing = d.id ? data.entries.find((e) => e.id === d.id) : null;
+    if (!existing) {
+      /* the same amount on the same day is often the same purchase entered twice: ask first */
+      const same = sameDayAmount(d.date || todayStr(), amount, d.kind);
+      if (same && !(await askConfirm(tr('dup.ask', { d: shortDate(d.date || todayStr()), w: entryDesc(same) }), tr('dup.go')))) return;
+    }
     const rec = {
       id: d.id || uid(), date: d.date || todayStr(), amount, kind: d.kind,
       cat: d.kind === 'move' ? null : d.cat, acc: d.acc, to: d.kind === 'move' ? d.to : null,
@@ -1331,7 +1351,7 @@
   function saveAi(patch) { try { localStorage.setItem(AI_STORE, JSON.stringify(Object.assign(aiState(), patch))); } catch (e) { /* storage full */ } }
   let scanCtrl = null;
   const scanButton = () => (aiKey()
-    ? `<label class="scan-btn" for="photo-in">📷 <span>${tr('ai.scan')}</span></label><input type="file" id="photo-in" accept="image/*" class="vh">`
+    ? `<label class="scan-btn" for="photo-in">📷 <span>${tr('ai.scan')}</span></label><input type="file" id="photo-in" accept="image/*" multiple class="vh">`
     : `<button class="scan-btn" data-act="ai-setup">📷 <span>${tr('ai.scan')}</span></button>`);
   function aiFormHTML() {
     const key = aiKey();
@@ -1393,49 +1413,74 @@
     closeSheet();
     render();
   }
-  /* phone photos are large: send a JPEG no longer than 1600px, which still keeps receipt text readable */
-  function shrinkImage(file, max = 1600) {
+  /* A photo or an ordinary screenshot goes as one JPEG, longest side 1600px, which keeps receipt text readable.
+     A long screenshot (taller than 2.4× its width) would turn unreadable if shrunk whole, so it is cut into
+     overlapping slices 900px wide instead. */
+  const MAX_FILES = 10, MAX_PARTS = 20;
+  function imageParts(file) {
     return new Promise((resolve, reject) => {
       const url = URL.createObjectURL(file);
       const img = new Image();
+      const fail = () => { URL.revokeObjectURL(url); reject(Object.assign(new Error('image'), { status: -1 })); };
       img.onload = () => {
-        const k = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight));
-        const c = document.createElement('canvas');
-        c.width = Math.max(1, Math.round(img.naturalWidth * k));
-        c.height = Math.max(1, Math.round(img.naturalHeight * k));
-        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+        const w = img.naturalWidth, h = img.naturalHeight, out = [];
+        if (!w || !h) return fail();
+        const jpeg = (y, sh, k) => {
+          const c = document.createElement('canvas');
+          c.width = Math.max(1, Math.round(w * k));
+          c.height = Math.max(1, Math.round(sh * k));
+          c.getContext('2d').drawImage(img, 0, y, w, sh, 0, 0, c.width, c.height);
+          const u = c.toDataURL('image/jpeg', 0.85);
+          return { mime: 'image/jpeg', data: u.slice(u.indexOf(',') + 1) };
+        };
+        if (h <= w * 2.4) out.push(jpeg(0, h, Math.min(1, 1600 / Math.max(w, h))));
+        else {
+          const k = Math.min(1, 900 / w), slice = Math.round(w * 1.9), step = slice - Math.round(slice * 0.15);
+          for (let y = 0; ; y += step) {
+            const sh = Math.min(slice, h - y);
+            out.push(jpeg(y, sh, k));
+            if (y + sh >= h || out.length > MAX_PARTS) break;
+          }
+        }
         URL.revokeObjectURL(url);
-        const u = c.toDataURL('image/jpeg', 0.85);
-        resolve({ mime: 'image/jpeg', data: u.slice(u.indexOf(',') + 1) });
+        resolve(out);
       };
-      img.onerror = () => { URL.revokeObjectURL(url); reject(Object.assign(new Error('image'), { status: -1 })); };
+      img.onerror = fail;
       img.src = url;
     });
   }
-  function scanPrompt() {
+  function scanPrompt(nImages = 1) {
     const list = (kind) => data.categories.filter((c) => c.kind === kind && !c.hidden)
       .map((c) => `${c.id}: ${[...new Set(allLabels(c, 'cat'))].join(' / ')}`).join('\n');
+    const accs = activeAccs().map((a) => `${a.id}: ${[...new Set(allLabels(a, 'acc'))].join(' / ')} (${a.type})`).join('\n');
+    const byBase = (k) => data.categories.find((c) => c.base === k && !c.hidden);
+    const conb = byBase('conbini'), food = byBase('food');
     return [
       'Read this image for a household budget app kept in Japanese yen. It can be a Japanese receipt, a payment screen, or a screenshot that lists several transactions (PayPay 取引履歴, WeChat Pay 微信支付 payment notices, a card or bank app).',
+      nImages > 1 ? `There are ${nImages} images, in order. They can be consecutive screenshots or slices of one long screenshot, and they may overlap: list each transaction only once.` : '',
       'Reply with JSON only, in this shape:',
-      '{"items": [{"type": "payment" | "refund" | "income" | "transfer" | "points" | "failed", "amount": integer, "currency": "JPY" or the currency shown, "date": "YYYY-MM-DD" or null, "merchant": string, "via": string or null, "category": a category id or null}]}',
+      '{"items": [{"type": "payment" | "refund" | "income" | "transfer" | "points" | "failed", "amount": integer, "currency": "JPY" or the currency shown, "date": "YYYY-MM-DD" or null, "time": "HH:MM" or null, "merchant": string, "via": string or null, "category": a category id or null, "from": an account id or null, "to": an account id or null}]}',
       'One item per transaction, in the order shown. A receipt is a single transaction.',
       'amount: in Japanese yen, digits only. On a receipt, the total actually paid, tax included, after discounts (合計, お支払い, ご請求額), not the subtotal, 預り or お釣り.',
       'On WeChat Pay or Alipay notices the large "¥" figure is Chinese yuan: use the yen price instead (标价 … 日元). Only if a transaction shows no yen amount at all, give its amount and currency as shown.',
       'type: "payment" for money paid, including 支払い完了, 支払い受付 and money sent to a person; "refund" for 返金 / 退款; "income" for money received (受け取り, 收款, salary); "transfer" for top-ups, charges and withdrawals between the user\'s own accounts (チャージ, 充值, 提现, 出金); "points" for points or coupons (pt, ポイント付与); "failed" for failed or cancelled payments (支払い失敗, キャンセル, 取消, 失败, a struck-through amount).',
       'date: the transaction date. Convert Japanese era years (令和8年 is 2026). Relative labels count back from today: 今天/今日/Today, 昨天/昨日/Yesterday, 前天/一昨日; a weekday name (星期二, 火曜日, Tue) is the latest such day before today; a time alone (9:30) means today. null if the date cannot be told.',
+      'time: the time of day if shown, else null.',
       'merchant: the shop or other party as shown (on WeChat Pay, the name at the top of the notice), at most 20 characters.',
       'via: the payment source if shown (残高, 残高カード, PayPayカード, a card name), else null.',
       'Leave out a transaction that is cut off so that its amount or its merchant cannot be seen.',
-      'category: the id that fits best from the lists below (an expense category for payments, an income category for refunds and income), or null.',
+      'category (payments, refunds and income only): an id from the lists below, only when you are fairly sure which one fits; otherwise null, and the user will choose.',
+      conb ? `Convenience stores (7-Eleven / セブン-イレブン / Seven-Eleven Japan, FamilyMart / ファミリーマート, Lawson / ローソン, Ministop, Daily Yamazaki, NewDays, Seicomart …) are ${conb.id}.` : '',
+      food ? `Supermarkets and grocery stores (AEON / イオン, 西友, ライフ, まいばすけっと, OK / オーケー, サミット, マルエツ, 業務スーパー …) are ${food.id}.` : '',
+      'from / to (transfers only): the ids of the accounts below that the money leaves and enters, when you can tell; for example 三菱ＵＦＪ銀行からのチャージ on a PayPay screen goes from the 三菱UFJ bank account to the PayPay account. null when unsure; null for other types.',
       `Today is ${todayStr()} (${WEEK.en[new Date().getDay()]}).`,
-      'Expense categories:', list('out'), 'Income categories:', list('in'),
+      'Expense categories:', list('out'), 'Income categories:', list('in'), 'Accounts:', accs,
       'If nothing can be read, reply {"items": []}.',
-    ].join('\n');
+    ].filter(Boolean).join('\n');
   }
-  async function aiReadReceipt(key, img, signal) {
+  async function aiReadReceipt(key, imgs, signal) {
     const base = {
-      contents: [{ role: 'user', parts: [{ inline_data: { mime_type: img.mime, data: img.data } }, { text: scanPrompt() }] }],
+      contents: [{ role: 'user', parts: [...imgs.map((img) => ({ inline_data: { mime_type: img.mime, data: img.data } })), { text: scanPrompt(imgs.length) }] }],
       generationConfig: { responseMimeType: 'application/json', thinkingConfig: { thinkingLevel: 'low' } },
     };
     const st = aiState();
@@ -1478,9 +1523,10 @@
   const okDate = (v) => /^\d{4}-\d{2}-\d{2}$/.test(v || '') && ymd(parseYMD(v)) === v && dayDiff(v) <= 1 && dayDiff(v) >= -400;
   const SCAN_TYPES = ['payment', 'refund', 'income', 'transfer', 'points', 'failed'];
   const YEN_CODES = ['JPY', 'YEN', '円', '日元', '¥', '￥', 'JP¥'];
-  /* every transaction the model listed, tidied; `skip` says why one is not offered (not spending/income, or no yen amount) */
+  /* every transaction the model listed, tidied; `skip` says why one is not offered (points, failed, no yen amount) */
   function scanItems(o) {
     const raw = Array.isArray(o) ? o : o && Array.isArray(o.items) ? o.items : o && typeof o === 'object' && o.amount != null ? [o] : [];
+    const accOk = (v) => (v != null && accIdx.has(String(v)) && !accIdx.get(String(v)).hidden ? String(v) : null);
     const out = [];
     for (const x of raw) {
       if (!x || typeof x !== 'object') continue;
@@ -1488,12 +1534,15 @@
       if (!(num > 0)) continue;
       const type = SCAN_TYPES.includes(x.type) ? x.type : x.kind === 'in' ? 'income' : 'payment';
       const isYen = YEN_CODES.includes(String(x.currency || 'JPY').trim().toUpperCase()) && Number.isInteger(num);
-      const kind = type === 'refund' || type === 'income' ? 'in' : 'out';
-      const cat = data.categories.find((c) => c.id === x.category && c.kind === kind && !c.hidden);
+      const kind = type === 'transfer' ? 'move' : type === 'refund' || type === 'income' ? 'in' : 'out';
+      const cat = kind === 'move' ? null : data.categories.find((c) => c.id === x.category && c.kind === kind && !c.hidden);
+      const to = kind === 'move' ? accOk(x.to) : null, from = kind === 'move' ? accOk(x.from) : null;
+      const time = /^\d{1,2}:\d{2}$/.test(String(x.time || '')) ? String(x.time).padStart(5, '0') : null;
       out.push({
-        skip: !isYen ? 'foreign' : ['transfer', 'points', 'failed'].includes(type) ? type : null,
-        kind, amount: Math.min(Math.round(num), 9999999999), date: okDate(x.date) ? x.date : null,
-        merchant: String(x.merchant || '').trim().slice(0, 40), via: String(x.via || '').trim().slice(0, 20), cat: cat ? cat.id : null,
+        skip: !isYen ? 'foreign' : type === 'points' || type === 'failed' ? type : null,
+        kind, amount: Math.min(Math.round(num), 9999999999), date: okDate(x.date) ? x.date : null, time,
+        merchant: String(x.merchant || '').trim().slice(0, 40), via: String(x.via || '').trim().slice(0, 20),
+        cat: cat ? cat.id : null, from: from && from !== to ? from : null, to,
       });
     }
     return out;
@@ -1501,7 +1550,7 @@
   function skipText(items) {
     const n = {};
     items.forEach((x) => { if (x.skip) n[x.skip] = (n[x.skip] || 0) + 1; });
-    return ['transfer', 'points', 'failed', 'foreign'].filter((k) => n[k]).map((k) => tr(`scan.sk.${k}`, { n: n[k] })).join(tr('scan.sep'));
+    return ['points', 'failed', 'foreign'].filter((k) => n[k]).map((k) => tr(`scan.sk.${k}`, { n: n[k] })).join(tr('scan.sep'));
   }
   function handleScan(items, d) {
     const ok = items.filter((x) => !x.skip), skipped = skipText(items);
@@ -1510,45 +1559,63 @@
     openScanList(ok, skipped, d);
   }
   function applyScan(x, d, skipped) {
-    d.kind = x.kind;
     d.amt = String(x.amount);
     if (x.date) d.date = x.date;
-    if (x.cat) d.cat = x.cat;
-    else if (d.cat && (!catIdx.has(d.cat) || catIdx.get(d.cat).kind !== d.kind)) d.cat = null;
+    if (x.kind === 'move') {
+      /* a charge or top-up: the accounts the AI recognised; what it could not tell is left for the user */
+      const to = x.to || d.acc || null;
+      d.kind = 'move'; d.cat = null; d.to = to; d.acc = x.from && x.from !== to ? x.from : null;
+    } else {
+      d.kind = x.kind;
+      /* a category the AI is unsure about stays empty for the user to pick */
+      if (x.cat) { d.cat = x.cat; d.aiCat = x.cat; }
+      else if (d.cat && (d.cat === d.aiCat || !catIdx.has(d.cat) || catIdx.get(d.cat).kind !== d.kind)) d.cat = null;
+      /* the payment method is left exactly as the user chose it */
+    }
     /* the shop name goes into the note unless the user already typed their own */
     if (x.merchant && (!d.memo || d.memo === d.aiMemo)) { d.memo = x.merchant; d.aiMemo = x.merchant; }
-    /* the payment method is left exactly as the user chose it */
     renderEntry();
     toast(skipped ? tr('ai.doneSkip', { s: skipped }) : tr('ai.done'));
   }
 
-  /* several transactions in one image (a PayPay history, WeChat Pay notices): tick the ones to add */
+  /* several transactions (a PayPay history, WeChat Pay notices, several screenshots): tick the ones to add */
   let scanList = null;
-  const looksRecorded = (x, date) => data.entries.some((e) => e.date === date && e.amount === x.amount && e.kind === x.kind);
   function openScanList(items, skipped, d) {
-    const rows = items.map((x) => {
-      const date = x.date || d.date || todayStr(), dup = looksRecorded(x, date);
-      return Object.assign({}, x, { date, noDate: !x.date, dup, on: !dup });
-    });
-    /* everything goes to the payment method already chosen in the entry sheet; the user can switch it here */
+    const rows = [];
+    for (const x of items) {
+      const date = x.date || d.date || todayStr(), same = sameDayAmount(date, x.amount, x.kind);
+      /* the same transaction seen twice, e.g. in two overlapping screenshots */
+      const twin = rows.some((r) => r.date === date && r.amount === x.amount && r.kind === x.kind && (!r.time || !x.time || r.time === x.time));
+      const to = x.kind === 'move' ? x.to || d.acc || null : null;
+      rows.push(Object.assign({}, x, { date, noDate: !x.date, same: same ? entryDesc(same) : '', twin, on: !same && !twin, to, from: x.from && x.from !== to ? x.from : null }));
+    }
+    /* spending and income go to the payment method already chosen in the entry sheet; the user can switch it here */
     scanList = { draft: d, acc: d.acc || firstAcc(), skipped, rows };
     openSheet('scanlist', scanListHTML(), true);
   }
+  const rowNotes = (r) => [
+    r.same ? `<em class="tag warn">${esc(tr('scan.same', { w: r.same }))}</em>` : '',
+    r.twin ? `<em class="tag warn">${tr('scan.twin')}</em>` : '',
+    r.noDate ? `<em class="tag warn">${tr('scan.noDate')}</em>` : '',
+    r.via ? `<span>${esc(r.via)}</span>` : ''].join('');
   function scanListHTML() {
-    const s = scanList, n = s.rows.filter((r) => r.on).length, accs = activeAccs(s.acc);
+    const s = scanList, n = s.rows.filter((r) => r.on).length;
+    const accOpts = (sel, ph) => (sel ? '' : `<option value="">${ph}</option>`) + activeAccs(sel).map((a) => `<option value="${esc(a.id)}"${a.id === sel ? ' selected' : ''}>${esc(aName(a))}</option>`).join('');
     const catOpts = (r) => (r.cat ? '' : `<option value="">${tr('scan.pickCat')}</option>`) + data.categories
       .filter((c) => c.kind === r.kind && (!c.hidden || c.id === r.cat))
       .map((c) => `<option value="${esc(c.id)}"${c.id === r.cat ? ' selected' : ''}>${esc(c.icon)} ${esc(cName(c))}</option>`).join('');
-    const notes = (r) => [r.dup ? `<em class="tag">${tr('scan.dup')}</em>` : '', r.noDate ? `<em class="tag warn">${tr('scan.noDate')}</em>` : '', r.via ? `<span>${esc(r.via)}</span>` : ''].join('');
+    const sign = (r) => (r.kind === 'in' ? '+' : r.kind === 'out' ? '−' : '⇄ ');
     const row = (r, i) => `<div class="sl-row${r.on ? '' : ' off'}">
-        <label class="sl-main"><input type="checkbox" data-sl="on" data-i="${i}"${r.on ? ' checked' : ''}><span class="sl-name">${esc(r.merchant || kindName(r.kind))}</span><span class="sl-amt${r.kind === 'in' ? ' in' : ''}">${r.kind === 'in' ? '+' : '−'}${yen(r.amount)}</span></label>
-        <div class="sl-meta"><label class="date-chip${r.noDate ? ' warn' : ''}">📅 <span class="date-text">${shortDate(r.date)}</span><input type="date" value="${r.date}" data-sl="date" data-i="${i}" aria-label="${tr('entry.date')}"></label><select class="sl-cat" data-sl="cat" data-i="${i}" aria-label="${tr('list.category')}">${catOpts(r)}</select></div>
-        ${notes(r) ? `<div class="sl-notes">${notes(r)}</div>` : ''}
+        <label class="sl-main"><input type="checkbox" data-sl="on" data-i="${i}"${r.on ? ' checked' : ''}><span class="sl-name">${esc(r.merchant || kindName(r.kind))}</span><span class="sl-amt ${r.kind}">${sign(r)}${yen(r.amount)}</span></label>
+        <div class="sl-meta"><label class="date-chip${r.noDate ? ' warn' : ''}">📅 <span class="date-text">${shortDate(r.date)}</span><input type="date" value="${r.date}" data-sl="date" data-i="${i}" aria-label="${tr('entry.date')}"></label>${r.kind === 'move' ? `<span class="sl-kind">⇄ ${kindName('move')}</span>` : `<select class="sl-cat" data-sl="cat" data-i="${i}" aria-label="${tr('list.category')}">${catOpts(r)}</select>`}</div>
+        ${r.kind === 'move' ? `<div class="sl-move"><select data-sl="from" data-i="${i}" aria-label="${tr('scan.from')}">${accOpts(r.from, tr('scan.from'))}</select><span class="sl-arrow">→</span><select data-sl="to" data-i="${i}" aria-label="${tr('scan.to')}">${accOpts(r.to, tr('scan.to'))}</select></div>` : ''}
+        <div class="sl-notes">${rowNotes(r)}</div>
       </div>`;
+    const payRows = s.rows.some((r) => r.kind !== 'move');
     return `<div class="form scanlist">
       <div class="f-top"><button class="icon-btn" data-act="sl-back" aria-label="${tr('common.close')}">✕</button><div class="e-title">${tr('scan.found', { n: s.rows.length })}</div><span class="e-sp"></span></div>
       <div class="f-body">
-        <label class="field"><span>${tr('entry.paid')}</span>${accs.length ? `<select class="sl-acc" data-sl="acc">${accs.map((a) => `<option value="${esc(a.id)}"${a.id === s.acc ? ' selected' : ''}>${esc(aName(a))}</option>`).join('')}</select>` : `<div class="hint">${tr('entry.noAcc')}</div>`}</label>
+        ${payRows ? `<label class="field"><span>${tr('entry.paid')}</span>${activeAccs(s.acc).length ? `<select class="sl-acc" data-sl="acc">${accOpts(s.acc, tr('entry.paid'))}</select>` : `<div class="hint">${tr('entry.noAcc')}</div>`}</label>` : ''}
         <div class="sl-list">${s.rows.map(row).join('')}</div>
         ${s.skipped ? `<p class="hint">${esc(tr('scan.skipped', { s: s.skipped }))}</p>` : ''}
         <p class="hint">${tr('scan.hint')}</p>
@@ -1559,22 +1626,28 @@
   function changeScanList(el) {
     const s = scanList, f = el.dataset.sl;
     if (f === 'acc') { s.acc = el.value; return; }
-    const r = s.rows[Number(el.dataset.i)];
+    const r = s.rows[Number(el.dataset.i)], rowEl = el.closest('.sl-row');
     if (!r) return;
     if (f === 'on') {
       r.on = el.checked;
-      el.closest('.sl-row').classList.toggle('off', !r.on);
+      rowEl.classList.toggle('off', !r.on);
       const n = s.rows.filter((x) => x.on).length, btn = $('.sl-add', sheetEl);
       btn.textContent = tr('scan.add', { n });
       btn.disabled = !n;
     } else if (f === 'date') {
-      if (okDate(el.value) || /^\d{4}-\d{2}-\d{2}$/.test(el.value)) { r.date = el.value; r.noDate = false; }
-      const chip = el.closest('.date-chip'), warn = $('.tag.warn', el.closest('.sl-row'));
+      if (/^\d{4}-\d{2}-\d{2}$/.test(el.value)) {
+        r.date = el.value; r.noDate = false;
+        const same = sameDayAmount(r.date, r.amount, r.kind);
+        r.same = same ? entryDesc(same) : '';
+      }
+      const chip = el.closest('.date-chip');
       $('.date-text', chip).textContent = shortDate(r.date);
       chip.classList.remove('warn');
-      if (warn) warn.remove();
+      $('.sl-notes', rowEl).innerHTML = rowNotes(r);
     } else if (f === 'cat') {
       r.cat = el.value || null;
+    } else if (f === 'from' || f === 'to') {
+      r[f] = el.value || null;
     }
   }
   function backToEntry() {
@@ -1589,14 +1662,20 @@
     if (!s) return;
     const rows = s.rows.filter((r) => r.on);
     if (!rows.length) return;
-    if (!s.acc || !accIdx.has(s.acc)) return toast(tr('entry.needAcc'));
-    const bad = rows.find((r) => !r.cat || !catIdx.has(r.cat));
-    if (bad) { shake($$('.sl-row', sheetEl)[s.rows.indexOf(bad)]); return toast(tr('scan.needCat')); }
+    const pay = rows.filter((r) => r.kind !== 'move'), moves = rows.filter((r) => r.kind === 'move');
+    const flag = (r, msg) => { shake($$('.sl-row', sheetEl)[s.rows.indexOf(r)]); toast(msg); };
+    if (pay.length && (!s.acc || !accIdx.has(s.acc))) return toast(tr('entry.needAcc'));
+    const noCat = pay.find((r) => !r.cat || !catIdx.has(r.cat));
+    if (noCat) return flag(noCat, tr('scan.needCat'));
+    const badMove = moves.find((r) => !r.from || !r.to || r.from === r.to || !accIdx.has(r.from) || !accIdx.has(r.to));
+    if (badMove) return flag(badMove, tr('scan.needMove'));
     const now = Date.now();
-    const recs = rows.map((r, i) => ({ id: uid(), date: r.date, amount: r.amount, kind: r.kind, cat: r.cat, acc: s.acc, to: null, memo: r.merchant, ts: now - i }));
+    const recs = rows.map((r, i) => ({
+      id: uid(), date: r.date, amount: r.amount, kind: r.kind, cat: r.kind === 'move' ? null : r.cat,
+      acc: r.kind === 'move' ? r.from : s.acc, to: r.kind === 'move' ? r.to : null, memo: r.merchant, ts: now - i,
+    }));
     data.entries.push(...recs);
-    ui.lastAccAny = s.acc;
-    saveUI();
+    if (pay.length) { ui.lastAccAny = s.acc; saveUI(); }
     saveData();
     const latest = recs.reduce((m, r) => (r.date > m ? r.date : m), recs[0].date);
     if (latest.slice(0, 7) !== ui.month) ui.month = latest.slice(0, 7);
@@ -1615,18 +1694,23 @@
     b.classList.toggle('busy', on);
     $('span', b).textContent = tr(on ? 'ai.busy' : 'ai.scan');
   }
-  async function scanReceipt(file) {
-    const key = aiKey(), d = draft;
+  async function scanReceipt(fileList) {
+    const key = aiKey(), d = draft, files = [...fileList].filter(Boolean);
     if (!key) return openSheet('ai', aiFormHTML());
-    if (!d || sheetType !== 'entry' || scanCtrl) return;
+    if (!d || sheetType !== 'entry' || scanCtrl || !files.length) return;
+    if (files.length > MAX_FILES) return toast(tr('ai.tooMany', { n: MAX_FILES }));
     const ctrl = new AbortController();
     scanCtrl = ctrl;
-    let timedOut = false;
-    const timer = setTimeout(() => { timedOut = true; ctrl.abort(); }, 60000);
+    let timedOut = false, timer = null;
     scanBusy(true);
     try {
-      const img = await shrinkImage(file);
-      const j = await aiReadReceipt(key, img, ctrl.signal);
+      const imgs = [];
+      for (const f of files) imgs.push(...(await imageParts(f)));
+      if (ctrl.signal.aborted) return;
+      if (imgs.length > MAX_PARTS) { toast(tr('ai.tooLong')); return; }
+      /* more images take Gemini longer */
+      timer = setTimeout(() => { timedOut = true; ctrl.abort(); }, Math.min(150000, 60000 + 8000 * (imgs.length - 1)));
+      const j = await aiReadReceipt(key, imgs, ctrl.signal);
       if (draft === d && sheetType === 'entry') handleScan(scanItems(scanResult(j)), d);
     } catch (e) {
       if (e.name === 'AbortError') { if (timedOut) toast(tr('ai.timeout')); }
@@ -2019,9 +2103,9 @@
     } else if (el.dataset.input === 'autoadd') {
       ui.autoAdd = el.checked; saveUI(); toast(tr(el.checked ? 'set.autoOn' : 'set.autoOff'));
     } else if (el.id === 'photo-in' && el.files && el.files[0]) {
-      const f = el.files[0];
+      const files = [...el.files];
       el.value = '';
-      scanReceipt(f);
+      scanReceipt(files);
     } else if (el.id === 'file-in' && el.files && el.files[0]) {
       const file = el.files[0];
       const reader = new FileReader();
