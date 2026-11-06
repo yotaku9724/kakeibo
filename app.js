@@ -1,7 +1,7 @@
 /* 家计簿 — offline bookkeeping web app. Data lives only in this browser (localStorage). */
 'use strict';
 (() => {
-  const APP_VERSION = '1.0.9';
+  const APP_VERSION = '1.0.10';
   const STORE_KEY = 'kakeibo:data';
   const PREV_KEY = 'kakeibo:data:prev';
   const UI_KEY = 'kakeibo:ui';
@@ -11,6 +11,8 @@
   const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
   const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+  /* ids are written into the page's HTML, so only plain ones are accepted */
+  const SAFE_ID = /^[A-Za-z0-9_-]{1,64}$/;
   const pad2 = (n) => String(n).padStart(2, '0');
   const ymd = (d) => `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
   const todayStr = () => ymd(new Date());
@@ -476,12 +478,16 @@
   function normalize(d) {
     const out = { app: 'kakeibo', version: 1 };
     out.meta = Object.assign({ createdAt: new Date().toISOString(), lastBackup: null }, d.meta || {});
+    /* an id that isn't plain (say, from a crafted backup file) gets a fresh one, and entries follow the change */
+    const remap = new Map();
+    const cleanId = (v) => { const s = v == null ? '' : String(v); if (SAFE_ID.test(s)) return s; const n = uid(); if (s) remap.set(s, n); return n; };
+    const ref = (v) => { if (v == null || v === '') return null; const s = String(v); return remap.has(s) ? remap.get(s) : SAFE_ID.test(s) ? s : null; };
     out.categories = d.categories.filter((c) => c && c.name).map((c) => {
       const kind = c.kind === 'in' ? 'in' : 'out', name = String(c.name).slice(0, 20);
       const sys = c.sys === 'adj-in' || c.sys === 'adj-out' ? c.sys : null;
       const base = BASE_CATS[c.base] && BASE_CATS[c.base].kind === kind ? c.base : sys ? (sys === 'adj-in' ? 'adjIn' : 'adjOut') : findBase('cat', name, kind);
       return {
-        id: String(c.id || uid()), name, kind, icon: String(c.icon || (kind === 'in' ? '💰' : '📦')).slice(0, 8), hidden: !!c.hidden,
+        id: cleanId(c.id), name, kind, icon: String(c.icon || (kind === 'in' ? '💰' : '📦')).slice(0, 8), hidden: !!c.hidden,
         lang0: LANGS.includes(c.lang0) ? c.lang0 : 'zh', ...(base ? { base } : {}), ...(sys ? { sys } : {}), ...cleanNames(c.names, 20),
       };
     });
@@ -501,7 +507,7 @@
       const type = ACC_TYPES[a.type] ? a.type : 'other', name = String(a.name).slice(0, 24);
       const base = BASE_ACCS[a.base] && BASE_ACCS[a.base].type === type ? a.base : findBase('acc', name, type);
       return {
-        id: String(a.id || uid()), name, type, initial: Math.round(Number(a.initial) || 0), hidden: !!a.hidden,
+        id: cleanId(a.id), name, type, initial: Math.round(Number(a.initial) || 0), hidden: !!a.hidden,
         lang0: LANGS.includes(a.lang0) ? a.lang0 : 'zh', ...(base ? { base } : {}), ...cleanNames(a.names, 24),
       };
     });
@@ -510,9 +516,9 @@
     out.entries = d.entries
       .filter((e) => e && /^\d{4}-\d{2}-\d{2}$/.test(e.date) && Number(e.amount) > 0 && ['out', 'in', 'move'].includes(e.kind))
       .map((e) => ({
-        id: String(e.id || uid()), date: e.date, amount: Math.round(Number(e.amount)), kind: e.kind,
-        cat: e.kind === 'move' ? null : (e.cat ? String(e.cat) : null), acc: e.acc ? String(e.acc) : null,
-        to: e.kind === 'move' && e.to ? String(e.to) : null, memo: String(e.memo || '').slice(0, 60), ts: Number(e.ts) || 0,
+        id: cleanId(e.id), date: e.date, amount: Math.round(Number(e.amount)), kind: e.kind,
+        cat: e.kind === 'move' ? null : ref(e.cat), acc: ref(e.acc),
+        to: e.kind === 'move' ? ref(e.to) : null, memo: String(e.memo || '').slice(0, 60), ts: Number(e.ts) || 0,
       }));
     return out;
   }
@@ -639,13 +645,13 @@
     const future = e.date > todayStr();
     const fb = future ? `<span class="badge-future">${tr('future')}</span>` : '';
     if (e.kind === 'move') {
-      return `<button class="row ${future ? 'future' : ''}" data-act="edit" data-id="${e.id}"><span class="ic mv">⇄</span><span class="mid"><span class="title">${esc(e.memo || kindName('move'))}${fb}</span><span class="rsub">${esc(a ? aName(a) : tr('deleted'))} → ${esc(t ? aName(t) : tr('deleted'))}</span></span><span class="amt mv">${yen(e.amount)}</span></button>`;
+      return `<button class="row ${future ? 'future' : ''}" data-act="edit" data-id="${esc(e.id)}"><span class="ic mv">⇄</span><span class="mid"><span class="title">${esc(e.memo || kindName('move'))}${fb}</span><span class="rsub">${esc(a ? aName(a) : tr('deleted'))} → ${esc(t ? aName(t) : tr('deleted'))}</span></span><span class="amt mv">${yen(e.amount)}</span></button>`;
     }
     const title = e.memo || cName(c);
     const subParts = [];
     if (e.memo) subParts.push(cName(c));
     subParts.push(aName(a));
-    return `<button class="row ${future ? 'future' : ''}" data-act="edit" data-id="${e.id}"><span class="ic">${esc(c ? c.icon : '❔')}</span><span class="mid"><span class="title">${esc(title)}${fb}</span><span class="rsub">${esc(subParts.join(' · '))}</span></span><span class="amt ${e.kind === 'in' ? 'in' : ''}">${e.kind === 'in' ? '+' : '−'}${yen(e.amount)}</span></button>`;
+    return `<button class="row ${future ? 'future' : ''}" data-act="edit" data-id="${esc(e.id)}"><span class="ic">${esc(c ? c.icon : '❔')}</span><span class="mid"><span class="title">${esc(title)}${fb}</span><span class="rsub">${esc(subParts.join(' · '))}</span></span><span class="amt ${e.kind === 'in' ? 'in' : ''}">${e.kind === 'in' ? '+' : '−'}${yen(e.amount)}</span></button>`;
   }
 
   /* ================= charts (plain SVG) ================= */
@@ -797,7 +803,7 @@
     const rowHtml = rows.map(([id, v]) => {
       const c = catIdx.get(id);
       const color = slots.has(id) ? pal[slots.get(id)] : otherGray();
-      const act = id === '_none' ? '' : `data-act="filter-cat" data-id="${id}"`;
+      const act = id === '_none' ? '' : `data-act="filter-cat" data-id="${esc(id)}"`;
       return `<button class="rank-row" ${act}><span class="dot" style="background:${color}"></span><span class="r-icon">${esc(c ? c.icon : '❔')}</span><span class="r-name">${esc(cName(c))}</span><span class="r-pct">${pct(v, total)}</span><span class="r-amt">${yen(v)}</span><span class="chev">›</span></button>`;
     }).join('');
     return `<section class="card">
@@ -829,7 +835,7 @@
     const avg = recVals.length ? sum(recVals) / recVals.length : 0;
     const tip = ui.trendTip && months.includes(ui.trendTip) ? ui.trendTip : end;
     const tipVal = vals[months.indexOf(tip)];
-    const chips = opts.map((id) => { const x = catIdx.get(id); return `<button class="chip ${id === sel ? 'on' : ''}" data-act="trend-cat" data-id="${id}">${esc(x.icon)} ${esc(cName(x))}</button>`; }).join('');
+    const chips = opts.map((id) => { const x = catIdx.get(id); return `<button class="chip ${id === sel ? 'on' : ''}" data-act="trend-cat" data-id="${esc(id)}">${esc(x.icon)} ${esc(cName(x))}</button>`; }).join('');
     const multi = months.length >= 2;
     return `<section class="card">
       <div class="card-head"><h2>${tr('trend.title', { k: kindName(kind) })}</h2>${multi ? `<span class="muted" style="font-size:12.5px">${tr('trend.tap')}</span>` : ''}</div>
@@ -878,9 +884,9 @@
     const T = ACC_TYPES[a.type];
     if (a.type === 'credit') {
       const owe = -v;
-      return `<button class="acc-card" style="--c:${T.color}" data-act="filter-acc" data-id="${a.id}"><div class="ac-top"><span class="ac-name">${esc(aName(a))}</span><span class="ac-type">${typeName(a.type)}</span></div><div class="ac-bal"><span class="ac-label">${owe >= 0 ? tr('owed') : tr('balance')}</span>${yen(Math.abs(owe))}</div><div class="ac-foot">${tr('card.usage', { a: yen(cardUsage(a.id, cm)), b: yen(cardUsage(a.id, addMonths(cm, -1))) })}</div></button>`;
+      return `<button class="acc-card" style="--c:${T.color}" data-act="filter-acc" data-id="${esc(a.id)}"><div class="ac-top"><span class="ac-name">${esc(aName(a))}</span><span class="ac-type">${typeName(a.type)}</span></div><div class="ac-bal"><span class="ac-label">${owe >= 0 ? tr('owed') : tr('balance')}</span>${yen(Math.abs(owe))}</div><div class="ac-foot">${tr('card.usage', { a: yen(cardUsage(a.id, cm)), b: yen(cardUsage(a.id, addMonths(cm, -1))) })}</div></button>`;
     }
-    return `<button class="acc-card" style="--c:${T.color}" data-act="filter-acc" data-id="${a.id}"><div class="ac-top"><span class="ac-name">${esc(aName(a))}</span><span class="ac-type">${typeName(a.type)}</span></div><div class="ac-bal">${yen(v)}</div></button>`;
+    return `<button class="acc-card" style="--c:${T.color}" data-act="filter-acc" data-id="${esc(a.id)}"><div class="ac-top"><span class="ac-name">${esc(aName(a))}</span><span class="ac-type">${typeName(a.type)}</span></div><div class="ac-bal">${yen(v)}</div></button>`;
   }
 
   function renderAssets() {
@@ -940,10 +946,10 @@
       const T = ACC_TYPES[a.type];
       const cur = bal.get(a.id) ?? a.initial;
       const now = a.type === 'credit' && cur <= 0 ? `${tr('owed')} ${yen(-cur)}` : `${tr('balance')} ${yen(cur)}`;
-      return `<button class="list-row" data-act="acc-edit" data-id="${a.id}"><i class="badge" style="background:${T.color}">${T.icon}</i><span class="lr-main"><span class="lr-title">${esc(aName(a))}${a.hidden ? `<em class="tag">${tr('common.hiddenTag')}</em>` : ''}</span><span class="lr-sub">${typeName(a.type)} · ${now}</span></span><span class="chev">›</span></button>`;
+      return `<button class="list-row" data-act="acc-edit" data-id="${esc(a.id)}"><i class="badge" style="background:${T.color}">${T.icon}</i><span class="lr-main"><span class="lr-title">${esc(aName(a))}${a.hidden ? `<em class="tag">${tr('common.hiddenTag')}</em>` : ''}</span><span class="lr-sub">${typeName(a.type)} · ${now}</span></span><span class="chev">›</span></button>`;
     }).join('');
     const cats = data.categories.filter((c) => c.kind === ui.setKind);
-    const catRows = cats.map((c) => `<button class="list-row" data-act="cat-edit" data-id="${c.id}"><i class="emoji">${esc(c.icon)}</i><span class="lr-main"><span class="lr-title">${esc(cName(c))}${c.hidden ? `<em class="tag">${tr('common.hiddenTag')}</em>` : ''}</span></span><span class="chev">›</span></button>`).join('');
+    const catRows = cats.map((c) => `<button class="list-row" data-act="cat-edit" data-id="${esc(c.id)}"><i class="emoji">${esc(c.icon)}</i><span class="lr-main"><span class="lr-title">${esc(cName(c))}${c.hidden ? `<em class="tag">${tr('common.hiddenTag')}</em>` : ''}</span></span><span class="chev">›</span></button>`).join('');
     const days = backupDays();
     const bstate = days === null ? tr('set.bNever') : `${tr('set.bLast')}<b>${days === 0 ? tr('set.bToday') : tr('set.bDays', { n: days })}</b>`;
     return `${header(tr('tab.settings'))}
@@ -1057,7 +1063,7 @@
   function accChips(field, selected, exclude) {
     const list = activeAccs(selected).filter((a) => a.id !== exclude || a.id === selected);
     if (!list.length) return `<div class="hint" style="margin:4px 4px 0">${tr('entry.noAcc')}</div>`;
-    return list.map((a) => { const T = ACC_TYPES[a.type]; return `<button class="acc-chip ${a.id === selected ? 'on' : ''}" data-act="pick-acc" data-field="${field}" data-id="${a.id}"><i style="background:${T.color}">${T.icon}</i>${esc(aName(a))}</button>`; }).join('');
+    return list.map((a) => { const T = ACC_TYPES[a.type]; return `<button class="acc-chip ${a.id === selected ? 'on' : ''}" data-act="pick-acc" data-field="${field}" data-id="${esc(a.id)}"><i style="background:${T.color}">${T.icon}</i>${esc(aName(a))}</button>`; }).join('');
   }
   function entryHTML() {
     const d = draft;
@@ -1068,7 +1074,7 @@
     } else {
       const cats = data.categories.filter((c) => c.kind === d.kind && (!c.hidden || c.id === d.cat));
       body = cats.length
-        ? `<div class="cat-grid">${cats.map((c) => `<button class="cat-cell ${c.id === d.cat ? 'on' : ''}" data-act="pick-cat" data-id="${c.id}"><span class="ce">${esc(c.icon)}</span><span class="cn">${esc(cName(c))}</span></button>`).join('')}</div>`
+        ? `<div class="cat-grid">${cats.map((c) => `<button class="cat-cell ${c.id === d.cat ? 'on' : ''}" data-act="pick-cat" data-id="${esc(c.id)}"><span class="ce">${esc(c.icon)}</span><span class="cn">${esc(cName(c))}</span></button>`).join('')}</div>`
         : `<div class="empty">${tr('entry.noCat')}</div>`;
     }
     const accRow = d.kind === 'move' ? '' : `<div class="e-label">${d.kind === 'in' ? tr('entry.received') : tr('entry.paid')}</div><div class="acc-row" data-row="acc">${accChips('acc', d.acc, null)}</div>`;
@@ -1192,8 +1198,8 @@
     const credit = x.type === 'credit';
     const cur = isNew ? 0 : (balances(todayStr()).get(x.id) ?? x.initial);
     const initVal = signedStr(credit ? -cur : cur);
-    return `<div class="form" data-type="${x.type}" data-id="${x.id}">
-      <div class="f-top"><button class="icon-btn" data-act="close-sheet" aria-label="${tr('common.close')}">✕</button><div class="e-title">${isNew ? tr('acc.add') : tr('acc.edit')}</div><button class="text-btn strong" data-act="acc-save" data-id="${x.id}">${tr('common.save')}</button></div>
+    return `<div class="form" data-type="${x.type}" data-id="${esc(x.id)}">
+      <div class="f-top"><button class="icon-btn" data-act="close-sheet" aria-label="${tr('common.close')}">✕</button><div class="e-title">${isNew ? tr('acc.add') : tr('acc.edit')}</div><button class="text-btn strong" data-act="acc-save" data-id="${esc(x.id)}">${tr('common.save')}</button></div>
       <div class="f-body">
         <label class="field"><span>${tr('common.name')}</span><input type="text" id="f-name" value="${esc(aName(x))}" maxlength="24" placeholder="${esc(tr('acc.namePh'))}"></label>
         <p class="hint name-hint">${tr(isNew ? 'name.hintNew' : 'name.hint', { l: LANG_NAME[LANG] })}</p>
@@ -1203,7 +1209,7 @@
         ${isNew ? '' : `<p class="hint adj-note" id="f-adj-note" hidden></p>
         <label class="switch-row"><span>${tr('acc.adjSwitch')}<small>${tr('acc.adjSwitchSub')}</small></span><input type="checkbox" id="f-adj" ${data.entries.length ? 'checked' : ''}></label>
         <label class="switch-row"><span>${tr('common.hide')}</span><input type="checkbox" id="f-hidden" ${x.hidden ? 'checked' : ''}></label>
-        <div class="f-row"><button class="btn ghost sm" data-act="sort-accs">${tr('sort.btn')}</button><span class="grow"></span><button class="btn ghost sm danger" data-act="acc-del" data-id="${x.id}">${tr('common.delete')}</button></div>`}
+        <div class="f-row"><button class="btn ghost sm" data-act="sort-accs">${tr('sort.btn')}</button><span class="grow"></span><button class="btn ghost sm danger" data-act="acc-del" data-id="${esc(x.id)}">${tr('common.delete')}</button></div>`}
       </div>
     </div>`;
   }
@@ -1212,7 +1218,7 @@
     const x = c || { id: '', name: '', kind: ui.setKind, icon: ui.setKind === 'in' ? '💰' : '📦', hidden: false };
     const kindLocked = !isNew && usedCat(x.id) > 0;
     return `<div class="form" data-kind="${x.kind}">
-      <div class="f-top"><button class="icon-btn" data-act="close-sheet" aria-label="${tr('common.close')}">✕</button><div class="e-title">${isNew ? tr('cat.add') : tr('cat.edit')}</div><button class="text-btn strong" data-act="cat-save" data-id="${x.id}">${tr('common.save')}</button></div>
+      <div class="f-top"><button class="icon-btn" data-act="close-sheet" aria-label="${tr('common.close')}">✕</button><div class="e-title">${isNew ? tr('cat.add') : tr('cat.edit')}</div><button class="text-btn strong" data-act="cat-save" data-id="${esc(x.id)}">${tr('common.save')}</button></div>
       <div class="f-body">
         <div class="field"><span>${tr('cat.kind')}</span>${kindLocked ? `<div class="muted">${kindName(x.kind)}${tr('cat.locked')}</div>` : `<div class="seg" id="f-kind">${[['out', kindName('out')], ['in', kindName('in')]].map(([v, l]) => `<button class="${v === x.kind ? 'on' : ''}" data-act="pick-kind" data-v="${v}">${l}</button>`).join('')}</div>`}</div>
         <label class="field"><span>${tr('common.name')}</span><input type="text" id="f-name" value="${esc(cName(x))}" maxlength="20" placeholder="${esc(tr('cat.namePh'))}"></label>
@@ -1220,7 +1226,7 @@
         <div class="field"><span>${tr('cat.icon')}</span><div class="icon-input"><input type="text" id="f-icon" value="${esc(x.icon)}" maxlength="8"></div>
           <div class="emoji-grid">${EMOJIS.map((e) => `<button data-act="pick-emoji" data-v="${e}">${e}</button>`).join('')}</div></div>
         ${isNew ? '' : `<label class="switch-row"><span>${tr('common.hide')}</span><input type="checkbox" id="f-hidden" ${x.hidden ? 'checked' : ''}></label>
-        <div class="f-row"><button class="btn ghost sm" data-act="move-item" data-what="cat" data-id="${x.id}" data-v="-1">${tr('common.up')}</button><button class="btn ghost sm" data-act="move-item" data-what="cat" data-id="${x.id}" data-v="1">${tr('common.down')}</button><span class="grow"></span><button class="btn ghost sm danger" data-act="cat-del" data-id="${x.id}">${tr('common.delete')}</button></div>`}
+        <div class="f-row"><button class="btn ghost sm" data-act="move-item" data-what="cat" data-id="${esc(x.id)}" data-v="-1">${tr('common.up')}</button><button class="btn ghost sm" data-act="move-item" data-what="cat" data-id="${esc(x.id)}" data-v="1">${tr('common.down')}</button><span class="grow"></span><button class="btn ghost sm danger" data-act="cat-del" data-id="${esc(x.id)}">${tr('common.delete')}</button></div>`}
       </div>
     </div>`;
   }
@@ -1494,7 +1500,7 @@
   /* ================= account order (drag to reorder) ================= */
   function sortHTML() {
     const groups = data.typeOrder.map((type) => ({ type, list: data.accounts.filter((a) => a.type === type) })).filter((g) => g.list.length);
-    const item = (a) => `<div class="sort-item" data-id="${a.id}"><i class="badge" style="background:${ACC_TYPES[a.type].color}">${ACC_TYPES[a.type].icon}</i><span class="si-name">${esc(aName(a))}${a.hidden ? `<em class="tag">${tr('common.hiddenTag')}</em>` : ''}</span><span class="drag-h" aria-label="${tr('sort.dragItem')}">≡</span></div>`;
+    const item = (a) => `<div class="sort-item" data-id="${esc(a.id)}"><i class="badge" style="background:${ACC_TYPES[a.type].color}">${ACC_TYPES[a.type].icon}</i><span class="si-name">${esc(aName(a))}${a.hidden ? `<em class="tag">${tr('common.hiddenTag')}</em>` : ''}</span><span class="drag-h" aria-label="${tr('sort.dragItem')}">≡</span></div>`;
     return `<div class="form sorter">
       <div class="f-top"><span class="e-sp"></span><div class="e-title">${tr('sort.title')}</div><button class="text-btn strong" data-act="close-sheet">${tr('sort.done')}</button></div>
       <div class="f-body">
