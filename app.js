@@ -1,7 +1,7 @@
 /* 家计簿 — offline bookkeeping web app. Data lives only in this browser (localStorage). */
 'use strict';
 (() => {
-  const APP_VERSION = '1.0.14';
+  const APP_VERSION = '1.0.15';
   const STORE_KEY = 'kakeibo:data';
   const PREV_KEY = 'kakeibo:data:prev';
   const UI_KEY = 'kakeibo:ui';
@@ -184,6 +184,12 @@
       'ss.stallUp': '上传卡住了，网络可能不好', 'ss.stallAi': 'AI {s} 秒没有回复', 'ss.net': '网络连接断了',
       'ss.cut': '已识别的可以先添加，也可以重试。', 'ss.retry': '重试', 'ss.fill': '填到记一笔里改',
       'scan.discard': '识别结果还没添加，要放弃吗？', 'scan.discardBtn': '放弃',
+      'aa.people': '{n} 人', 'aa.mine': '我的 {v}', 'aa.title': 'AA · {n} 人', 'aa.total': '总额 {v} · 用「{a}」支付', 'aa.others': '其他 {n} 人还给你的钱',
+      'aa.who': '朋友 {i}', 'aa.accPh': '收款方式', 'aa.mineBox': '我的部分 {v}，记为「{c}」支出', 'aa.amtLabel': '金额',
+      'aa.note': '朋友还的钱记成从「{a}」到收款账户的转移，不算收入也不算支出，并标记为 AA。还到「{a}」本身的不另记。',
+      'aa.needAcc': '请给每个人选收款方式', 'aa.needAmt': '请填写每个人的金额', 'aa.tooMuch': '朋友的合计不能超过总额',
+      'aa.saved': '已记下 AA：我的部分 {v}（共 {t} · {n} 人）', 'aa.sub': '{n}人 · 共{t}', 'aa.delAsk': '删除这笔 AA？朋友还款的 {k} 笔转移也会一起删除。',
+      'aa.descT': '（AA 共{t}）', 'scan.aaSame': '可能是已记的 AA 回款：{w}',
       'scan.sk.points': '积分 {n} 笔', 'scan.sk.failed': '失败/取消 {n} 笔', 'scan.sk.foreign': '没有日元金额 {n} 笔',
     },
     ja: {
@@ -282,6 +288,12 @@
       'ss.stallUp': 'アップロードが進みません。通信状況を確認してください', 'ss.stallAi': 'AI から {s}秒応答がありません', 'ss.net': '通信が切れました',
       'ss.cut': '読み取れた分は追加できます。再試行もできます。', 'ss.retry': '再試行', 'ss.fill': '入力画面で編集',
       'scan.discard': '読み取り結果はまだ追加されていません。破棄しますか？', 'scan.discardBtn': '破棄',
+      'aa.people': '{n}人', 'aa.mine': '自分 {v}', 'aa.title': 'AA・{n}人', 'aa.total': '合計 {v}・「{a}」で支払い', 'aa.others': 'ほかの{n}人から返ってくるお金',
+      'aa.who': '友達 {i}', 'aa.accPh': '受取方法', 'aa.mineBox': '自分の分 {v} を「{c}」の支出として記録', 'aa.amtLabel': '金額',
+      'aa.note': '友達からのお金は「{a}」から受取口座への振替として記録し、収入にも支出にも含めません（AA の印付き）。「{a}」自体に戻った分は記録しません。',
+      'aa.needAcc': '全員の受取方法を選んでください', 'aa.needAmt': '全員の金額を入力してください', 'aa.tooMuch': '友達の合計が総額を超えています',
+      'aa.saved': 'AA を記録しました：自分の分 {v}（合計 {t}・{n}人）', 'aa.sub': '{n}人・合計{t}', 'aa.delAsk': 'この AA を削除しますか？友達からの振替 {k} 件も削除されます。',
+      'aa.descT': '（AA 合計{t}）', 'scan.aaSame': '記録済みの AA の返金かもしれません：{w}',
       'scan.sk.points': 'ポイント {n}件', 'scan.sk.failed': '失敗・取消 {n}件', 'scan.sk.foreign': '円の金額なし {n}件',
     },
     en: {
@@ -384,6 +396,12 @@
       'ss.stallUp': 'The upload is stuck. Check your connection', 'ss.stallAi': 'No reply from AI for {s}s', 'ss.net': 'The connection dropped',
       'ss.cut': 'You can add what was found, or try again.', 'ss.retry': 'Try again', 'ss.fill': 'Edit in New entry',
       'scan.discard': 'These results have not been added. Discard them?', 'scan.discardBtn': 'Discard',
+      'aa.people': '{n} people', 'aa.mine': 'Mine {v}', 'aa.title': 'AA · {n} people', 'aa.total': 'Total {v} · paid with {a}', 'aa.others': 'What the other {n} pay you back', 'aa.others1': 'What the other person pays you back',
+      'aa.who': 'Friend {i}', 'aa.accPh': 'Paid back to', 'aa.mineBox': 'Your share {v}, recorded as {c} spending', 'aa.amtLabel': 'Amount',
+      'aa.note': 'Money paid back is recorded as a transfer from {a} to the account it went to, not as income or spending, and marked AA. Money paid back into {a} itself needs no transfer.',
+      'aa.needAcc': 'Choose where each person paid you back', 'aa.needAmt': 'Enter an amount for each person', 'aa.tooMuch': 'Friends’ total is more than the bill',
+      'aa.saved': 'AA saved: your share {v} (total {t}, {n} people)', 'aa.sub': '{n} people · total {t}', 'aa.delAsk': 'Delete this AA? Its {k} pay-back transfers will be deleted too.', 'aa.delAsk1': 'Delete this AA? Its pay-back transfer will be deleted too.',
+      'aa.descT': ' (AA, total {t})', 'scan.aaSame': 'May be an AA pay-back already recorded: {w}',
       'scan.sk.points': '{n} points items', 'scan.sk.points1': '1 points item',
       'scan.sk.failed': '{n} failed or cancelled', 'scan.sk.failed1': '1 failed or cancelled', 'scan.sk.foreign': '{n} without a yen amount', 'scan.sk.foreign1': '1 without a yen amount',
     },
@@ -536,6 +554,16 @@
     const remap = new Map();
     const cleanId = (v) => { const s = v == null ? '' : String(v); if (SAFE_ID.test(s)) return s; const n = uid(); if (s) remap.set(s, n); return n; };
     const ref = (v) => { if (v == null || v === '') return null; const s = String(v); return remap.has(s) ? remap.get(s) : SAFE_ID.test(s) ? s : null; };
+    /* AA mark: g = group; on your share also n people, t total bill, p = what each friend paid back and where */
+    const cleanAA = (v) => {
+      if (!v || typeof v !== 'object' || !SAFE_ID.test(String(v.g || ''))) return {};
+      const aa = { g: String(v.g) }, n = Math.round(Number(v.n)), t = Math.round(Number(v.t));
+      if (n >= 2 && n <= 50 && t > 0) {
+        aa.n = n; aa.t = t;
+        aa.p = (Array.isArray(v.p) ? v.p : []).slice(0, n - 1).map((x) => ({ a: ref(x && x.a), v: Math.round(Number(x && x.v)) || 0 })).filter((x) => x.v > 0);
+      }
+      return { aa };
+    };
     out.categories = d.categories.filter((c) => c && c.name).map((c) => {
       const kind = c.kind === 'in' ? 'in' : 'out', name = String(c.name).slice(0, 20);
       const sys = c.sys === 'adj-in' || c.sys === 'adj-out' ? c.sys : null;
@@ -575,6 +603,7 @@
         id: cleanId(e.id), date: e.date, amount: Math.round(Number(e.amount)), kind: e.kind,
         cat: e.kind === 'move' ? null : ref(e.cat), acc: ref(e.acc),
         to: e.kind === 'move' ? ref(e.to) : null, memo: String(e.memo || '').slice(0, 60), ts: Number(e.ts) || 0,
+        ...cleanAA(e.aa),
       }));
     return out;
   }
@@ -625,6 +654,9 @@
     trendCat: savedUI.trendCat || null,
     trendTip: null,
     lastAccAny: savedUI.lastAccAny || null,
+    /* AA: last people count, and where friends last paid back */
+    aaN: Number(savedUI.aaN) || 2,
+    aaAcc: savedUI.aaAcc || null,
     autoAdd: savedUI.autoAdd !== false,
     filter: { kind: 'all', cat: null, acc: null },
     setKind: 'out',
@@ -632,7 +664,7 @@
   function saveUI() {
     try {
       localStorage.setItem(UI_KEY, JSON.stringify({
-        compKind: ui.compKind, trendCat: ui.trendCat, lastAccAny: ui.lastAccAny, autoAdd: ui.autoAdd, lang: LANG,
+        compKind: ui.compKind, trendCat: ui.trendCat, lastAccAny: ui.lastAccAny, autoAdd: ui.autoAdd, lang: LANG, aaN: ui.aaN, aaAcc: ui.aaAcc,
       }));
     } catch (e) { /* ignore */ }
   }
@@ -700,14 +732,16 @@
     const a = accIdx.get(e.acc), t = accIdx.get(e.to);
     const future = e.date > todayStr();
     const fb = future ? `<span class="badge-future">${tr('future')}</span>` : '';
+    const aaB = e.aa ? '<span class="badge-aa">AA</span>' : '';
     if (e.kind === 'move') {
-      return `<button class="row ${future ? 'future' : ''}" data-act="edit" data-id="${esc(e.id)}"><span class="ic mv">⇄</span><span class="mid"><span class="title">${esc(e.memo || kindName('move'))}${fb}</span><span class="rsub">${esc(a ? aName(a) : tr('deleted'))} → ${esc(t ? aName(t) : tr('deleted'))}</span></span><span class="amt mv">${yen(e.amount)}</span></button>`;
+      return `<button class="row ${future ? 'future' : ''}" data-act="edit" data-id="${esc(e.id)}"><span class="ic mv">⇄</span><span class="mid"><span class="title">${esc(e.memo || kindName('move'))}${aaB}${fb}</span><span class="rsub">${esc(a ? aName(a) : tr('deleted'))} → ${esc(t ? aName(t) : tr('deleted'))}</span></span><span class="amt mv">${yen(e.amount)}</span></button>`;
     }
     const title = e.memo || cName(c);
     const subParts = [];
     if (e.memo) subParts.push(cName(c));
     subParts.push(aName(a));
-    return `<button class="row ${future ? 'future' : ''}" data-act="edit" data-id="${esc(e.id)}"><span class="ic">${esc(c ? c.icon : '❔')}</span><span class="mid"><span class="title">${esc(title)}${fb}</span><span class="rsub">${esc(subParts.join(' · '))}</span></span><span class="amt ${e.kind === 'in' ? 'in' : ''}">${e.kind === 'in' ? '+' : '−'}${yen(e.amount)}</span></button>`;
+    if (e.aa && e.aa.t) subParts.push(tr('aa.sub', { n: e.aa.n, t: yen(e.aa.t) }));
+    return `<button class="row ${future ? 'future' : ''}" data-act="edit" data-id="${esc(e.id)}"><span class="ic">${esc(c ? c.icon : '❔')}</span><span class="mid"><span class="title">${esc(title)}${aaB}${fb}</span><span class="rsub">${esc(subParts.join(' · '))}</span></span><span class="amt ${e.kind === 'in' ? 'in' : ''}">${e.kind === 'in' ? '+' : '−'}${yen(e.amount)}</span></button>`;
   }
 
   /* ================= charts (plain SVG) ================= */
@@ -1065,6 +1099,7 @@
   function closeSheet() {
     if (!sheetRoot.classList.contains('open')) return;
     endScanJob();
+    aaEdit = null;
     sheetRoot.classList.remove('show');
     sheetType = null;
     const el = sheetEl;
@@ -1109,6 +1144,8 @@
   function openEntry(entry) {
     if (entry) {
       draft = { id: entry.id, kind: entry.kind, amt: String(entry.amount), cat: entry.cat, acc: entry.acc, to: entry.to, date: entry.date, memo: entry.memo || '' };
+      /* an AA expense is edited as its total bill, with the split it was saved with */
+      if (entry.aa && entry.aa.t) { draft.amt = String(entry.aa.t); draft.aa = { n: entry.aa.n, g: entry.aa.g, t: entry.aa.t, p: entry.aa.p || [] }; }
     } else {
       const acc = ui.lastAccAny && accIdx.has(ui.lastAccAny) && !accIdx.get(ui.lastAccAny).hidden ? ui.lastAccAny : firstAcc();
       draft = { id: null, kind: 'out', amt: '', cat: null, acc, to: null, date: todayStr(), memo: '' };
@@ -1138,7 +1175,8 @@
     return `<div class="entry">
       <div class="e-top"><button class="icon-btn" data-act="close-sheet" aria-label="${tr('common.close')}">✕</button><div class="e-title">${d.id ? tr('entry.edit') : tr('entry.new')}</div>${d.id ? `<button class="text-btn danger" data-act="del-entry">${tr('common.delete')}</button>` : '<span class="e-sp"></span>'}</div>
       <div class="kinds">${kinds}</div>
-      <div class="amount k-${d.kind} ${d.amt ? '' : 'ph'}">${d.kind === 'move' ? '' : scanButton()}<span class="cur">¥</span><span class="num">${d.amt ? Number(d.amt).toLocaleString('ja-JP') : '0'}</span></div>
+      <div class="amount k-${d.kind} ${d.amt ? '' : 'ph'}">${d.kind === 'move' ? '' : `<span class="amt-tools">${scanButton()}${d.kind === 'out' ? `<button class="aa-btn${d.aa ? ' on' : ''}" data-act="aa-toggle" aria-pressed="${d.aa ? 'true' : 'false'}">AA</button>` : ''}</span>`}<span class="cur">¥</span><span class="num">${d.amt ? Number(d.amt).toLocaleString('ja-JP') : '0'}</span></div>
+      ${d.kind === 'out' && d.aa ? `<div class="aa-bar">${aaBarInner(d)}</div>` : ''}
       <div class="e-body">${body}</div>
       ${accRow}
       <div class="e-meta"><label class="date-chip">📅 <span class="date-text">${shortDate(d.date)}</span><input type="date" value="${d.date}" data-input="date" aria-label="${tr('entry.date')}"></label><input class="memo" type="text" placeholder="${tr('entry.memo')}" value="${esc(d.memo)}" data-input="memo" maxlength="40" enterkeyhint="done"></div>
@@ -1151,7 +1189,12 @@
     if (!el) return;
     $('.num', el).textContent = draft.amt ? Number(draft.amt).toLocaleString('ja-JP') : '0';
     el.classList.toggle('ph', !draft.amt);
+    const bar = $('.aa-bar', sheetEl);
+    if (bar) bar.innerHTML = aaBarInner(draft);
   }
+  /* AA bar under the amount: people count and your even share */
+  const aaShare = (total, n) => Math.round(total / n);
+  const aaBarInner = (d) => `<span class="aa-tag">AA</span><button data-act="aa-n" data-v="-1" aria-label="−">−</button><b class="aa-n">${tr('aa.people', { n: d.aa.n })}</b><button data-act="aa-n" data-v="1" aria-label="+">+</button><span class="aa-mine">${tr('aa.mine', { v: yen(aaShare(parseInt(d.amt || '0', 10), d.aa.n)) })}</span>`;
   function pressKey(k) {
     let s = draft.amt;
     if (k === 'del') s = s.slice(0, -1);
@@ -1163,8 +1206,8 @@
     $$(rowSel, sheetEl).forEach((b) => b.classList.toggle('on', b.dataset[attr] === id));
   }
   /* "−¥573 便利店 · Seven-Eleven Japan" */
-  const entryDesc = (e) => `${e.kind === 'in' ? '+' : e.kind === 'out' ? '−' : ''}${yen(e.amount)} ${e.kind === 'move' ? kindName('move') : cName(catIdx.get(e.cat))}${e.memo ? ` · ${e.memo}` : ''}`;
-  const sameDayAmount = (date, amount, kind) => data.entries.find((e) => e.date === date && e.amount === amount && e.kind === kind);
+  const entryDesc = (e) => `${e.kind === 'in' ? '+' : e.kind === 'out' ? '−' : ''}${yen(e.amount)} ${e.kind === 'move' ? kindName('move') : cName(catIdx.get(e.cat))}${e.memo ? ` · ${e.memo}` : ''}${e.aa && e.aa.t ? tr('aa.descT', { t: yen(e.aa.t) }) : ''}`;
+  const sameDayAmount = (date, amount, kind) => data.entries.find((e) => e.date === date && e.kind === kind && (e.amount === amount || (e.aa && e.aa.t === amount)));
   async function saveDraft(cont) {
     const d = draft;
     const amount = parseInt(d.amt || '0', 10);
@@ -1180,6 +1223,14 @@
       /* the same amount on the same day is often the same purchase entered twice: ask first */
       const same = sameDayAmount(d.date || todayStr(), amount, d.kind);
       if (same && !(await askConfirm(tr('dup.ask', { d: shortDate(d.date || todayStr()), w: entryDesc(same) }), tr('dup.go')))) return;
+    }
+    /* AA: next, who paid back how much and where */
+    if (d.kind === 'out' && d.aa) return openAA(cont);
+    /* no longer AA (switched off, or not an expense any more): drop the pay-back transfers and the mark */
+    if (existing && existing.aa) {
+      const g = existing.aa.g;
+      data.entries = data.entries.filter((e) => !(e.aa && e.aa.g === g && e.id !== existing.id));
+      delete existing.aa;
     }
     const rec = {
       id: d.id || uid(), date: d.date || todayStr(), amount, kind: d.kind,
@@ -1206,15 +1257,115 @@
   async function deleteDraft() {
     const d = draft;
     if (!d || !d.id) return;
-    const ok = await askConfirm(tr('entry.delAsk'), tr('common.delete'), true);
+    const target = data.entries.find((e) => e.id === d.id);
+    if (!target) return;
+    /* an AA expense goes together with its pay-back transfers */
+    const g = target.aa && target.aa.g;
+    const group = g ? data.entries.filter((e) => e.aa && e.aa.g === g) : [target];
+    const k = group.filter((e) => e.kind === 'move').length;
+    const ok = await askConfirm(g && k ? tr('aa.delAsk', { k, n: k }) : tr('entry.delAsk'), tr('common.delete'), true);
     if (!ok) return;
-    const i = data.entries.findIndex((e) => e.id === d.id);
-    if (i < 0) return;
-    const [removed] = data.entries.splice(i, 1);
+    data.entries = data.entries.filter((e) => !group.includes(e));
     saveData();
     closeSheet();
     render();
-    toast(tr('entry.deleted'), { label: tr('common.undo'), fn: () => { data.entries.splice(i, 0, removed); saveData(); render(); toast(tr('entry.restored')); } });
+    toast(tr('entry.deleted'), { label: tr('common.undo'), fn: () => { data.entries.push(...group.filter((e) => !data.entries.includes(e))); saveData(); render(); toast(tr('entry.restored')); } });
+  }
+
+  /* ================= AA: split the bill ================= */
+  /* The whole bill leaves the account that paid it. Your share is the expense; what each friend pays back is a
+     transfer from that account to the account the money came back to (PayPay, cash …), so it is neither
+     income nor spending. All of it carries the same AA group id and is edited or deleted together. */
+  let aaEdit = null;
+  function openAA(cont) {
+    const d = draft, total = parseInt(d.amt, 10), n = d.aa.n;
+    const kept = d.aa.p && d.aa.p.length === n - 1 && d.aa.t === total ? d.aa.p : null;
+    const mine = aaShare(total, n), rest = total - mine, base = Math.floor(rest / (n - 1)), extra = rest - base * (n - 1);
+    const def = ui.aaAcc && accIdx.has(ui.aaAcc) && !accIdx.get(ui.aaAcc).hidden ? ui.aaAcc : '';
+    aaEdit = {
+      d, cont: !!cont, total, n,
+      persons: kept ? kept.map((p) => ({ a: p.a && accIdx.has(p.a) ? p.a : '', v: String(p.v) }))
+        : Array.from({ length: n - 1 }, (_, i) => ({ a: def, v: String(base + (i < extra ? 1 : 0)) })),
+    };
+    openSheet('aa', aaHTML());
+  }
+  const aaMine = (s) => s.total - s.persons.reduce((m, p) => m + (parseInt(p.v, 10) || 0), 0);
+  function aaMineHTML(s) {
+    const mine = aaMine(s), c = catIdx.get(s.d.cat);
+    return mine < 1 ? `<span class="bad">${tr('aa.tooMuch')}</span>` : esc(tr('aa.mineBox', { v: yen(mine), c: cName(c) }));
+  }
+  function aaHTML() {
+    const s = aaEdit, payer = accIdx.get(s.d.acc);
+    const opts = (sel) => (sel ? '' : `<option value="">${tr('aa.accPh')}</option>`) + activeAccs(sel).map((a) => `<option value="${esc(a.id)}"${a.id === sel ? ' selected' : ''}>${esc(aName(a))}</option>`).join('');
+    return `<div class="form aa-form">
+      <div class="f-top"><button class="icon-btn" data-act="aa-back" aria-label="${tr('common.close')}">✕</button><div class="e-title">${tr('aa.title', { n: s.n })}</div><button class="text-btn strong" data-act="aa-save">${tr('common.save')}</button></div>
+      <div class="f-body">
+        <p class="aa-sum">${esc(tr('aa.total', { v: yen(s.total), a: aName(payer) }))}</p>
+        <div class="e-label">${tr('aa.others', { n: s.n - 1 })}</div>
+        <div class="aa-people">${s.persons.map((p, i) => `<div class="aa-p"><span class="aa-who">${tr('aa.who', { i: i + 1 })}</span><select data-aa="acc" data-i="${i}" aria-label="${tr('aa.accPh')}">${opts(p.a)}</select><input type="text" inputmode="numeric" data-aa="amt" data-i="${i}" value="${esc(p.v)}" aria-label="${tr('aa.amtLabel')}"></div>`).join('')}</div>
+        <div class="aa-mine-box">${aaMineHTML(s)}</div>
+        <p class="hint">${esc(tr('aa.note', { a: aName(payer) }))}</p>
+      </div></div>`;
+  }
+  function aaInput(el) {
+    const s = aaEdit, i = Number(el.dataset.i), p = s.persons[i];
+    if (!p) return;
+    if (el.dataset.aa === 'amt') {
+      p.v = el.value.replace(/[^\d]/g, '').slice(0, 10);
+      if (el.value !== p.v) el.value = p.v;
+    } else {
+      p.a = el.value;
+      if (p.a) {
+        ui.aaAcc = p.a; saveUI();
+        /* the first choice fills the people not chosen yet; each can still be changed */
+        s.persons.forEach((q, j) => { if (!q.a && j !== i) { q.a = p.a; const sel = $(`select[data-aa="acc"][data-i="${j}"]`, sheetEl); if (sel) sel.value = p.a; } });
+      }
+    }
+    $('.aa-mine-box', sheetEl).innerHTML = aaMineHTML(s);
+  }
+  function aaBack() {
+    const s = aaEdit;
+    aaEdit = null;
+    if (!s) return closeSheet();
+    draft = s.d;
+    openSheet('entry', entryHTML(), true);
+  }
+  function commitAA() {
+    const s = aaEdit;
+    if (!s) return;
+    const d = s.d;
+    const persons = s.persons.map((p) => ({ a: p.a, v: parseInt(p.v, 10) || 0 }));
+    if (persons.some((p) => !p.a || !accIdx.has(p.a))) return toast(tr('aa.needAcc'));
+    if (persons.some((p) => !(p.v > 0))) return toast(tr('aa.needAmt'));
+    const mine = aaMine(s);
+    if (mine < 1) { shake($('.aa-mine-box', sheetEl)); return toast(tr('aa.tooMuch')); }
+    const existing = d.id ? data.entries.find((e) => e.id === d.id) : null;
+    const g = (existing && existing.aa && existing.aa.g) || uid();
+    const date = d.date || todayStr(), memo = (d.memo || '').trim(), ts = existing ? existing.ts : Date.now();
+    /* rebuild the group: your share, then one transfer per friend who paid back into another account */
+    data.entries = data.entries.filter((e) => !(e.aa && e.aa.g === g && e.kind === 'move'));
+    const main = { id: d.id || uid(), date, amount: mine, kind: 'out', cat: d.cat, acc: d.acc, to: null, memo, ts, aa: { g, n: s.n, t: s.total, p: persons } };
+    const at = existing ? data.entries.findIndex((e) => e.id === existing.id) : -1;
+    if (at >= 0) data.entries[at] = main; else data.entries.push(main);
+    const label = memo || cName(catIdx.get(d.cat));
+    persons.forEach((p, i) => {
+      if (p.a !== d.acc) data.entries.push({ id: uid(), date, amount: p.v, kind: 'move', cat: null, acc: d.acc, to: p.a, memo: label, ts: ts - 1 - i, aa: { g } });
+    });
+    ui.lastAccAny = d.acc;
+    saveUI();
+    saveData();
+    if (date.slice(0, 7) !== ui.month) ui.month = date.slice(0, 7);
+    aaEdit = null;
+    const msg = tr('aa.saved', { v: yen(mine), t: yen(s.total), n: s.n });
+    const undo = existing ? null : { label: tr('common.undo'), fn: () => { data.entries = data.entries.filter((e) => !(e.aa && e.aa.g === g)); saveData(); render(); toast(tr('entry.restored')); } };
+    if (s.cont && !existing) {
+      draft = { id: null, kind: 'out', amt: '', cat: null, acc: d.acc, to: d.to, date: d.date, memo: '' };
+      openSheet('entry', entryHTML(), true);
+    } else {
+      closeSheet();
+    }
+    render();
+    if (existing) toast(tr('entry.savedEdit')); else toast(msg, undo);
   }
 
   /* ================= settings forms ================= */
@@ -1661,6 +1812,7 @@
   }
   const rowNotes = (r) => [
     r.same ? `<em class="tag warn">${esc(tr('scan.same', { w: r.same }))}</em>` : '',
+    r.aaSame ? `<em class="tag warn">${esc(tr('scan.aaSame', { w: r.aaSame }))}</em>` : '',
     r.twin ? `<em class="tag warn">${tr('scan.twin')}</em>` : '',
     r.noDate ? `<em class="tag warn">${tr('scan.noDate')}</em>` : '',
     r.via ? `<span>${esc(r.via)}</span>` : ''].join('');
@@ -1714,7 +1866,10 @@
     /* the same transaction seen twice, e.g. in two overlapping screenshots */
     const twin = j.rows.some((r) => r.date === date && r.amount === x.amount && r.kind === x.kind && (!r.time || !x.time || r.time === x.time));
     const to = x.kind === 'move' ? x.to || d.acc || null : null;
-    const r = Object.assign({}, x, { date, noDate: !x.date, same: same ? entryDesc(same) : '', twin, on: !same && !twin, to, from: x.from && x.from !== to ? x.from : null });
+    /* money received that matches an AA pay-back recorded within two weeks is probably the same money */
+    const days = (a, b) => Math.abs(Math.round((parseYMD(a) - parseYMD(b)) / 86400000));
+    const aaHit = x.kind === 'in' ? data.entries.find((e) => e.kind === 'move' && e.aa && e.amount === x.amount && days(e.date, date) <= 14) : null;
+    const r = Object.assign({}, x, { date, noDate: !x.date, same: same ? entryDesc(same) : '', twin, aaSame: aaHit ? `${yen(aaHit.amount)} · ${aaHit.memo}` : '', on: !same && !twin && !aaHit, to, from: x.from && x.from !== to ? x.from : null });
     j.rows.push(r);
     if (onPage(j)) {
       const list = $('.sl-list', sheetEl), ph = $('.sl-empty', list);
@@ -2226,7 +2381,13 @@
       case 'clear-filter': ui.filter = { kind: ui.filter.kind, cat: null, acc: null }; render(); break;
       case 'trend-cat': ui.trendCat = id; ui.trendTip = null; saveUI(); render(); break;
       case 'bar': ui.trendTip = v; render(); break;
-      case 'edit': { const e = data.entries.find((x) => x.id === id); if (e) openEntry(e); break; }
+      case 'edit': {
+        const e = data.entries.find((x) => x.id === id);
+        /* a friend's AA pay-back opens the AA expense it belongs to */
+        const main = e && e.aa && e.kind === 'move' ? data.entries.find((x) => x.aa && x.aa.g === e.aa.g && x.kind !== 'move') : null;
+        if (e) openEntry(main || e);
+        break;
+      }
       case 'go-settings': ui.tab = 'settings'; render(); view.scrollTop = 0; break;
       case 'go-list': ui.tab = 'list'; render(); view.scrollTop = 0; break;
       /* entry sheet */
@@ -2249,6 +2410,19 @@
         break;
       }
       case 'key': pressKey(v); break;
+      case 'aa-toggle':
+        draft.aa = draft.aa ? null : { n: Math.min(20, Math.max(2, Number(ui.aaN) || 2)) };
+        renderEntry(); break;
+      case 'aa-n': {
+        if (!draft.aa) break;
+        draft.aa.n = Math.min(20, Math.max(2, draft.aa.n + Number(v)));
+        ui.aaN = draft.aa.n; saveUI();
+        const bar = $('.aa-bar', sheetEl);
+        if (bar) bar.innerHTML = aaBarInner(draft);
+        break;
+      }
+      case 'aa-back': aaBack(); break;
+      case 'aa-save': commitAA(); break;
       case 'save': if (v === 'cont' && draft.id) closeSheet(); else saveDraft(v === 'cont'); break;
       case 'del-entry': deleteDraft(); break;
       case 'close-sheet': case 'backdrop': closeSheet(); break;
@@ -2304,11 +2478,14 @@
   document.addEventListener('input', (ev) => {
     const el = ev.target;
     if (el.dataset.input === 'memo' && draft) draft.memo = el.value;
+    else if (el.dataset.aa === 'amt' && aaEdit) aaInput(el);
     else if (el.id === 'f-init') updateAdjNote();
   });
   document.addEventListener('change', (ev) => {
     const el = ev.target;
-    if (el.dataset.sl && scanJob) {
+    if (el.dataset.aa === 'acc' && aaEdit) {
+      aaInput(el);
+    } else if (el.dataset.sl && scanJob) {
       changeScanList(el);
     } else if (el.dataset.input === 'date' && draft) {
       draft.date = /^\d{4}-\d{2}-\d{2}$/.test(el.value) ? el.value : todayStr();

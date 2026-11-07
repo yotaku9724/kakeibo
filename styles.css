@@ -477,3 +477,24 @@ svg { display: block; }
 .sl-skips:empty { display: none; }
 .sl-row.new { animation: sl-in .25s ease-out; }
 @keyframes sl-in { from { opacity: 0; transform: translateY(6px); } }
+
+/* AA: split the bill */
+.amt-tools { margin-right: auto; align-self: center; display: inline-flex; align-items: center; gap: 8px; }
+.amt-tools .scan-btn { margin-right: 0; }
+.aa-btn { padding: 6px 12px; border-radius: 999px; border: 1.5px solid var(--line); background: var(--card); color: var(--ink2); font-size: 14px; font-weight: 800; letter-spacing: .5px; }
+.aa-btn.on { border-color: var(--accent); background: var(--accent-soft); color: var(--accent-ink); }
+.aa-bar { display: flex; align-items: center; gap: 8px; margin: 0 16px 6px; padding: 5px 10px; border-radius: 12px; background: var(--accent-soft); color: var(--accent-ink); font-size: 14px; font-weight: 700; }
+.aa-bar .aa-tag { font-weight: 800; letter-spacing: .5px; }
+.aa-bar button { width: 30px; height: 30px; flex: none; border-radius: 50%; background: var(--card); color: var(--ink); font-size: 18px; font-weight: 800; line-height: 1; }
+.aa-bar .aa-n { min-width: 42px; text-align: center; }
+.aa-bar .aa-mine { margin-left: auto; font-variant-numeric: tabular-nums; }
+.aa-form .aa-sum { margin: 2px 2px 4px; color: var(--ink2); font-weight: 650; }
+.aa-people { display: flex; flex-direction: column; gap: 8px; }
+.aa-p { display: grid; grid-template-columns: auto 1fr 104px; gap: 8px; align-items: center; }
+.aa-who { min-width: 48px; font-size: 14px; font-weight: 650; }
+.aa-p select, .aa-p input { width: 100%; min-width: 0; min-height: 42px; border: 1px solid var(--line); border-radius: 12px; background: var(--bg); color: var(--ink); padding: 0 10px; font-size: 16px; }
+.aa-p input { text-align: right; font-variant-numeric: tabular-nums; outline: none; }
+.aa-p input:focus { border-color: var(--accent); }
+.aa-mine-box { margin-top: 12px; padding: 10px 12px; border-radius: 12px; background: var(--accent-soft); color: var(--accent-ink); font-weight: 700; }
+.aa-mine-box .bad { color: var(--out); }
+.badge-aa { display: inline-block; font-size: 10.5px; font-weight: 800; color: var(--accent-ink); background: var(--accent-soft); border-radius: 6px; padding: 0 5px; margin-left: 6px; vertical-align: 1px; letter-spacing: .3px; }
