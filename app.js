@@ -1,7 +1,7 @@
 /* 家计簿 — offline bookkeeping web app. Data lives only in this browser (localStorage). */
 'use strict';
 (() => {
-  const APP_VERSION = '1.0.13';
+  const APP_VERSION = '1.0.14';
   const STORE_KEY = 'kakeibo:data';
   const PREV_KEY = 'kakeibo:data:prev';
   const UI_KEY = 'kakeibo:ui';
@@ -179,7 +179,7 @@
       'scan.title': 'AI 识别', 'ss.prep': '处理图片', 'ss.upload': '上传', 'ss.ai': 'AI 识别',
       'ss.prepDone': '{n} 张', 'ss.prepSlices': '{n} 张 · 长图切成 {p} 段', 'ss.prepSkip': '{n} 张打不开，已跳过',
       'ss.upPct': '{p}% · {a} / {b}', 'ss.wait': '{m} · 等待回复 {s} 秒', 'ss.recv': '已识别 {n} 笔 · {s} 秒', 'ss.done': '完成 · {s} 秒',
-      'ss.switch': '{a} 暂时用不了（{c}），改用 {b}', 'ss.noThink': '这个模型不支持思考设置，已重新发送',
+      'ss.switch': '{a} 暂时用不了（{c}），改用 {b}', 'ss.slowSwitch': '{a} {s} 秒没回复，改用 {b}', 'ss.noThink': '这个模型不支持思考设置，已重新发送',
       'ss.waiting': '识别出的会一条一条出现在这里', 'ss.none': '没有可以记的收支',
       'ss.stallUp': '上传卡住了，网络可能不好', 'ss.stallAi': 'AI {s} 秒没有回复', 'ss.net': '网络连接断了',
       'ss.cut': '已识别的可以先添加，也可以重试。', 'ss.retry': '重试', 'ss.fill': '填到记一笔里改',
@@ -277,7 +277,7 @@
       'scan.title': 'AI 読み取り', 'ss.prep': '画像の準備', 'ss.upload': 'アップロード', 'ss.ai': 'AI 読み取り',
       'ss.prepDone': '{n}枚', 'ss.prepSlices': '{n}枚・縦長を{p}分割', 'ss.prepSkip': '{n}枚は開けないため除外しました',
       'ss.upPct': '{p}%・{a} / {b}', 'ss.wait': '{m}・応答待ち {s}秒', 'ss.recv': '{n}件読み取り済み・{s}秒', 'ss.done': '完了・{s}秒',
-      'ss.switch': '{a} が使えないため（{c}）、{b} に切り替えました', 'ss.noThink': 'このモデルは思考設定に未対応のため、送り直しました',
+      'ss.switch': '{a} が使えないため（{c}）、{b} に切り替えました', 'ss.slowSwitch': '{a} が{s}秒応答しないため、{b} に切り替えました', 'ss.noThink': 'このモデルは思考設定に未対応のため、送り直しました',
       'ss.waiting': '読み取れた取引がここに順に表示されます', 'ss.none': '記録できる取引がありません',
       'ss.stallUp': 'アップロードが進みません。通信状況を確認してください', 'ss.stallAi': 'AI から {s}秒応答がありません', 'ss.net': '通信が切れました',
       'ss.cut': '読み取れた分は追加できます。再試行もできます。', 'ss.retry': '再試行', 'ss.fill': '入力画面で編集',
@@ -379,7 +379,7 @@
       'scan.title': 'AI scan', 'ss.prep': 'Preparing images', 'ss.upload': 'Uploading', 'ss.ai': 'AI reading',
       'ss.prepDone': '{n} images', 'ss.prepDone1': '1 image', 'ss.prepSlices': '{n} images · long ones cut into {p} parts', 'ss.prepSlices1': '1 image · cut into {p} parts', 'ss.prepSkip': '{n} could not be opened and were left out', 'ss.prepSkip1': '1 could not be opened and was left out',
       'ss.upPct': '{p}% · {a} / {b}', 'ss.wait': '{m} · waiting {s}s', 'ss.recv': '{n} found · {s}s', 'ss.done': 'Done · {s}s',
-      'ss.switch': '{a} unavailable ({c}), switched to {b}', 'ss.noThink': 'This model does not take the thinking setting; sent again',
+      'ss.switch': '{a} unavailable ({c}), switched to {b}', 'ss.slowSwitch': '{a} gave no reply for {s}s, switched to {b}', 'ss.noThink': 'This model does not take the thinking setting; sent again',
       'ss.waiting': 'Transactions appear here as they are found', 'ss.none': 'Nothing to record',
       'ss.stallUp': 'The upload is stuck. Check your connection', 'ss.stallAi': 'No reply from AI for {s}s', 'ss.net': 'The connection dropped',
       'ss.cut': 'You can add what was found, or try again.', 'ss.retry': 'Try again', 'ss.fill': 'Edit in New entry',
@@ -1367,8 +1367,9 @@
      straight from the phone to Google; nothing passes through any server of ours. */
   const AI_STORE = 'kakeibo:ai';
   const AI_BASE = 'https://generativelanguage.googleapis.com/v1beta';
-  /* free-tier models, best first; if Google retires them all, the models list is asked for a current flash model */
-  const AI_MODELS = ['gemini-3.8-flash', 'gemini-3.6-flash', 'gemini-3.5-flash-lite', 'gemini-3.1-flash-lite'];
+  /* free-tier models, fastest first: on the free tier the bigger Flash models often take a minute or more
+     (or answer 503), while Flash-Lite replies in seconds. If Google retires them all, the models list is asked. */
+  const AI_MODELS = ['gemini-3.5-flash-lite', 'gemini-3.1-flash-lite', 'gemini-3.6-flash', 'gemini-3.8-flash'];
   const aiState = () => { try { return JSON.parse(localStorage.getItem(AI_STORE) || '{}') || {}; } catch (e) { return {}; } };
   const aiKey = () => String(aiState().key || '');
   function saveAi(patch) { try { localStorage.setItem(AI_STORE, JSON.stringify(Object.assign(aiState(), patch))); } catch (e) { /* storage full */ } }
@@ -1408,7 +1409,7 @@
     }
     return j || {};
   }
-  /* flash models from the account's model list, newest first, full flash before lite */
+  /* flash models from the account's model list, newest first, lite (faster) before full flash */
   async function aiListModels(key, signal) {
     const j = await aiFetch(key, 'models?pageSize=200', null, signal);
     const ver = (n) => Number((/(\d+(?:\.\d+)?)/.exec(n) || [0, 0])[1]);
@@ -1416,7 +1417,7 @@
       .filter((m) => (m.supportedGenerationMethods || []).includes('generateContent'))
       .map((m) => String(m.name || '').replace(/^models\//, ''))
       .filter((n) => /flash/.test(n) && !/(live|tts|image|audio|embed|transcrib|translat)/.test(n))
-      .sort((a, b) => ver(b) - ver(a) || /lite/.test(a) - /lite/.test(b));
+      .sort((a, b) => ver(b) - ver(a) || /lite/.test(b) - /lite/.test(a));
   }
   async function saveAiKey() {
     const inp = $('#ai-key', sheetEl);
@@ -1481,20 +1482,21 @@
       'Read this image for a household budget app kept in Japanese yen. It can be a Japanese receipt, a payment screen, or a screenshot that lists several transactions (PayPay 取引履歴, WeChat Pay 微信支付 payment notices, a card or bank app).',
       nImages > 1 ? `There are ${nImages} images, in order. They can be consecutive screenshots or slices of one long screenshot, and they may overlap: list each transaction only once.` : '',
       'Reply with JSON only, in this shape:',
-      '{"items": [{"type": "payment" | "refund" | "income" | "transfer" | "points" | "failed", "amount": integer, "currency": "JPY" or the currency shown, "date": "YYYY-MM-DD" or null, "time": "HH:MM" or null, "merchant": string, "via": string or null, "category": a category id or null, "from": an account id or null, "to": an account id or null}]}',
+      '{"items": [{"type": "payment" | "refund" | "income" | "transfer" | "points" | "failed", "amount": integer, "date": "YYYY-MM-DD", "time": "HH:MM", "merchant": string, "via": string, "category": a category id, "from": an account id, "to": an account id, "currency": a currency code}]}',
+      'Leave out any field that is unknown or does not apply, to keep the reply short: currency only when the amount is not in yen, from and to only for transfers.',
       'One item per transaction, in the order shown. A receipt is a single transaction.',
       'amount: in Japanese yen, digits only. On a receipt, the total actually paid, tax included, after discounts (合計, お支払い, ご請求額), not the subtotal, 預り or お釣り.',
-      'On WeChat Pay or Alipay notices the large "¥" figure is Chinese yuan: use the yen price instead (标价 … 日元). Only if a transaction shows no yen amount at all, give its amount and currency as shown.',
+      'On WeChat Pay or Alipay notices the large "¥" figure is Chinese yuan: use the yen price instead (标价 … 日元). Only if a transaction shows no yen amount at all, give its amount with the currency as shown.',
       'type: "payment" for money paid, including 支払い完了, 支払い受付 and money sent to a person; "refund" for 返金 / 退款; "income" for money received (受け取り, 收款, salary); "transfer" for top-ups, charges and withdrawals between the user\'s own accounts (チャージ, 充值, 提现, 出金); "points" for points or coupons (pt, ポイント付与); "failed" for failed or cancelled payments (支払い失敗, キャンセル, 取消, 失败, a struck-through amount).',
-      'date: the transaction date. Convert Japanese era years (令和8年 is 2026). Relative labels count back from today: 今天/今日/Today, 昨天/昨日/Yesterday, 前天/一昨日; a weekday name (星期二, 火曜日, Tue) is the latest such day before today; a time alone (9:30) means today. null if the date cannot be told.',
-      'time: the time of day if shown, else null.',
+      'date: the transaction date. Convert Japanese era years (令和8年 is 2026). Relative labels count back from today: 今天/今日/Today, 昨天/昨日/Yesterday, 前天/一昨日; a weekday name (星期二, 火曜日, Tue) is the latest such day before today; a time alone (9:30) means today. Leave it out if the date cannot be told.',
+      'time: the time of day if shown.',
       'merchant: the shop or other party as shown (on WeChat Pay, the name at the top of the notice), at most 20 characters.',
-      'via: the payment source if shown (残高, 残高カード, PayPayカード, a card name), else null.',
+      'via: the payment source if shown (残高, 残高カード, PayPayカード, a card name).',
       'Leave out a transaction that is cut off so that its amount or its merchant cannot be seen.',
-      'category (payments, refunds and income only): an id from the lists below, only when you are fairly sure which one fits; otherwise null, and the user will choose.',
+      'category (payments, refunds and income only): an id from the lists below, only when you are fairly sure which one fits; otherwise leave it out, and the user will choose.',
       conb ? `Convenience stores (7-Eleven / セブン-イレブン / Seven-Eleven Japan, FamilyMart / ファミリーマート, Lawson / ローソン, Ministop, Daily Yamazaki, NewDays, Seicomart …) are ${conb.id}.` : '',
       food ? `Supermarkets and grocery stores (AEON / イオン, 西友, ライフ, まいばすけっと, OK / オーケー, サミット, マルエツ, 業務スーパー …) are ${food.id}.` : '',
-      'from / to (transfers only): the ids of the accounts below that the money leaves and enters, when you can tell; for example 三菱ＵＦＪ銀行からのチャージ on a PayPay screen goes from the 三菱UFJ bank account to the PayPay account. null when unsure; null for other types.',
+      'from / to (transfers only): the ids of the accounts below that the money leaves and enters, when you can tell; for example 三菱ＵＦＪ銀行からのチャージ on a PayPay screen goes from the 三菱UFJ bank account to the PayPay account. Leave out the one you cannot tell.',
       `Today is ${todayStr()} (${WEEK.en[new Date().getDay()]}).`,
       'Expense categories:', list('out'), 'Income categories:', list('in'), 'Accounts:', accs,
       'If nothing can be read, reply {"items": []}.',
@@ -1634,7 +1636,7 @@
 
   /* ---- the scan page: what is happening (images, upload, AI) and each transaction as soon as it is read ---- */
   /* a stage only gives up after this many seconds without any progress, not after a fixed total */
-  const SCAN_LIMITS = { upStall: 30, firstReply: 120, idle: 60 };
+  const SCAN_LIMITS = { upStall: 30, switchAfter: 25, firstReply: 120, idle: 60 };
   let scanJob = null;
   const mb = (n) => (n < 1048576 ? `${Math.max(1, Math.round(n / 1024))} KB` : `${(n / 1048576).toFixed(1)} MB`);
   const secs = (t) => Math.max(0, Math.round((Date.now() - t) / 1000));
@@ -1735,6 +1737,8 @@
     if (j !== scanJob) return clearInterval(j.tick);
     refreshAiStep(j);
     const L = SCAN_LIMITS, now = Date.now();
+    /* a model that has not started answering: try the next one rather than keep waiting */
+    if (j.phase === 'wait' && j.hasNext && now - j.tWait > L.switchAfter * 1000 && j.xhr) { j.slow = L.switchAfter; try { j.xhr.abort(); } catch (e) { /* gone */ } return; }
     let why = null;
     if (j.phase === 'upload' && now - j.last > L.upStall * 1000) why = tr('ss.stallUp');
     else if (j.phase === 'wait' && now - j.tWait > L.firstReply * 1000) why = tr('ss.stallAi', { s: L.firstReply });
@@ -1771,7 +1775,8 @@
   /* 2) + 3) send to Gemini and read the reply as it streams; on a busy or retired model, try the next one */
   async function runScan(j) {
     const key = aiKey(), st = aiState();
-    const models = [...new Set([st.model, ...AI_MODELS].filter(Boolean))];
+    /* a remembered model only leads when it is one found through the model list (not one of ours) */
+    const models = [...new Set([...(st.model && !AI_MODELS.includes(st.model) ? [st.model] : []), ...AI_MODELS])];
     let listed = false, noThink = false;
     j.rows = []; j.skips = {}; j.stall = null;
     if (onPage(j)) { $('.sl-list', sheetEl).innerHTML = `<p class="hint sl-empty">${tr('ss.waiting')}</p>`; setScanMsg(j, ''); }
@@ -1783,7 +1788,7 @@
         contents: [{ role: 'user', parts: [...j.parts.map((p) => ({ inline_data: { mime_type: p.mime, data: p.data } })), { text: scanPrompt(j.parts.length) }] }],
         generationConfig: noThink ? { responseMimeType: 'application/json' } : { responseMimeType: 'application/json', thinkingConfig: { thinkingLevel: 'low' } },
       };
-      j.model = m; j.phase = 'upload'; j.last = j.tSend = Date.now(); j.stall = null;
+      j.model = m; j.phase = 'upload'; j.last = j.tSend = Date.now(); j.stall = null; j.slow = 0; j.hasNext = i < models.length - 1;
       setStep(j, 'upload', 'on', '');
       setStep(j, 'ai', 'wait', '');
       refreshScanFoot(j);
@@ -1813,7 +1818,7 @@
           },
         });
         if (j !== scanJob) return;
-        if (m !== st.model) saveAi({ model: m });
+        if (!AI_MODELS.includes(m) && m !== st.model) saveAi({ model: m });
         /* an answer that was not an items list: read it whole */
         if (!j.rows.length && !Object.keys(j.skips).length) {
           const o = looseJSON(scanner.text());
@@ -1829,6 +1834,7 @@
         return;
       } catch (e) {
         if (j !== scanJob) return;
+        if (e.name === 'AbortError' && j.slow && !gotText && i < models.length - 1) { setScanNote(j, tr('ss.slowSwitch', { a: m, b: models[i + 1], s: j.slow })); continue; }
         if (e.name !== 'AbortError' && !gotText) {
           /* a model that does not take the thinking setting: ask again without it */
           if (e.status === 400 && /think/i.test(e.message) && !noThink) { noThink = true; i--; setScanNote(j, tr('ss.noThink')); continue; }
