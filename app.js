@@ -1,7 +1,7 @@
 /* 家计簿 — offline bookkeeping web app. Data lives only in this browser (localStorage). */
 'use strict';
 (() => {
-  const APP_VERSION = '1.0.15';
+  const APP_VERSION = '1.0.16';
   const STORE_KEY = 'kakeibo:data';
   const PREV_KEY = 'kakeibo:data:prev';
   const UI_KEY = 'kakeibo:ui';
@@ -188,7 +188,7 @@
       'aa.who': '朋友 {i}', 'aa.accPh': '收款方式', 'aa.mineBox': '我的部分 {v}，记为「{c}」支出', 'aa.amtLabel': '金额',
       'aa.note': '朋友还的钱记成从「{a}」到收款账户的转移，不算收入也不算支出，并标记为 AA。还到「{a}」本身的不另记。',
       'aa.needAcc': '请给每个人选收款方式', 'aa.needAmt': '请填写每个人的金额', 'aa.tooMuch': '朋友的合计不能超过总额',
-      'aa.saved': '已记下 AA：我的部分 {v}（共 {t} · {n} 人）', 'aa.sub': '{n}人 · 共{t}', 'aa.delAsk': '删除这笔 AA？朋友还款的 {k} 笔转移也会一起删除。',
+      'aa.saved': '已记下 AA：我的部分 {v}（共 {t} · {n} 人）', 'aa.over': '我的部分 ¥0。多出的 {x} 只进收款账户的余额，不算收入也不算支出', 'aa.extra': 'AA 多收', 'aa.extraCsv': '（AA 多收，不计入收支）', 'aa.delExtra': '删除这笔 AA 多收？', 'aa.sub': '{n}人 · 共{t}', 'aa.delAsk': '删除这笔 AA？相关的 {k} 笔（朋友还款）也会一起删除。',
       'aa.descT': '（AA 共{t}）', 'scan.aaSame': '可能是已记的 AA 回款：{w}',
       'scan.sk.points': '积分 {n} 笔', 'scan.sk.failed': '失败/取消 {n} 笔', 'scan.sk.foreign': '没有日元金额 {n} 笔',
     },
@@ -292,7 +292,7 @@
       'aa.who': '友達 {i}', 'aa.accPh': '受取方法', 'aa.mineBox': '自分の分 {v} を「{c}」の支出として記録', 'aa.amtLabel': '金額',
       'aa.note': '友達からのお金は「{a}」から受取口座への振替として記録し、収入にも支出にも含めません（AA の印付き）。「{a}」自体に戻った分は記録しません。',
       'aa.needAcc': '全員の受取方法を選んでください', 'aa.needAmt': '全員の金額を入力してください', 'aa.tooMuch': '友達の合計が総額を超えています',
-      'aa.saved': 'AA を記録しました：自分の分 {v}（合計 {t}・{n}人）', 'aa.sub': '{n}人・合計{t}', 'aa.delAsk': 'この AA を削除しますか？友達からの振替 {k} 件も削除されます。',
+      'aa.saved': 'AA を記録しました：自分の分 {v}（合計 {t}・{n}人）', 'aa.over': '自分の分は ¥0。超えた {x} は受取口座の残高にだけ反映し、収入にも支出にも含めません', 'aa.extra': 'AA 超過分', 'aa.extraCsv': '（AA 超過分、収支に含めない）', 'aa.delExtra': 'この AA 超過分を削除しますか？', 'aa.sub': '{n}人・合計{t}', 'aa.delAsk': 'この AA を削除しますか？関連する {k} 件（友達からの返金）も削除されます。',
       'aa.descT': '（AA 合計{t}）', 'scan.aaSame': '記録済みの AA の返金かもしれません：{w}',
       'scan.sk.points': 'ポイント {n}件', 'scan.sk.failed': '失敗・取消 {n}件', 'scan.sk.foreign': '円の金額なし {n}件',
     },
@@ -400,7 +400,7 @@
       'aa.who': 'Friend {i}', 'aa.accPh': 'Paid back to', 'aa.mineBox': 'Your share {v}, recorded as {c} spending', 'aa.amtLabel': 'Amount',
       'aa.note': 'Money paid back is recorded as a transfer from {a} to the account it went to, not as income or spending, and marked AA. Money paid back into {a} itself needs no transfer.',
       'aa.needAcc': 'Choose where each person paid you back', 'aa.needAmt': 'Enter an amount for each person', 'aa.tooMuch': 'Friends’ total is more than the bill',
-      'aa.saved': 'AA saved: your share {v} (total {t}, {n} people)', 'aa.sub': '{n} people · total {t}', 'aa.delAsk': 'Delete this AA? Its {k} pay-back transfers will be deleted too.', 'aa.delAsk1': 'Delete this AA? Its pay-back transfer will be deleted too.',
+      'aa.saved': 'AA saved: your share {v} (total {t}, {n} people)', 'aa.over': 'Your share is ¥0. The extra {x} only goes into the receiving account balance, not income or spending', 'aa.extra': 'AA extra', 'aa.extraCsv': ' (AA extra, not income or spending)', 'aa.delExtra': 'Delete this AA extra?', 'aa.sub': '{n} people · total {t}', 'aa.delAsk': 'Delete this AA? Its {k} related pay-back records will be deleted too.', 'aa.delAsk1': 'Delete this AA? Its related pay-back record will be deleted too.',
       'aa.descT': ' (AA, total {t})', 'scan.aaSame': 'May be an AA pay-back already recorded: {w}',
       'scan.sk.points': '{n} points items', 'scan.sk.points1': '1 points item',
       'scan.sk.failed': '{n} failed or cancelled', 'scan.sk.failed1': '1 failed or cancelled', 'scan.sk.foreign': '{n} without a yen amount', 'scan.sk.foreign1': '1 without a yen amount',
@@ -598,10 +598,12 @@
     /* data from before group ordering existed: keep the order the accounts were already listed in */
     out.typeOrder = normTypeOrder(Array.isArray(d.typeOrder) ? d.typeOrder : out.accounts.map((a) => a.type));
     out.entries = d.entries
-      .filter((e) => e && /^\d{4}-\d{2}-\d{2}$/.test(e.date) && Number(e.amount) > 0 && ['out', 'in', 'move'].includes(e.kind))
+      .filter((e) => e && /^\d{4}-\d{2}-\d{2}$/.test(e.date) && ['out', 'in', 'move', 'adj'].includes(e.kind)
+        /* an AA expense can be ¥0 when friends paid back the whole bill */
+        && (Number(e.amount) > 0 || (e.kind === 'out' && Number(e.amount) === 0 && e.aa && Number(e.aa.t) > 0)))
       .map((e) => ({
         id: cleanId(e.id), date: e.date, amount: Math.round(Number(e.amount)), kind: e.kind,
-        cat: e.kind === 'move' ? null : ref(e.cat), acc: ref(e.acc),
+        cat: e.kind === 'move' || e.kind === 'adj' ? null : ref(e.cat), acc: ref(e.acc),
         to: e.kind === 'move' ? ref(e.to) : null, memo: String(e.memo || '').slice(0, 60), ts: Number(e.ts) || 0,
         ...cleanAA(e.aa),
       }));
@@ -680,7 +682,8 @@
   }
   function catTotals(list, kind) {
     const m = new Map();
-    for (const e of list) if (e.kind === kind) { const k = e.cat && catIdx.has(e.cat) ? e.cat : '_none'; m.set(k, (m.get(k) || 0) + e.amount); }
+    /* a ¥0 AA share is not a category the month spent money on */
+    for (const e of list) if (e.kind === kind && e.amount > 0) { const k = e.cat && catIdx.has(e.cat) ? e.cat : '_none'; m.set(k, (m.get(k) || 0) + e.amount); }
     return m;
   }
   const catOrder = (id) => { const i = data.categories.findIndex((c) => c.id === id); return i < 0 ? 999 : i; };
@@ -699,7 +702,7 @@
     for (const e of data.entries) {
       if (e.date > through) continue;
       if (e.kind === 'out') { if (b.has(e.acc)) b.set(e.acc, b.get(e.acc) - e.amount); }
-      else if (e.kind === 'in') { if (b.has(e.acc)) b.set(e.acc, b.get(e.acc) + e.amount); }
+      else if (e.kind === 'in' || e.kind === 'adj') { if (b.has(e.acc)) b.set(e.acc, b.get(e.acc) + e.amount); }
       else {
         if (b.has(e.acc)) b.set(e.acc, b.get(e.acc) - e.amount);
         if (b.has(e.to)) b.set(e.to, b.get(e.to) + e.amount);
@@ -733,6 +736,9 @@
     const future = e.date > todayStr();
     const fb = future ? `<span class="badge-future">${tr('future')}</span>` : '';
     const aaB = e.aa ? '<span class="badge-aa">AA</span>' : '';
+    if (e.kind === 'adj') {
+      return `<button class="row ${future ? 'future' : ''}" data-act="edit" data-id="${esc(e.id)}"><span class="ic mv">＋</span><span class="mid"><span class="title">${esc(e.memo || tr('aa.extra'))}${aaB}${fb}</span><span class="rsub">${esc(`${tr('aa.extra')} · ${a ? aName(a) : tr('deleted')}`)}</span></span><span class="amt mv">+${yen(e.amount)}</span></button>`;
+    }
     if (e.kind === 'move') {
       return `<button class="row ${future ? 'future' : ''}" data-act="edit" data-id="${esc(e.id)}"><span class="ic mv">⇄</span><span class="mid"><span class="title">${esc(e.memo || kindName('move'))}${aaB}${fb}</span><span class="rsub">${esc(a ? aName(a) : tr('deleted'))} → ${esc(t ? aName(t) : tr('deleted'))}</span></span><span class="amt mv">${yen(e.amount)}</span></button>`;
     }
@@ -913,7 +919,7 @@
     const winTot = new Map();
     for (const e of data.entries) {
       const m = e.date.slice(0, 7);
-      if (e.kind === kind && m >= start && m <= end && e.cat && catIdx.has(e.cat)) winTot.set(e.cat, (winTot.get(e.cat) || 0) + e.amount);
+      if (e.kind === kind && e.amount > 0 && m >= start && m <= end && e.cat && catIdx.has(e.cat)) winTot.set(e.cat, (winTot.get(e.cat) || 0) + e.amount);
     }
     const opts = [...winTot.entries()].sort((a, b) => b[1] - a[1] || catOrder(a[0]) - catOrder(b[0])).map(([id]) => id);
     if (!opts.length) return '';
@@ -1206,7 +1212,7 @@
     $$(rowSel, sheetEl).forEach((b) => b.classList.toggle('on', b.dataset[attr] === id));
   }
   /* "−¥573 便利店 · Seven-Eleven Japan" */
-  const entryDesc = (e) => `${e.kind === 'in' ? '+' : e.kind === 'out' ? '−' : ''}${yen(e.amount)} ${e.kind === 'move' ? kindName('move') : cName(catIdx.get(e.cat))}${e.memo ? ` · ${e.memo}` : ''}${e.aa && e.aa.t ? tr('aa.descT', { t: yen(e.aa.t) }) : ''}`;
+  const entryDesc = (e) => `${e.kind === 'in' || e.kind === 'adj' ? '+' : e.kind === 'out' ? '−' : ''}${yen(e.amount)} ${e.kind === 'move' ? kindName('move') : e.kind === 'adj' ? tr('aa.extra') : cName(catIdx.get(e.cat))}${e.memo ? ` · ${e.memo}` : ''}${e.aa && e.aa.t ? tr('aa.descT', { t: yen(e.aa.t) }) : ''}`;
   const sameDayAmount = (date, amount, kind) => data.entries.find((e) => e.date === date && e.kind === kind && (e.amount === amount || (e.aa && e.aa.t === amount)));
   async function saveDraft(cont) {
     const d = draft;
@@ -1262,7 +1268,7 @@
     /* an AA expense goes together with its pay-back transfers */
     const g = target.aa && target.aa.g;
     const group = g ? data.entries.filter((e) => e.aa && e.aa.g === g) : [target];
-    const k = group.filter((e) => e.kind === 'move').length;
+    const k = group.filter((e) => e.kind !== 'out').length;
     const ok = await askConfirm(g && k ? tr('aa.delAsk', { k, n: k }) : tr('entry.delAsk'), tr('common.delete'), true);
     if (!ok) return;
     data.entries = data.entries.filter((e) => !group.includes(e));
@@ -1289,10 +1295,12 @@
     };
     openSheet('aa', aaHTML());
   }
-  const aaMine = (s) => s.total - s.persons.reduce((m, p) => m + (parseInt(p.v, 10) || 0), 0);
+  /* your share is what the friends did not cover; it never goes below ¥0 */
+  const aaPaid = (s) => s.persons.reduce((m, p) => m + (parseInt(p.v, 10) || 0), 0);
+  const aaMine = (s) => Math.max(0, s.total - aaPaid(s));
   function aaMineHTML(s) {
-    const mine = aaMine(s), c = catIdx.get(s.d.cat);
-    return mine < 1 ? `<span class="bad">${tr('aa.tooMuch')}</span>` : esc(tr('aa.mineBox', { v: yen(mine), c: cName(c) }));
+    const over = aaPaid(s) - s.total, c = catIdx.get(s.d.cat);
+    return over > 0 ? esc(tr('aa.over', { x: yen(over) })) : esc(tr('aa.mineBox', { v: yen(aaMine(s)), c: cName(c) }));
   }
   function aaHTML() {
     const s = aaEdit, payer = accIdx.get(s.d.acc);
@@ -1338,18 +1346,22 @@
     if (persons.some((p) => !p.a || !accIdx.has(p.a))) return toast(tr('aa.needAcc'));
     if (persons.some((p) => !(p.v > 0))) return toast(tr('aa.needAmt'));
     const mine = aaMine(s);
-    if (mine < 1) { shake($('.aa-mine-box', sheetEl)); return toast(tr('aa.tooMuch')); }
     const existing = d.id ? data.entries.find((e) => e.id === d.id) : null;
     const g = (existing && existing.aa && existing.aa.g) || uid();
     const date = d.date || todayStr(), memo = (d.memo || '').trim(), ts = existing ? existing.ts : Date.now();
-    /* rebuild the group: your share, then one transfer per friend who paid back into another account */
-    data.entries = data.entries.filter((e) => !(e.aa && e.aa.g === g && e.kind === 'move'));
+    /* rebuild the group: your share, then for each friend the part of the bill they covered (a transfer from the
+       account that paid, unless they paid back into that same account) and anything beyond the bill (balance only) */
+    data.entries = data.entries.filter((e) => !(e.aa && e.aa.g === g && e.kind !== 'out'));
     const main = { id: d.id || uid(), date, amount: mine, kind: 'out', cat: d.cat, acc: d.acc, to: null, memo, ts, aa: { g, n: s.n, t: s.total, p: persons } };
     const at = existing ? data.entries.findIndex((e) => e.id === existing.id) : -1;
     if (at >= 0) data.entries[at] = main; else data.entries.push(main);
     const label = memo || cName(catIdx.get(d.cat));
+    let left = s.total;
     persons.forEach((p, i) => {
-      if (p.a !== d.acc) data.entries.push({ id: uid(), date, amount: p.v, kind: 'move', cat: null, acc: d.acc, to: p.a, memo: label, ts: ts - 1 - i, aa: { g } });
+      const cover = Math.min(p.v, left), extra = p.v - cover;
+      left -= cover;
+      if (cover > 0 && p.a !== d.acc) data.entries.push({ id: uid(), date, amount: cover, kind: 'move', cat: null, acc: d.acc, to: p.a, memo: label, ts: ts - 1 - i, aa: { g } });
+      if (extra > 0) data.entries.push({ id: uid(), date, amount: extra, kind: 'adj', cat: null, acc: p.a, to: null, memo: label, ts: ts - 1 - i, aa: { g } });
     });
     ui.lastAccAny = d.acc;
     saveUI();
@@ -1868,8 +1880,8 @@
     const to = x.kind === 'move' ? x.to || d.acc || null : null;
     /* money received that matches an AA pay-back recorded within two weeks is probably the same money */
     const days = (a, b) => Math.abs(Math.round((parseYMD(a) - parseYMD(b)) / 86400000));
-    const aaHit = x.kind === 'in' ? data.entries.find((e) => e.kind === 'move' && e.aa && e.amount === x.amount && days(e.date, date) <= 14) : null;
-    const r = Object.assign({}, x, { date, noDate: !x.date, same: same ? entryDesc(same) : '', twin, aaSame: aaHit ? `${yen(aaHit.amount)} · ${aaHit.memo}` : '', on: !same && !twin && !aaHit, to, from: x.from && x.from !== to ? x.from : null });
+    const aaHit = x.kind === 'in' ? data.entries.find((e) => e.kind === 'out' && e.aa && (e.aa.p || []).some((q) => q.v === x.amount) && days(e.date, date) <= 14) : null;
+    const r = Object.assign({}, x, { date, noDate: !x.date, same: same ? entryDesc(same) : '', twin, aaSame: aaHit ? `${yen(x.amount)} · ${aaHit.memo || cName(catIdx.get(aaHit.cat))}` : '', on: !same && !twin && !aaHit, to, from: x.from && x.from !== to ? x.from : null });
     j.rows.push(r);
     if (onPage(j)) {
       const list = $('.sl-list', sheetEl), ph = $('.sl-empty', list);
@@ -2225,6 +2237,7 @@
     const rows = [['日期', '内容', '金额', '收支', '分类', '支付方式', '备注']];
     for (const e of [...data.entries].sort((a, b) => -cmpDesc(a, b))) {
       const a = accIdx.get(e.acc), t = accIdx.get(e.to), c = catIdx.get(e.cat);
+      if (e.kind === 'adj') { rows.push([e.date.replace(/-/g, '/'), `${e.memo || ''}${tr('aa.extraCsv')}`, e.amount, '收入', '其他收入', a ? labelIn(a, 'acc', 'zh') : '', '']); continue; }
       rows.push([e.date.replace(/-/g, '/'), e.memo, e.amount, CSV_KIND[e.kind], e.kind === 'move' ? (t ? labelIn(t, 'acc', 'zh') : '') : (c ? labelIn(c, 'cat', 'zh') : ''), a ? labelIn(a, 'acc', 'zh') : '', '']);
     }
     const csv = '﻿' + rows.map((r) => r.map(csvCell).join(',')).join('\r\n');
@@ -2384,8 +2397,10 @@
       case 'edit': {
         const e = data.entries.find((x) => x.id === id);
         /* a friend's AA pay-back opens the AA expense it belongs to */
-        const main = e && e.aa && e.kind === 'move' ? data.entries.find((x) => x.aa && x.aa.g === e.aa.g && x.kind !== 'move') : null;
-        if (e) openEntry(main || e);
+        const main = e && e.aa && e.kind !== 'out' ? data.entries.find((x) => x.aa && x.aa.g === e.aa.g && x.kind === 'out') : null;
+        if (main) openEntry(main);
+        else if (e && e.kind === 'adj') askConfirm(tr('aa.delExtra'), tr('common.delete'), true).then((yes) => { if (yes) { data.entries = data.entries.filter((x) => x !== e); saveData(); render(); } });
+        else if (e) openEntry(e);
         break;
       }
       case 'go-settings': ui.tab = 'settings'; render(); view.scrollTop = 0; break;
