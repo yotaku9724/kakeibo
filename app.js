@@ -1,7 +1,7 @@
 /* 家计簿 — offline bookkeeping web app. Data lives only in this browser (localStorage). */
 'use strict';
 (() => {
-  const APP_VERSION = '1.0.12';
+  const APP_VERSION = '1.0.13';
   const STORE_KEY = 'kakeibo:data';
   const PREV_KEY = 'kakeibo:data:prev';
   const UI_KEY = 'kakeibo:ui';
@@ -176,6 +176,14 @@
       'scan.hint': '支出和收入记到上面选的支付方式，转移按每笔选的账户记。金额和备注可以保存后在「明细」里改。',
       'ai.tooMany': '一次最多选 {n} 张', 'ai.tooLong': '图片太多或太长了，请分几次识别',
       'dup.ask': '{d} 已经有一笔同样金额的记录：{w}。还要再记一笔吗？', 'dup.go': '仍然记',
+      'scan.title': 'AI 识别', 'ss.prep': '处理图片', 'ss.upload': '上传', 'ss.ai': 'AI 识别',
+      'ss.prepDone': '{n} 张', 'ss.prepSlices': '{n} 张 · 长图切成 {p} 段', 'ss.prepSkip': '{n} 张打不开，已跳过',
+      'ss.upPct': '{p}% · {a} / {b}', 'ss.wait': '{m} · 等待回复 {s} 秒', 'ss.recv': '已识别 {n} 笔 · {s} 秒', 'ss.done': '完成 · {s} 秒',
+      'ss.switch': '{a} 暂时用不了（{c}），改用 {b}', 'ss.noThink': '这个模型不支持思考设置，已重新发送',
+      'ss.waiting': '识别出的会一条一条出现在这里', 'ss.none': '没有可以记的收支',
+      'ss.stallUp': '上传卡住了，网络可能不好', 'ss.stallAi': 'AI {s} 秒没有回复', 'ss.net': '网络连接断了',
+      'ss.cut': '已识别的可以先添加，也可以重试。', 'ss.retry': '重试', 'ss.fill': '填到记一笔里改',
+      'scan.discard': '识别结果还没添加，要放弃吗？', 'scan.discardBtn': '放弃',
       'scan.sk.points': '积分 {n} 笔', 'scan.sk.failed': '失败/取消 {n} 笔', 'scan.sk.foreign': '没有日元金额 {n} 笔',
     },
     ja: {
@@ -266,6 +274,14 @@
       'scan.hint': '支出・収入は上で選んだ支払い方法に、振替は項目ごとに選んだ口座に記録します。金額やメモは保存後に「明細」で変更できます。',
       'ai.tooMany': '一度に選べるのは{n}枚までです', 'ai.tooLong': '画像が多すぎるか長すぎます。何回かに分けてください',
       'dup.ask': '{d}に同じ金額の記録がすでにあります：{w}。もう1件記録しますか？', 'dup.go': '記録する',
+      'scan.title': 'AI 読み取り', 'ss.prep': '画像の準備', 'ss.upload': 'アップロード', 'ss.ai': 'AI 読み取り',
+      'ss.prepDone': '{n}枚', 'ss.prepSlices': '{n}枚・縦長を{p}分割', 'ss.prepSkip': '{n}枚は開けないため除外しました',
+      'ss.upPct': '{p}%・{a} / {b}', 'ss.wait': '{m}・応答待ち {s}秒', 'ss.recv': '{n}件読み取り済み・{s}秒', 'ss.done': '完了・{s}秒',
+      'ss.switch': '{a} が使えないため（{c}）、{b} に切り替えました', 'ss.noThink': 'このモデルは思考設定に未対応のため、送り直しました',
+      'ss.waiting': '読み取れた取引がここに順に表示されます', 'ss.none': '記録できる取引がありません',
+      'ss.stallUp': 'アップロードが進みません。通信状況を確認してください', 'ss.stallAi': 'AI から {s}秒応答がありません', 'ss.net': '通信が切れました',
+      'ss.cut': '読み取れた分は追加できます。再試行もできます。', 'ss.retry': '再試行', 'ss.fill': '入力画面で編集',
+      'scan.discard': '読み取り結果はまだ追加されていません。破棄しますか？', 'scan.discardBtn': '破棄',
       'scan.sk.points': 'ポイント {n}件', 'scan.sk.failed': '失敗・取消 {n}件', 'scan.sk.foreign': '円の金額なし {n}件',
     },
     en: {
@@ -360,6 +376,14 @@
       'scan.hint': 'Spending and income go to the payment method above; transfers use the accounts chosen on each. Amounts and notes can be changed later under Entries.',
       'ai.tooMany': 'Up to {n} images at a time', 'ai.tooLong': 'Too many or too long images. Please split them up',
       'dup.ask': 'There is already an entry with the same amount on {d}: {w}. Add this one too?', 'dup.go': 'Add anyway',
+      'scan.title': 'AI scan', 'ss.prep': 'Preparing images', 'ss.upload': 'Uploading', 'ss.ai': 'AI reading',
+      'ss.prepDone': '{n} images', 'ss.prepDone1': '1 image', 'ss.prepSlices': '{n} images · long ones cut into {p} parts', 'ss.prepSlices1': '1 image · cut into {p} parts', 'ss.prepSkip': '{n} could not be opened and were left out', 'ss.prepSkip1': '1 could not be opened and was left out',
+      'ss.upPct': '{p}% · {a} / {b}', 'ss.wait': '{m} · waiting {s}s', 'ss.recv': '{n} found · {s}s', 'ss.done': 'Done · {s}s',
+      'ss.switch': '{a} unavailable ({c}), switched to {b}', 'ss.noThink': 'This model does not take the thinking setting; sent again',
+      'ss.waiting': 'Transactions appear here as they are found', 'ss.none': 'Nothing to record',
+      'ss.stallUp': 'The upload is stuck. Check your connection', 'ss.stallAi': 'No reply from AI for {s}s', 'ss.net': 'The connection dropped',
+      'ss.cut': 'You can add what was found, or try again.', 'ss.retry': 'Try again', 'ss.fill': 'Edit in New entry',
+      'scan.discard': 'These results have not been added. Discard them?', 'scan.discardBtn': 'Discard',
       'scan.sk.points': '{n} points items', 'scan.sk.points1': '1 points item',
       'scan.sk.failed': '{n} failed or cancelled', 'scan.sk.failed1': '1 failed or cancelled', 'scan.sk.foreign': '{n} without a yen amount', 'scan.sk.foreign1': '1 without a yen amount',
     },
@@ -1040,8 +1064,7 @@
   }
   function closeSheet() {
     if (!sheetRoot.classList.contains('open')) return;
-    if (scanCtrl) { scanCtrl.abort(); scanCtrl = null; }
-    scanList = null;
+    endScanJob();
     sheetRoot.classList.remove('show');
     sheetType = null;
     const el = sheetEl;
@@ -1349,7 +1372,6 @@
   const aiState = () => { try { return JSON.parse(localStorage.getItem(AI_STORE) || '{}') || {}; } catch (e) { return {}; } };
   const aiKey = () => String(aiState().key || '');
   function saveAi(patch) { try { localStorage.setItem(AI_STORE, JSON.stringify(Object.assign(aiState(), patch))); } catch (e) { /* storage full */ } }
-  let scanCtrl = null;
   const scanButton = () => (aiKey()
     ? `<label class="scan-btn" for="photo-in">📷 <span>${tr('ai.scan')}</span></label><input type="file" id="photo-in" accept="image/*" multiple class="vh">`
     : `<button class="scan-btn" data-act="ai-setup">📷 <span>${tr('ai.scan')}</span></button>`);
@@ -1478,46 +1500,85 @@
       'If nothing can be read, reply {"items": []}.',
     ].filter(Boolean).join('\n');
   }
-  async function aiReadReceipt(key, imgs, signal) {
-    const base = {
-      contents: [{ role: 'user', parts: [...imgs.map((img) => ({ inline_data: { mime_type: img.mime, data: img.data } })), { text: scanPrompt(imgs.length) }] }],
-      generationConfig: { responseMimeType: 'application/json', thinkingConfig: { thinkingLevel: 'low' } },
+  /* The model writes {"items": [{…}, {…}]} a piece at a time. This pulls out each transaction object
+     as soon as its closing brace arrives, so it can be shown before the rest is written. */
+  function itemScanner(onItem) {
+    let text = '', pos = 0, inStr = false, escNext = false;
+    const stack = [];
+    return {
+      push(chunk) {
+        text += chunk;
+        for (; pos < text.length; pos++) {
+          const c = text[pos];
+          if (inStr) { if (escNext) escNext = false; else if (c === '\\') escNext = true; else if (c === '"') inStr = false; continue; }
+          if (c === '"') inStr = true;
+          else if (c === '{' || c === '[') {
+            /* an object directly inside the items array (or a bare top-level array) is one transaction */
+            const parent = stack[stack.length - 1];
+            stack.push({ c, start: pos, item: c === '{' && !!parent && parent.c === '[' && stack.length <= 2 });
+          } else if (c === '}' || c === ']') {
+            const top = stack.pop();
+            if (top && top.item && c === '}') { let o = null; try { o = JSON.parse(text.slice(top.start, pos + 1)); } catch (e) { /* malformed piece */ } if (o) onItem(o); }
+          }
+        }
+      },
+      text: () => text,
     };
-    const st = aiState();
-    const models = [...new Set([st.model, ...AI_MODELS].filter(Boolean))];
-    let lastErr = null, listed = false;
-    for (let i = 0; i < models.length; i++) {
-      const m = models[i];
-      try {
-        let j;
-        try {
-          j = await aiFetch(key, `models/${encodeURIComponent(m)}:generateContent`, base, signal);
-        } catch (e) {
-          /* a model that does not take the thinking setting: ask again without it */
-          if (e.status !== 400 || !/think/i.test(e.message)) throw e;
-          j = await aiFetch(key, `models/${encodeURIComponent(m)}:generateContent`, { contents: base.contents, generationConfig: { responseMimeType: 'application/json' } }, signal);
-        }
-        if (m !== st.model) saveAi({ model: m });
-        return j;
-      } catch (e) {
-        if (e.name === 'AbortError') throw e;
-        lastErr = e;
-        if (![404, 429, 500, 503].includes(e.status)) throw e;
-        if (i === models.length - 1 && e.status === 404 && !listed) {
-          listed = true;
-          const more = await aiListModels(key, signal).catch(() => []);
-          models.push(...more.filter((x) => !models.includes(x)));
-        }
-      }
-    }
-    throw lastErr || new Error('no model');
   }
-  function scanResult(j) {
-    const parts = (((j.candidates || [])[0] || {}).content || {}).parts || [];
-    const text = parts.filter((p) => !p.thought).map((p) => p.text || '').join('');
-    const a = text.indexOf('{'), b = text.lastIndexOf('}');
-    if (a < 0 || b <= a) return null;
-    try { return JSON.parse(text.slice(a, b + 1)); } catch (e) { return null; }
+  /* the whole reply, for answers that are not an items list (an older single-object shape) */
+  function looseJSON(text) {
+    const t = String(text || '').trim(), a = t.search(/[[{]/);
+    if (a < 0) return null;
+    const close = t[a] === '[' ? ']' : '}', b = t.lastIndexOf(close);
+    if (b <= a) return null;
+    try { return JSON.parse(t.slice(a, b + 1)); } catch (e) { return null; }
+  }
+  /* One streamed request (server-sent events) to one model. XHR rather than fetch, because it reports
+     upload progress as well as the reply arriving in pieces. Calls back: up(loaded, total), sent(), text(piece). */
+  function aiStream(job, key, model, body, cb) {
+    return new Promise((resolve, reject) => {
+      const payload = JSON.stringify(body);
+      const xhr = new XMLHttpRequest();
+      job.xhr = xhr;
+      let seen = 0, buf = '', settled = false;
+      const fail = (msg, status) => { if (settled) return; settled = true; reject(Object.assign(new Error(msg), { status })); };
+      const event = (raw) => {
+        const data = raw.split(/\r?\n/).filter((l) => l.startsWith('data:')).map((l) => l.slice(5).replace(/^ /, '')).join('\n');
+        if (!data) return;
+        let j;
+        try { j = JSON.parse(data); } catch (e) { return; }
+        if (j.error) { fail(j.error.message || 'error', j.error.code || 500); try { xhr.abort(); } catch (e) { /* gone */ } return; }
+        const parts = (((j.candidates || [])[0] || {}).content || {}).parts || [];
+        const piece = parts.filter((p) => !p.thought).map((p) => p.text || '').join('');
+        if (piece) cb.text(piece);
+      };
+      const pump = (final) => {
+        const t = xhr.responseText || '';
+        if (t.length > seen) { buf += t.slice(seen); seen = t.length; }
+        let m;
+        while (!settled && (m = /\r?\n\r?\n/.exec(buf))) { const ev = buf.slice(0, m.index); buf = buf.slice(m.index + m[0].length); event(ev); }
+        if (final && !settled && buf.trim()) { event(buf); buf = ''; }
+      };
+      xhr.open('POST', `${AI_BASE}/models/${encodeURIComponent(model)}:streamGenerateContent?alt=sse`);
+      xhr.setRequestHeader('Content-Type', 'application/json');
+      xhr.setRequestHeader('x-goog-api-key', key);
+      xhr.upload.onprogress = (e) => cb.up(e.loaded, e.lengthComputable && e.total ? e.total : payload.length);
+      xhr.upload.onload = () => cb.sent();
+      xhr.onprogress = () => { cb.alive(); if (xhr.status === 200) { cb.sent(); pump(false); } };
+      xhr.onload = () => {
+        if (settled) return;
+        /* any answer at all means the upload went through */
+        cb.sent();
+        if (xhr.status === 200) { pump(true); if (!settled) { settled = true; resolve(); } return; }
+        let j = null;
+        try { j = JSON.parse(xhr.responseText); } catch (e) { /* not JSON */ }
+        if (Array.isArray(j)) j = j[0];
+        fail((j && j.error && j.error.message) || `HTTP ${xhr.status}`, xhr.status);
+      };
+      xhr.onerror = () => fail(navigator.onLine === false ? 'offline' : 'network', 0);
+      xhr.onabort = () => { if (settled) return; settled = true; reject(Object.assign(new Error('abort'), { name: 'AbortError' })); };
+      xhr.send(payload);
+    });
   }
   /* a date the model gave that is plausible for a purchase: a real day, not far in the future or past */
   const okDate = (v) => /^\d{4}-\d{2}-\d{2}$/.test(v || '') && ymd(parseYMD(v)) === v && dayDiff(v) <= 1 && dayDiff(v) >= -400;
@@ -1547,17 +1608,10 @@
     }
     return out;
   }
-  function skipText(items) {
-    const n = {};
-    items.forEach((x) => { if (x.skip) n[x.skip] = (n[x.skip] || 0) + 1; });
-    return ['points', 'failed', 'foreign'].filter((k) => n[k]).map((k) => tr(`scan.sk.${k}`, { n: n[k] })).join(tr('scan.sep'));
+  function skipSummary(counts) {
+    return ['points', 'failed', 'foreign'].filter((k) => counts[k]).map((k) => tr(`scan.sk.${k}`, { n: counts[k] })).join(tr('scan.sep'));
   }
-  function handleScan(items, d) {
-    const ok = items.filter((x) => !x.skip), skipped = skipText(items);
-    if (!ok.length) return toast(skipped ? tr('scan.none', { s: skipped }) : tr('ai.noAmount'));
-    if (ok.length === 1) return applyScan(ok[0], d, skipped);
-    openScanList(ok, skipped, d);
-  }
+  /* fill the entry sheet from one recognised transaction ("edit in New entry") */
   function applyScan(x, d, skipped) {
     d.amt = String(x.amount);
     if (x.date) d.date = x.date;
@@ -1578,62 +1632,242 @@
     toast(skipped ? tr('ai.doneSkip', { s: skipped }) : tr('ai.done'));
   }
 
-  /* several transactions (a PayPay history, WeChat Pay notices, several screenshots): tick the ones to add */
-  let scanList = null;
-  function openScanList(items, skipped, d) {
-    const rows = [];
-    for (const x of items) {
-      const date = x.date || d.date || todayStr(), same = sameDayAmount(date, x.amount, x.kind);
-      /* the same transaction seen twice, e.g. in two overlapping screenshots */
-      const twin = rows.some((r) => r.date === date && r.amount === x.amount && r.kind === x.kind && (!r.time || !x.time || r.time === x.time));
-      const to = x.kind === 'move' ? x.to || d.acc || null : null;
-      rows.push(Object.assign({}, x, { date, noDate: !x.date, same: same ? entryDesc(same) : '', twin, on: !same && !twin, to, from: x.from && x.from !== to ? x.from : null }));
-    }
-    /* spending and income go to the payment method already chosen in the entry sheet; the user can switch it here */
-    scanList = { draft: d, acc: d.acc || firstAcc(), skipped, rows };
-    openSheet('scanlist', scanListHTML(), true);
+  /* ---- the scan page: what is happening (images, upload, AI) and each transaction as soon as it is read ---- */
+  /* a stage only gives up after this many seconds without any progress, not after a fixed total */
+  const SCAN_LIMITS = { upStall: 30, firstReply: 120, idle: 60 };
+  let scanJob = null;
+  const mb = (n) => (n < 1048576 ? `${Math.max(1, Math.round(n / 1024))} KB` : `${(n / 1048576).toFixed(1)} MB`);
+  const secs = (t) => Math.max(0, Math.round((Date.now() - t) / 1000));
+  function scanPageHTML(j) {
+    const accs = activeAccs(j.acc);
+    return `<div class="form scanlist">
+      <div class="f-top"><button class="icon-btn" data-act="sl-back" aria-label="${tr('common.close')}">✕</button><div class="e-title">${tr('scan.title')}</div><span class="e-sp"></span></div>
+      <div class="f-body">
+        <section class="scan-status">
+          <div class="ss-thumbs">${j.thumbs.map((u) => `<img src="${u}" alt="">`).join('')}</div>
+          <ol class="ss-steps">${['prep', 'upload', 'ai'].map((k) => `<li class="ss-step wait" data-step="${k}"><i class="ss-i"></i><span class="ss-t">${tr(`ss.${k}`)}</span><span class="ss-v"></span>${k === 'upload' ? '<span class="ss-bar"><b></b></span>' : ''}</li>`).join('')}</ol>
+          <p class="ss-note"></p>
+          <div class="ss-msg"></div>
+        </section>
+        <label class="field"><span>${tr('entry.paid')}</span>${accs.length ? `<select class="sl-acc" data-sl="acc">${accs.map((a) => `<option value="${esc(a.id)}"${a.id === j.acc ? ' selected' : ''}>${esc(aName(a))}</option>`).join('')}</select>` : `<div class="hint">${tr('entry.noAcc')}</div>`}</label>
+        <div class="sl-list"><p class="hint sl-empty">${tr('ss.waiting')}</p></div>
+        <p class="hint sl-skips"></p>
+        <p class="hint">${tr('scan.hint')}</p>
+      </div>
+      <div class="sl-foot"><button class="btn ghost sl-fill" data-act="sl-fill" hidden>${tr('ss.fill')}</button><button class="btn primary sl-add" data-act="sl-add" disabled>${tr('scan.add', { n: 0 })}</button></div>
+    </div>`;
   }
   const rowNotes = (r) => [
     r.same ? `<em class="tag warn">${esc(tr('scan.same', { w: r.same }))}</em>` : '',
     r.twin ? `<em class="tag warn">${tr('scan.twin')}</em>` : '',
     r.noDate ? `<em class="tag warn">${tr('scan.noDate')}</em>` : '',
     r.via ? `<span>${esc(r.via)}</span>` : ''].join('');
-  function scanListHTML() {
-    const s = scanList, n = s.rows.filter((r) => r.on).length;
+  function rowHTML(r, i) {
     const accOpts = (sel, ph) => (sel ? '' : `<option value="">${ph}</option>`) + activeAccs(sel).map((a) => `<option value="${esc(a.id)}"${a.id === sel ? ' selected' : ''}>${esc(aName(a))}</option>`).join('');
-    const catOpts = (r) => (r.cat ? '' : `<option value="">${tr('scan.pickCat')}</option>`) + data.categories
+    const catOpts = (r.cat ? '' : `<option value="">${tr('scan.pickCat')}</option>`) + data.categories
       .filter((c) => c.kind === r.kind && (!c.hidden || c.id === r.cat))
       .map((c) => `<option value="${esc(c.id)}"${c.id === r.cat ? ' selected' : ''}>${esc(c.icon)} ${esc(cName(c))}</option>`).join('');
-    const sign = (r) => (r.kind === 'in' ? '+' : r.kind === 'out' ? '−' : '⇄ ');
-    const row = (r, i) => `<div class="sl-row${r.on ? '' : ' off'}">
-        <label class="sl-main"><input type="checkbox" data-sl="on" data-i="${i}"${r.on ? ' checked' : ''}><span class="sl-name">${esc(r.merchant || kindName(r.kind))}</span><span class="sl-amt ${r.kind}">${sign(r)}${yen(r.amount)}</span></label>
-        <div class="sl-meta"><label class="date-chip${r.noDate ? ' warn' : ''}">📅 <span class="date-text">${shortDate(r.date)}</span><input type="date" value="${r.date}" data-sl="date" data-i="${i}" aria-label="${tr('entry.date')}"></label>${r.kind === 'move' ? `<span class="sl-kind">⇄ ${kindName('move')}</span>` : `<select class="sl-cat" data-sl="cat" data-i="${i}" aria-label="${tr('list.category')}">${catOpts(r)}</select>`}</div>
+    const sign = r.kind === 'in' ? '+' : r.kind === 'out' ? '−' : '⇄ ';
+    return `<div class="sl-row new${r.on ? '' : ' off'}">
+        <label class="sl-main"><input type="checkbox" data-sl="on" data-i="${i}"${r.on ? ' checked' : ''}><span class="sl-name">${esc(r.merchant || kindName(r.kind))}</span><span class="sl-amt ${r.kind}">${sign}${yen(r.amount)}</span></label>
+        <div class="sl-meta"><label class="date-chip${r.noDate ? ' warn' : ''}">📅 <span class="date-text">${shortDate(r.date)}</span><input type="date" value="${r.date}" data-sl="date" data-i="${i}" aria-label="${tr('entry.date')}"></label>${r.kind === 'move' ? `<span class="sl-kind">⇄ ${kindName('move')}</span>` : `<select class="sl-cat" data-sl="cat" data-i="${i}" aria-label="${tr('list.category')}">${catOpts}</select>`}</div>
         ${r.kind === 'move' ? `<div class="sl-move"><select data-sl="from" data-i="${i}" aria-label="${tr('scan.from')}">${accOpts(r.from, tr('scan.from'))}</select><span class="sl-arrow">→</span><select data-sl="to" data-i="${i}" aria-label="${tr('scan.to')}">${accOpts(r.to, tr('scan.to'))}</select></div>` : ''}
         <div class="sl-notes">${rowNotes(r)}</div>
       </div>`;
-    const payRows = s.rows.some((r) => r.kind !== 'move');
-    return `<div class="form scanlist">
-      <div class="f-top"><button class="icon-btn" data-act="sl-back" aria-label="${tr('common.close')}">✕</button><div class="e-title">${tr('scan.found', { n: s.rows.length })}</div><span class="e-sp"></span></div>
-      <div class="f-body">
-        ${payRows ? `<label class="field"><span>${tr('entry.paid')}</span>${activeAccs(s.acc).length ? `<select class="sl-acc" data-sl="acc">${accOpts(s.acc, tr('entry.paid'))}</select>` : `<div class="hint">${tr('entry.noAcc')}</div>`}</label>` : ''}
-        <div class="sl-list">${s.rows.map(row).join('')}</div>
-        ${s.skipped ? `<p class="hint">${esc(tr('scan.skipped', { s: s.skipped }))}</p>` : ''}
-        <p class="hint">${tr('scan.hint')}</p>
-      </div>
-      <div class="sl-foot"><button class="btn primary full sl-add" data-act="sl-add"${n ? '' : ' disabled'}>${tr('scan.add', { n })}</button></div>
-    </div>`;
+  }
+  const onPage = (j) => j === scanJob && sheetType === 'scan' && sheetEl;
+  function setStep(j, k, state, value) {
+    if (!onPage(j)) return;
+    const li = $(`.ss-step[data-step="${k}"]`, sheetEl);
+    li.className = `ss-step ${state}`;
+    if (value !== undefined) $('.ss-v', li).textContent = value;
+  }
+  function setScanMsg(j, text, isErr, retry, extra) {
+    if (!onPage(j)) return;
+    const el = $('.ss-msg', sheetEl);
+    el.className = `ss-msg${isErr ? ' err' : ''}`;
+    el.innerHTML = text ? `<span>${esc(text)}${extra ? `<small>${esc(extra)}</small>` : ''}</span>${retry ? `<button class="btn ghost" data-act="ss-retry">${tr('ss.retry')}</button>` : ''}` : '';
+  }
+  function setScanNote(j, text) { if (onPage(j)) $('.ss-note', sheetEl).textContent = text; }
+  function refreshScanFoot(j) {
+    if (!onPage(j)) return;
+    const n = j.rows.filter((r) => r.on).length, ended = j.phase === 'done' || j.phase === 'error';
+    const add = $('.sl-add', sheetEl);
+    add.textContent = tr('scan.add', { n });
+    add.disabled = !n || !ended;
+    $('.sl-fill', sheetEl).hidden = !(ended && j.rows.length === 1);
+    $('.sl-skips', sheetEl).textContent = skipSummary(j.skips) ? tr('scan.skipped', { s: skipSummary(j.skips) }) : '';
+  }
+  /* the AI line: which model, how long it has been */
+  function refreshAiStep(j) {
+    if (j.phase === 'wait') setStep(j, 'ai', 'on', tr('ss.wait', { m: j.model, s: secs(j.tWait) }));
+    else if (j.phase === 'recv') setStep(j, 'ai', 'on', tr('ss.recv', { n: j.rows.length, s: secs(j.tSend) }));
+  }
+  function addScanItem(j, raw) {
+    if (j !== scanJob) return;
+    const [x] = scanItems([raw]);
+    if (!x) return;
+    if (x.skip) { j.skips[x.skip] = (j.skips[x.skip] || 0) + 1; refreshScanFoot(j); return; }
+    const d = j.draft, date = x.date || d.date || todayStr(), same = sameDayAmount(date, x.amount, x.kind);
+    /* the same transaction seen twice, e.g. in two overlapping screenshots */
+    const twin = j.rows.some((r) => r.date === date && r.amount === x.amount && r.kind === x.kind && (!r.time || !x.time || r.time === x.time));
+    const to = x.kind === 'move' ? x.to || d.acc || null : null;
+    const r = Object.assign({}, x, { date, noDate: !x.date, same: same ? entryDesc(same) : '', twin, on: !same && !twin, to, from: x.from && x.from !== to ? x.from : null });
+    j.rows.push(r);
+    if (onPage(j)) {
+      const list = $('.sl-list', sheetEl), ph = $('.sl-empty', list);
+      if (ph) ph.remove();
+      list.insertAdjacentHTML('beforeend', rowHTML(r, j.rows.length - 1));
+    }
+    refreshAiStep(j);
+    refreshScanFoot(j);
+  }
+  function endScanJob() {
+    const j = scanJob;
+    if (!j) return;
+    scanJob = null;
+    clearInterval(j.tick);
+    if (j.xhr) { try { j.xhr.abort(); } catch (e) { /* already done */ } }
+    j.thumbs.forEach((u) => URL.revokeObjectURL(u));
+  }
+  /* once a second: elapsed time, and give up on a stage that has stopped moving */
+  function tickScan(j) {
+    if (j !== scanJob) return clearInterval(j.tick);
+    refreshAiStep(j);
+    const L = SCAN_LIMITS, now = Date.now();
+    let why = null;
+    if (j.phase === 'upload' && now - j.last > L.upStall * 1000) why = tr('ss.stallUp');
+    else if (j.phase === 'wait' && now - j.tWait > L.firstReply * 1000) why = tr('ss.stallAi', { s: L.firstReply });
+    else if (j.phase === 'recv' && now - j.last > L.idle * 1000) why = tr('ss.stallAi', { s: L.idle });
+    if (why && j.xhr) { j.stall = why; try { j.xhr.abort(); } catch (e) { /* gone */ } }
+  }
+  async function scanReceipt(fileList) {
+    const key = aiKey(), d = draft, files = [...fileList].filter(Boolean);
+    if (!key) return openSheet('ai', aiFormHTML());
+    if (!d || sheetType !== 'entry' || scanJob || !files.length) return;
+    if (files.length > MAX_FILES) return toast(tr('ai.tooMany', { n: MAX_FILES }));
+    const j = {
+      draft: d, files, thumbs: files.map((f) => URL.createObjectURL(f)), parts: null, acc: d.acc || firstAcc(),
+      phase: 'prep', rows: [], skips: {}, model: '', xhr: null, tick: null, stall: null, last: Date.now(), tWait: 0, tSend: 0,
+    };
+    scanJob = j;
+    openSheet('scan', scanPageHTML(j), true);
+    /* 1) images: shrink, and cut long screenshots into readable slices */
+    const parts = [];
+    let bad = 0;
+    for (let i = 0; i < files.length; i++) {
+      setStep(j, 'prep', 'on', `${i + 1}/${files.length}`);
+      try { parts.push(...(await imageParts(files[i]))); } catch (e) { bad++; }
+      if (j !== scanJob) return;
+    }
+    if (!parts.length) { j.phase = 'error'; setStep(j, 'prep', 'err', ''); setScanMsg(j, tr('ai.badImage'), true); return; }
+    if (parts.length > MAX_PARTS) { j.phase = 'error'; setStep(j, 'prep', 'err', ''); setScanMsg(j, tr('ai.tooLong'), true); return; }
+    const ok = files.length - bad;
+    setStep(j, 'prep', 'ok', parts.length > ok ? tr('ss.prepSlices', { n: ok, p: parts.length }) : tr('ss.prepDone', { n: ok }));
+    if (bad) setScanNote(j, tr('ss.prepSkip', { n: bad }));
+    j.parts = parts;
+    runScan(j);
+  }
+  /* 2) + 3) send to Gemini and read the reply as it streams; on a busy or retired model, try the next one */
+  async function runScan(j) {
+    const key = aiKey(), st = aiState();
+    const models = [...new Set([st.model, ...AI_MODELS].filter(Boolean))];
+    let listed = false, noThink = false;
+    j.rows = []; j.skips = {}; j.stall = null;
+    if (onPage(j)) { $('.sl-list', sheetEl).innerHTML = `<p class="hint sl-empty">${tr('ss.waiting')}</p>`; setScanMsg(j, ''); }
+    clearInterval(j.tick);
+    j.tick = setInterval(() => tickScan(j), 1000);
+    for (let i = 0; i < models.length; i++) {
+      const m = models[i];
+      const body = {
+        contents: [{ role: 'user', parts: [...j.parts.map((p) => ({ inline_data: { mime_type: p.mime, data: p.data } })), { text: scanPrompt(j.parts.length) }] }],
+        generationConfig: noThink ? { responseMimeType: 'application/json' } : { responseMimeType: 'application/json', thinkingConfig: { thinkingLevel: 'low' } },
+      };
+      j.model = m; j.phase = 'upload'; j.last = j.tSend = Date.now(); j.stall = null;
+      setStep(j, 'upload', 'on', '');
+      setStep(j, 'ai', 'wait', '');
+      refreshScanFoot(j);
+      const scanner = itemScanner((o) => addScanItem(j, o));
+      let gotText = false;
+      const sent = () => {
+        if (j.phase !== 'upload') return;
+        j.phase = 'wait'; j.tWait = j.last = Date.now();
+        setStep(j, 'upload', 'ok', mb(JSON.stringify(body).length));
+        refreshAiStep(j);
+      };
+      try {
+        await aiStream(j, key, m, body, {
+          up: (a, b) => {
+            j.last = Date.now();
+            setStep(j, 'upload', 'on', tr('ss.upPct', { p: Math.min(100, Math.round((a / b) * 100)), a: mb(a), b: mb(b) }));
+            if (onPage(j)) $('.ss-bar b', sheetEl).style.width = `${Math.min(100, (a / b) * 100)}%`;
+          },
+          sent,
+          alive: () => { j.last = Date.now(); },
+          text: (piece) => {
+            if (j !== scanJob) return;
+            if (!gotText) { gotText = true; sent(); j.phase = 'recv'; }
+            j.last = Date.now();
+            scanner.push(piece);
+            refreshAiStep(j);
+          },
+        });
+        if (j !== scanJob) return;
+        if (m !== st.model) saveAi({ model: m });
+        /* an answer that was not an items list: read it whole */
+        if (!j.rows.length && !Object.keys(j.skips).length) {
+          const o = looseJSON(scanner.text());
+          const raws = Array.isArray(o) ? o : o && Array.isArray(o.items) ? o.items : o && typeof o === 'object' ? [o] : [];
+          raws.forEach((x) => addScanItem(j, x));
+        }
+        j.phase = 'done';
+        clearInterval(j.tick);
+        setStep(j, 'ai', 'ok', tr('ss.done', { s: secs(j.tSend) }));
+        const sk = skipSummary(j.skips);
+        setScanMsg(j, j.rows.length ? tr('scan.found', { n: j.rows.length }) : sk ? tr('scan.none', { s: sk }) : tr('ss.none'), false);
+        refreshScanFoot(j);
+        return;
+      } catch (e) {
+        if (j !== scanJob) return;
+        if (e.name !== 'AbortError' && !gotText) {
+          /* a model that does not take the thinking setting: ask again without it */
+          if (e.status === 400 && /think/i.test(e.message) && !noThink) { noThink = true; i--; setScanNote(j, tr('ss.noThink')); continue; }
+          if ([404, 429, 500, 503].includes(e.status)) {
+            if (i === models.length - 1 && e.status === 404 && !listed) {
+              listed = true;
+              const more = await aiListModels(key).catch(() => []);
+              models.push(...more.filter((x) => !models.includes(x)));
+            }
+            if (i < models.length - 1) { setScanNote(j, tr('ss.switch', { a: m, b: models[i + 1], c: e.status })); continue; }
+          }
+        }
+        return failScan(j, e, gotText);
+      }
+    }
+  }
+  function failScan(j, e, partial) {
+    const step = j.phase === 'upload' ? 'upload' : 'ai';
+    j.phase = 'error';
+    clearInterval(j.tick);
+    setStep(j, step, 'err');
+    let msg;
+    if (e.name === 'AbortError') msg = j.stall || tr('ss.net');
+    else if (e.status === 0) msg = e.message === 'offline' ? tr('ai.offline') : tr('ss.net');
+    else if (e.status === 429) msg = tr('ai.quota');
+    else if ([400, 401, 403].includes(e.status) && /key/i.test(e.message)) msg = tr('ai.badKey');
+    else msg = tr('ai.failed', { m: e.message });
+    setScanMsg(j, msg, true, true, partial && j.rows.length ? tr('ss.cut') : '');
+    refreshScanFoot(j);
   }
   function changeScanList(el) {
-    const s = scanList, f = el.dataset.sl;
-    if (f === 'acc') { s.acc = el.value; return; }
-    const r = s.rows[Number(el.dataset.i)], rowEl = el.closest('.sl-row');
+    const j = scanJob, f = el.dataset.sl;
+    if (f === 'acc') { j.acc = el.value; return; }
+    const r = j.rows[Number(el.dataset.i)], rowEl = el.closest('.sl-row');
     if (!r) return;
     if (f === 'on') {
       r.on = el.checked;
       rowEl.classList.toggle('off', !r.on);
-      const n = s.rows.filter((x) => x.on).length, btn = $('.sl-add', sheetEl);
-      btn.textContent = tr('scan.add', { n });
-      btn.disabled = !n;
+      refreshScanFoot(j);
     } else if (f === 'date') {
       if (/^\d{4}-\d{2}-\d{2}$/.test(el.value)) {
         r.date = el.value; r.noDate = false;
@@ -1650,21 +1884,32 @@
       r[f] = el.value || null;
     }
   }
-  function backToEntry() {
-    const s = scanList;
-    scanList = null;
-    if (!s) return closeSheet();
-    draft = s.draft;
+  async function backToEntry() {
+    const j = scanJob;
+    if (!j) return closeSheet();
+    if (j.rows.length && !(await askConfirm(tr('scan.discard'), tr('scan.discardBtn'), true))) return;
+    if (j !== scanJob) return;
+    endScanJob();
+    draft = j.draft;
     openSheet('entry', entryHTML(), true);
   }
+  function fillFromScan() {
+    const j = scanJob;
+    if (!j || j.rows.length !== 1) return;
+    const r = j.rows[0], sk = skipSummary(j.skips);
+    endScanJob();
+    draft = j.draft;
+    openSheet('entry', entryHTML(), true);
+    applyScan(r, draft, sk);
+  }
   function addScanList() {
-    const s = scanList;
-    if (!s) return;
-    const rows = s.rows.filter((r) => r.on);
+    const j = scanJob;
+    if (!j || !(j.phase === 'done' || j.phase === 'error')) return;
+    const rows = j.rows.filter((r) => r.on);
     if (!rows.length) return;
     const pay = rows.filter((r) => r.kind !== 'move'), moves = rows.filter((r) => r.kind === 'move');
-    const flag = (r, msg) => { shake($$('.sl-row', sheetEl)[s.rows.indexOf(r)]); toast(msg); };
-    if (pay.length && (!s.acc || !accIdx.has(s.acc))) return toast(tr('entry.needAcc'));
+    const flag = (r, msg) => { shake($$('.sl-row', sheetEl)[j.rows.indexOf(r)]); toast(msg); };
+    if (pay.length && (!j.acc || !accIdx.has(j.acc))) return toast(tr('entry.needAcc'));
     const noCat = pay.find((r) => !r.cat || !catIdx.has(r.cat));
     if (noCat) return flag(noCat, tr('scan.needCat'));
     const badMove = moves.find((r) => !r.from || !r.to || r.from === r.to || !accIdx.has(r.from) || !accIdx.has(r.to));
@@ -1672,14 +1917,14 @@
     const now = Date.now();
     const recs = rows.map((r, i) => ({
       id: uid(), date: r.date, amount: r.amount, kind: r.kind, cat: r.kind === 'move' ? null : r.cat,
-      acc: r.kind === 'move' ? r.from : s.acc, to: r.kind === 'move' ? r.to : null, memo: r.merchant, ts: now - i,
+      acc: r.kind === 'move' ? r.from : j.acc, to: r.kind === 'move' ? r.to : null, memo: r.merchant, ts: now - i,
     }));
     data.entries.push(...recs);
-    if (pay.length) { ui.lastAccAny = s.acc; saveUI(); }
+    if (pay.length) { ui.lastAccAny = j.acc; saveUI(); }
     saveData();
     const latest = recs.reduce((m, r) => (r.date > m ? r.date : m), recs[0].date);
     if (latest.slice(0, 7) !== ui.month) ui.month = latest.slice(0, 7);
-    scanList = null;
+    endScanJob();
     closeSheet();
     render();
     const ids = new Set(recs.map((r) => r.id));
@@ -1687,43 +1932,6 @@
       data.entries = data.entries.filter((e) => !ids.has(e.id));
       saveData(); render(); toast(tr('scan.undone'));
     } });
-  }
-  function scanBusy(on) {
-    const b = sheetEl && $('.scan-btn', sheetEl);
-    if (!b) return;
-    b.classList.toggle('busy', on);
-    $('span', b).textContent = tr(on ? 'ai.busy' : 'ai.scan');
-  }
-  async function scanReceipt(fileList) {
-    const key = aiKey(), d = draft, files = [...fileList].filter(Boolean);
-    if (!key) return openSheet('ai', aiFormHTML());
-    if (!d || sheetType !== 'entry' || scanCtrl || !files.length) return;
-    if (files.length > MAX_FILES) return toast(tr('ai.tooMany', { n: MAX_FILES }));
-    const ctrl = new AbortController();
-    scanCtrl = ctrl;
-    let timedOut = false, timer = null;
-    scanBusy(true);
-    try {
-      const imgs = [];
-      for (const f of files) imgs.push(...(await imageParts(f)));
-      if (ctrl.signal.aborted) return;
-      if (imgs.length > MAX_PARTS) { toast(tr('ai.tooLong')); return; }
-      /* more images take Gemini longer */
-      timer = setTimeout(() => { timedOut = true; ctrl.abort(); }, Math.min(150000, 60000 + 8000 * (imgs.length - 1)));
-      const j = await aiReadReceipt(key, imgs, ctrl.signal);
-      if (draft === d && sheetType === 'entry') handleScan(scanItems(scanResult(j)), d);
-    } catch (e) {
-      if (e.name === 'AbortError') { if (timedOut) toast(tr('ai.timeout')); }
-      else if (e.status === -1) toast(tr('ai.badImage'));
-      else if (e.status === 0) toast(tr(e.message === 'offline' ? 'ai.offline' : 'ai.failed', { m: e.message }));
-      else if (e.status === 429) toast(tr('ai.quota'));
-      else if ([400, 401, 403].includes(e.status) && /key/i.test(e.message)) toast(tr('ai.badKey'));
-      else toast(tr('ai.failed', { m: e.message }));
-    } finally {
-      clearTimeout(timer);
-      if (scanCtrl === ctrl) scanCtrl = null;
-      scanBusy(false);
-    }
   }
 
   /* ================= account order (drag to reorder) ================= */
@@ -2075,6 +2283,8 @@
       case 'ai-clear': saveAi({ key: '', model: '' }); closeSheet(); render(); toast(tr('ai.removed')); break;
       case 'sl-back': backToEntry(); break;
       case 'sl-add': addScanList(); break;
+      case 'sl-fill': fillFromScan(); break;
+      case 'ss-retry': if (scanJob && scanJob.parts) runScan(scanJob); break;
       /* data */
       case 'export': exportBackup(); break;
       case 'copy-backup': copyBackup(); break;
@@ -2092,7 +2302,7 @@
   });
   document.addEventListener('change', (ev) => {
     const el = ev.target;
-    if (el.dataset.sl && scanList) {
+    if (el.dataset.sl && scanJob) {
       changeScanList(el);
     } else if (el.dataset.input === 'date' && draft) {
       draft.date = /^\d{4}-\d{2}-\d{2}$/.test(el.value) ? el.value : todayStr();
@@ -2180,5 +2390,6 @@
   render();
   const params = new URLSearchParams(location.search);
   if (params.has('add') || (ui.autoAdd && data.entries.length > 0)) openEntry();
-  window.__kakeibo = { get data() { return data; }, ui, render, version: APP_VERSION, backupJSON };
+  document.addEventListener('visibilitychange', () => { if (scanJob && document.visibilityState === 'visible') scanJob.last = scanJob.tWait = Date.now(); });
+  window.__kakeibo = { get data() { return data; }, ui, render, version: APP_VERSION, backupJSON, scanLimits: SCAN_LIMITS };
 })();
