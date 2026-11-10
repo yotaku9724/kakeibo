@@ -1,7 +1,7 @@
 /* 家计簿 — offline bookkeeping web app. Data lives only in this browser (localStorage). */
 'use strict';
 (() => {
-  const APP_VERSION = '1.0.17';
+  const APP_VERSION = '1.0.18';
   const STORE_KEY = 'kakeibo:data';
   const PREV_KEY = 'kakeibo:data:prev';
   const UI_KEY = 'kakeibo:ui';
@@ -1635,6 +1635,16 @@
       img.src = url;
     });
   }
+  /* relative labels as WeChat Pay writes them, already turned into dates, so the model only has to look them up */
+  function dateTable() {
+    const now = new Date();
+    const back = (n) => { const x = new Date(now.getFullYear(), now.getMonth(), now.getDate() - n); return x; };
+    const W = [['星期日', '周日', '日曜日', 'Sunday'], ['星期一', '周一', '月曜日', 'Monday'], ['星期二', '周二', '火曜日', 'Tuesday'], ['星期三', '周三', '水曜日', 'Wednesday'],
+      ['星期四', '周四', '木曜日', 'Thursday'], ['星期五', '周五', '金曜日', 'Friday'], ['星期六', '周六', '土曜日', 'Saturday']];
+    const lines = [`- a time alone (e.g. 9:35), 今天, 今日, Today: ${ymd(now)}`, `- 昨天, 昨日, Yesterday: ${ymd(back(1))}`, `- 前天, 一昨日: ${ymd(back(2))}`];
+    for (let n = 1; n <= 7; n++) { const x = back(n); lines.push(`- ${W[x.getDay()].join(', ')}: ${ymd(x)}`); }
+    return lines.join('\n');
+  }
   function scanPrompt(nImages = 1) {
     const list = (kind) => data.categories.filter((c) => c.kind === kind && !c.hidden)
       .map((c) => `${c.id}: ${[...new Set(allLabels(c, 'cat'))].join(' / ')}`).join('\n');
@@ -1651,7 +1661,9 @@
       'amount: in Japanese yen, digits only. On a receipt, the total actually paid, tax included, after discounts (合計, お支払い, ご請求額), not the subtotal, 預り or お釣り.',
       'On WeChat Pay or Alipay notices the large "¥" figure is Chinese yuan: use the yen price instead (标价 … 日元). Only if a transaction shows no yen amount at all, give its amount with the currency as shown.',
       'type: "payment" for money paid, including 支払い完了, 支払い受付 and money sent to a person; "refund" for 返金 / 退款; "income" for money received (受け取り, 收款, salary); "transfer" for top-ups, charges and withdrawals between the user\'s own accounts (チャージ, 充值, 提现, 出金); "points" for points or coupons (pt, ポイント付与); "failed" for failed or cancelled payments (支払い失敗, キャンセル, 取消, 失败, a struck-through amount).',
-      'date: the transaction date. Convert Japanese era years (令和8年 is 2026). Relative labels count back from today: 今天/今日/Today, 昨天/昨日/Yesterday, 前天/一昨日; a weekday name (星期二, 火曜日, Tue) is the latest such day before today; a time alone (9:30) means today. Leave it out if the date cannot be told.',
+      'date: the transaction date, in YYYY-MM-DD. Convert Japanese era years (令和8年 is 2026). Chat-style notices (WeChat Pay and similar) show only a time such as 9:35 for today, 昨天 for yesterday, a weekday for the past week and a full date for older ones. For those labels use this table:',
+      dateTable(),
+      'Leave the date out only when neither a date nor a time is shown for that transaction.',
       'time: the time of day if shown.',
       'merchant: the shop or other party as shown (on WeChat Pay, the name at the top of the notice), at most 20 characters.',
       'via: the payment source if shown (残高, 残高カード, PayPayカード, a card name).',
@@ -1765,9 +1777,14 @@
       const cat = kind === 'move' ? null : data.categories.find((c) => c.id === x.category && c.kind === kind && !c.hidden);
       const to = kind === 'move' ? accOk(x.to) : null, from = kind === 'move' ? accOk(x.from) : null, acc = kind === 'move' ? null : accOk(x.account);
       const time = /^\d{1,2}:\d{2}$/.test(String(x.time || '')) ? String(x.time).padStart(5, '0') : null;
+      /* 2026/11/10, 2026.11.10 and 2026年11月10日 are read as dates too */
+      const dm = /^(\d{4})[-/.年](\d{1,2})[-/.月](\d{1,2})日?$/.exec(String(x.date || '').trim());
+      const dateIn = dm ? `${dm[1]}-${pad2(Number(dm[2]))}-${pad2(Number(dm[3]))}` : '';
+      /* a notice that shows only a time is from today (that is how chat-style payment notices write it) */
+      const date = okDate(dateIn) ? dateIn : time ? todayStr() : null;
       out.push({
         skip: !isYen ? 'foreign' : type === 'points' || type === 'failed' ? type : null,
-        kind, amount: Math.min(Math.round(num), 9999999999), date: okDate(x.date) ? x.date : null, time,
+        kind, amount: Math.min(Math.round(num), 9999999999), date, time,
         merchant: String(x.merchant || '').trim().slice(0, 40), via: String(x.via || '').trim().slice(0, 20),
         cat: cat ? cat.id : null, acc, from: from && from !== to ? from : null, to,
       });
