@@ -1,7 +1,7 @@
 /* 家计簿 — offline bookkeeping web app. Data lives only in this browser (localStorage). */
 'use strict';
 (() => {
-  const APP_VERSION = '1.0.18';
+  const APP_VERSION = '1.0.19';
   const STORE_KEY = 'kakeibo:data';
   const PREV_KEY = 'kakeibo:data:prev';
   const UI_KEY = 'kakeibo:ui';
@@ -123,7 +123,13 @@
       'set.accounts': '账户', 'set.noAcc': '还没有账户',
       'set.cardHint': '信用卡的余额是负数，表示还没还的钱。还卡时记一笔「转移」：转出选银行，转入选信用卡。',
       'set.categories': '分类', 'set.noCat': '还没有分类', 'set.addOut': '＋ 添加支出分类', 'set.addIn': '＋ 添加收入分类',
-      'set.prefs': '使用习惯', 'set.autoAdd': '打开 App 时直接进入「记一笔」', 'set.autoOn': '下次打开会直接进入「记一笔」', 'set.autoOff': '已关闭',
+      'set.prefs': '使用习惯', 'set.showTb': '记一笔里显示「🚬 烟」按钮', 'set.showTbHint': '按包数把一笔里的一部分记成烟钱，默认每包 ¥590（IQOS センティア），之后可以在烟钱那一笔里改',
+      'tb.btn': '烟', 'tb.packs': '{n} 包', 'tb.splitInfo': '烟钱 {v} · 其余 {r}', 'tb.allOf': '整笔都算烟钱', 'tb.perPack': '每包 {v}', 'tb.each': '每包',
+      'tb.note': '其中烟钱 {v}（{n} 包）另记了一笔，点这里改', 'tb.saved': '已记下：烟 {n} 包 {v}，其余 {r}', 'tb.savedAll': '整笔记为烟钱：{n} 包 {v}',
+      'tb.adjusted': '烟钱改为 {v}，原来那笔变为 {r}', 'tb.tooMuch': '烟钱不能超过这次购物的总额 {v}', 'tb.sub': '{n} 包 · 每包 {p}', 'tb.srcSub': '含烟钱 {v}',
+      'tb.descT': '（含烟钱，共{t}）', 'tb.delCig': '删除这笔烟钱？{v} 会加回到原来那笔里。', 'tb.delSrc': '删除这笔？关联的烟钱 {v} 也会一起删除。',
+      'set.tbOn': '已显示「🚬 烟」按钮', 'set.tbOff': '已隐藏「🚬 烟」按钮',
+      'set.autoAdd': '打开 App 时直接进入「记一笔」', 'set.autoOn': '下次打开会直接进入「记一笔」', 'set.autoOff': '已关闭',
       'set.backup': '备份', 'set.bNever': '还没有备份过', 'set.bLast': '上次备份：', 'set.bToday': '今天', 'set.bDays': '{n} 天前',
       'set.export': '导出备份文件', 'set.copy': '复制备份文本', 'set.importFile': '从文件导入（备份 / CSV）', 'set.paste': '粘贴文本导入', 'set.csv': '导出明细 CSV',
       'set.backupHint': '数据只保存在这台手机上。删掉主屏幕上的图标会连数据一起删掉，建议每个月导出一次备份，存到「ファイル」或网盘里。',
@@ -226,7 +232,13 @@
       'set.accounts': '口座', 'set.noAcc': '口座がありません',
       'set.cardHint': 'クレジットカードの残高はマイナス（未払い分）で表示されます。カードを支払ったら「振替」で、振替元に銀行、振替先にカードを選んで記録します。',
       'set.categories': 'カテゴリ', 'set.noCat': 'カテゴリがありません', 'set.addOut': '＋ 支出カテゴリを追加', 'set.addIn': '＋ 収入カテゴリを追加',
-      'set.prefs': '使い方', 'set.autoAdd': 'アプリを開いたらすぐ「入力」画面にする', 'set.autoOn': '次回から開くとすぐ「入力」画面になります', 'set.autoOff': 'オフにしました',
+      'set.prefs': '使い方', 'set.showTb': '入力画面に「🚬 タバコ」ボタンを表示', 'set.showTbHint': '箱数で支払いの一部をタバコ代として記録します。初期値は1箱 ¥590（IQOS センティア）で、あとからタバコ代の明細で変更できます',
+      'tb.btn': 'タバコ', 'tb.packs': '{n}箱', 'tb.splitInfo': 'タバコ代 {v}・残り {r}', 'tb.allOf': '全額タバコ代', 'tb.perPack': '1箱 {v}', 'tb.each': '1箱',
+      'tb.note': 'うちタバコ代 {v}（{n}箱）は別に記録。ここで変更', 'tb.saved': '記録しました：タバコ {n}箱 {v}、残り {r}', 'tb.savedAll': '全額をタバコ代として記録：{n}箱 {v}',
+      'tb.adjusted': 'タバコ代を {v} に変更し、元の支払いは {r} になりました', 'tb.tooMuch': 'タバコ代はこの支払いの合計 {v} を超えられません', 'tb.sub': '{n}箱・1箱 {p}', 'tb.srcSub': 'うちタバコ代 {v}',
+      'tb.descT': '（タバコ代込み、合計{t}）', 'tb.delCig': 'このタバコ代を削除しますか？{v} は元の支払いに戻ります。', 'tb.delSrc': 'この支払いを削除しますか？関連するタバコ代 {v} も削除されます。',
+      'set.tbOn': '「🚬 タバコ」ボタンを表示しました', 'set.tbOff': '「🚬 タバコ」ボタンを非表示にしました',
+      'set.autoAdd': 'アプリを開いたらすぐ「入力」画面にする', 'set.autoOn': '次回から開くとすぐ「入力」画面になります', 'set.autoOff': 'オフにしました',
       'set.backup': 'バックアップ', 'set.bNever': 'まだバックアップしていません', 'set.bLast': '前回のバックアップ：', 'set.bToday': '今日', 'set.bDays': '{n}日前',
       'set.export': 'バックアップを書き出す', 'set.copy': 'バックアップをテキストでコピー', 'set.importFile': 'ファイルから読み込む',
       'set.paste': 'テキストを貼り付けて読み込む', 'set.csv': '明細をCSVで書き出す',
@@ -331,7 +343,14 @@
       'set.accounts': 'Accounts', 'set.noAcc': 'No accounts yet',
       'set.cardHint': 'Card balances show as negative (money owed). When you pay a card, record a Transfer from your bank to the card.',
       'set.categories': 'Categories', 'set.noCat': 'No categories yet', 'set.addOut': '＋ Add expense category', 'set.addIn': '＋ Add income category',
-      'set.prefs': 'Preferences', 'set.autoAdd': 'Open straight into “New entry”', 'set.autoOn': 'Will open straight into “New entry” next time', 'set.autoOff': 'Turned off',
+      'set.prefs': 'Preferences', 'set.showTb': 'Show the “🚬 Tobacco” button in New entry', 'set.showTbHint': 'Records part of a purchase as tobacco by packs; ¥590 a pack by default (IQOS SENTIA), changeable later on the tobacco entry',
+      'tb.btn': 'Tobacco', 'tb.packs': '{n} packs', 'tb.packs1': '1 pack', 'tb.splitInfo': 'Tobacco {v} · rest {r}', 'tb.allOf': 'All of it is tobacco', 'tb.perPack': '{v} a pack', 'tb.each': 'Per pack',
+      'tb.note': 'Tobacco {v} ({n} packs) recorded separately — tap to change', 'tb.note1': 'Tobacco {v} (1 pack) recorded separately — tap to change',
+      'tb.saved': 'Saved: tobacco {n} packs {v}, rest {r}', 'tb.saved1': 'Saved: tobacco 1 pack {v}, rest {r}', 'tb.savedAll': 'Recorded all of it as tobacco: {n} packs {v}', 'tb.savedAll1': 'Recorded all of it as tobacco: 1 pack {v}',
+      'tb.adjusted': 'Tobacco set to {v}; the original purchase is now {r}', 'tb.tooMuch': 'Tobacco cannot be more than the purchase total {v}', 'tb.sub': '{n} packs · {p} each', 'tb.sub1': '1 pack · {p} each', 'tb.srcSub': 'incl. tobacco {v}',
+      'tb.descT': ' (incl. tobacco, total {t})', 'tb.delCig': 'Delete this tobacco entry? {v} goes back to the original purchase.', 'tb.delSrc': 'Delete this? The linked tobacco entry {v} will be deleted too.',
+      'set.tbOn': '“🚬 Tobacco” button shown', 'set.tbOff': '“🚬 Tobacco” button hidden',
+      'set.autoAdd': 'Open straight into “New entry”', 'set.autoOn': 'Will open straight into “New entry” next time', 'set.autoOff': 'Turned off',
       'set.backup': 'Backup', 'set.bNever': 'No backup yet', 'set.bLast': 'Last backup: ', 'set.bToday': 'today', 'set.bDays': '{n} days ago', 'set.bDays1': '1 day ago',
       'set.export': 'Export backup file', 'set.copy': 'Copy backup as text', 'set.importFile': 'Import from file (backup / CSV)', 'set.paste': 'Paste text to import', 'set.csv': 'Export entries as CSV',
       'set.backupHint': 'Data is stored only on this phone. Deleting the home-screen icon deletes the data too, so export a backup about once a month and keep it in Files or cloud storage.',
@@ -494,6 +513,7 @@
     mortgage: { kind: 'out', icon: '🏦', zh: '房贷', ja: '住宅ローン', en: 'Mortgage', extra: true },
     adjIn: { kind: 'in', icon: '⚖️', zh: '特殊收入', ja: '特殊収入', en: 'Adjustment +', extra: true },
     adjOut: { kind: 'out', icon: '⚖️', zh: '特殊支出', ja: '特殊支出', en: 'Adjustment −', extra: true },
+    smoke: { kind: 'out', icon: '🚬', zh: '烟', ja: 'タバコ', en: 'Tobacco', extra: true },
   };
   /* built-ins introduced after the first release: added once to existing data, right after `after` */
   const LATER_CATS = ['coffee', 'conbini'];
@@ -564,6 +584,13 @@
       }
       return { aa };
     };
+    /* tobacco link: g = pair; on the tobacco entry also n packs and p yen a pack */
+    const cleanTB = (v) => {
+      if (!v || typeof v !== 'object' || !SAFE_ID.test(String(v.g || ''))) return {};
+      const tb = { g: String(v.g) }, n = Math.round(Number(v.n)), p = Math.round(Number(v.p));
+      if (n >= 1 && n <= 99) { tb.n = n; tb.p = p > 0 ? Math.min(p, 99999) : 0; }
+      return { tb };
+    };
     out.categories = d.categories.filter((c) => c && c.name).map((c) => {
       const kind = c.kind === 'in' ? 'in' : 'out', name = String(c.name).slice(0, 20);
       const sys = c.sys === 'adj-in' || c.sys === 'adj-out' ? c.sys : null;
@@ -599,13 +626,13 @@
     out.typeOrder = normTypeOrder(Array.isArray(d.typeOrder) ? d.typeOrder : out.accounts.map((a) => a.type));
     out.entries = d.entries
       .filter((e) => e && /^\d{4}-\d{2}-\d{2}$/.test(e.date) && ['out', 'in', 'move', 'adj'].includes(e.kind)
-        /* an AA expense can be ¥0 when friends paid back the whole bill */
-        && (Number(e.amount) > 0 || (e.kind === 'out' && Number(e.amount) === 0 && e.aa && Number(e.aa.t) > 0)))
+        /* an AA expense can be ¥0 when friends paid back the whole bill, and a purchase whose tobacco took all of it */
+        && (Number(e.amount) > 0 || (e.kind === 'out' && Number(e.amount) === 0 && ((e.aa && Number(e.aa.t) > 0) || (e.tb && !e.tb.n)))))
       .map((e) => ({
         id: cleanId(e.id), date: e.date, amount: Math.round(Number(e.amount)), kind: e.kind,
         cat: e.kind === 'move' || e.kind === 'adj' ? null : ref(e.cat), acc: ref(e.acc),
         to: e.kind === 'move' ? ref(e.to) : null, memo: String(e.memo || '').slice(0, 60), ts: Number(e.ts) || 0,
-        ...cleanAA(e.aa),
+        ...cleanAA(e.aa), ...cleanTB(e.tb),
       }));
     return out;
   }
@@ -659,6 +686,9 @@
     /* AA: last people count, and where friends last paid back */
     aaN: Number(savedUI.aaN) || 2,
     aaAcc: savedUI.aaAcc || null,
+    /* tobacco: the 🚬 button (on unless switched off), and the price per pack last set on a tobacco entry */
+    showTb: savedUI.showTb !== false,
+    tbPrice: Number(savedUI.tbPrice) > 0 ? Number(savedUI.tbPrice) : 0,
     autoAdd: savedUI.autoAdd !== false,
     filter: { kind: 'all', cat: null, acc: null },
     setKind: 'out',
@@ -666,7 +696,7 @@
   function saveUI() {
     try {
       localStorage.setItem(UI_KEY, JSON.stringify({
-        compKind: ui.compKind, trendCat: ui.trendCat, lastAccAny: ui.lastAccAny, autoAdd: ui.autoAdd, lang: LANG, aaN: ui.aaN, aaAcc: ui.aaAcc,
+        compKind: ui.compKind, trendCat: ui.trendCat, lastAccAny: ui.lastAccAny, autoAdd: ui.autoAdd, lang: LANG, aaN: ui.aaN, aaAcc: ui.aaAcc, showTb: ui.showTb, tbPrice: ui.tbPrice,
       }));
     } catch (e) { /* ignore */ }
   }
@@ -747,6 +777,8 @@
     if (e.memo) subParts.push(cName(c));
     subParts.push(aName(a));
     if (e.aa && e.aa.t) subParts.push(tr('aa.sub', { n: e.aa.n, t: yen(e.aa.t) }));
+    if (e.tb && e.tb.n) subParts.push(tr('tb.sub', { n: e.tb.n, p: yen(e.tb.p) }));
+    else if (e.tb) { const m = tbMate(e); if (m) subParts.push(tr('tb.srcSub', { v: yen(m.amount) })); }
     return `<button class="row ${future ? 'future' : ''}" data-act="edit" data-id="${esc(e.id)}"><span class="ic">${esc(c ? c.icon : '❔')}</span><span class="mid"><span class="title">${esc(title)}${aaB}${fb}</span><span class="rsub">${esc(subParts.join(' · '))}</span></span><span class="amt ${e.kind === 'in' ? 'in' : ''}">${e.kind === 'in' ? '+' : '−'}${yen(e.amount)}</span></button>`;
   }
 
@@ -1059,6 +1091,7 @@
       </section>
       <section class="card"><div class="card-head"><h2>${tr('set.prefs')}</h2></div>
         <label class="switch-row"><span>${tr('set.autoAdd')}</span><input type="checkbox" data-input="autoadd" ${ui.autoAdd ? 'checked' : ''}></label>
+        <label class="switch-row"><span>${tr('set.showTb')}<small>${tr('set.showTbHint')}</small></span><input type="checkbox" data-input="showtb" ${ui.showTb ? 'checked' : ''}></label>
       </section>
       <section class="card"><div class="card-head"><h2>${tr('ai.title')}</h2></div>
         <p class="hint ai-state">${tr(aiKey() ? 'ai.on' : 'ai.off')}</p>
@@ -1152,6 +1185,9 @@
       draft = { id: entry.id, kind: entry.kind, amt: String(entry.amount), cat: entry.cat, acc: entry.acc, to: entry.to, date: entry.date, memo: entry.memo || '' };
       /* an AA expense is edited as its total bill, with the split it was saved with */
       if (entry.aa && entry.aa.t) { draft.amt = String(entry.aa.t); draft.aa = { n: entry.aa.n, g: entry.aa.g, t: entry.aa.t, p: entry.aa.p || [] }; }
+      /* a tobacco entry is edited by packs and price; the purchase it came from shows where its tobacco went */
+      if (entry.tb && entry.tb.n) draft.tbCig = { n: entry.tb.n, p: entry.tb.p || Math.round(entry.amount / entry.tb.n), p0: entry.tb.p };
+      else if (entry.tb) { const m = tbMate(entry); if (m) draft.tbSrc = { cig: m.id }; }
     } else {
       const acc = ui.lastAccAny && accIdx.has(ui.lastAccAny) && !accIdx.get(ui.lastAccAny).hidden ? ui.lastAccAny : firstAcc();
       draft = { id: null, kind: 'out', amt: '', cat: null, acc, to: null, date: todayStr(), memo: '' };
@@ -1181,8 +1217,8 @@
     return `<div class="entry">
       <div class="e-top"><button class="icon-btn" data-act="close-sheet" aria-label="${tr('common.close')}">✕</button><div class="e-title">${d.id ? tr('entry.edit') : tr('entry.new')}</div>${d.id ? `<button class="text-btn danger" data-act="del-entry">${tr('common.delete')}</button>` : '<span class="e-sp"></span>'}</div>
       <div class="kinds">${kinds}</div>
-      <div class="amount k-${d.kind} ${d.amt ? '' : 'ph'}">${d.kind === 'move' ? '' : `<span class="amt-tools">${scanButton()}${d.kind === 'out' ? `<button class="aa-btn${d.aa ? ' on' : ''}" data-act="aa-toggle" aria-pressed="${d.aa ? 'true' : 'false'}">AA</button>` : ''}</span>`}<span class="cur">¥</span><span class="num">${d.amt ? Number(d.amt).toLocaleString('ja-JP') : '0'}</span></div>
-      ${d.kind === 'out' && d.aa ? `<div class="aa-bar">${aaBarInner(d)}</div>` : ''}
+      <div class="amount k-${d.kind} ${d.amt ? '' : 'ph'}">${d.kind === 'move' ? '' : `<span class="amt-tools">${scanButton()}</span>`}<span class="cur">¥</span><span class="num">${d.amt ? Number(d.amt).toLocaleString('ja-JP') : '0'}</span></div>
+      ${d.kind === 'out' ? optRowHTML(d) : ''}
       <div class="e-body">${body}</div>
       ${accRow}
       <div class="e-meta"><label class="date-chip">📅 <span class="date-text">${shortDate(d.date)}</span><input type="date" value="${d.date}" data-input="date" aria-label="${tr('entry.date')}"></label><input class="memo" type="text" placeholder="${tr('entry.memo')}" value="${esc(d.memo)}" data-input="memo" maxlength="40" enterkeyhint="done"></div>
@@ -1197,10 +1233,32 @@
     el.classList.toggle('ph', !draft.amt);
     const bar = $('.aa-bar', sheetEl);
     if (bar) bar.innerHTML = aaBarInner(draft);
+    const tbar = draft.tb && $('.tb-bar', sheetEl);
+    if (tbar) tbar.innerHTML = tbBarInner(draft);
+    /* on a tobacco entry, typing the amount sets the price per pack (unless the price itself is being typed) */
+    const pi = draft.tbCig && $('.tb-price', sheetEl);
+    if (pi && document.activeElement !== pi) { draft.tbCig.p = Math.round((parseInt(draft.amt || '0', 10) || 0) / draft.tbCig.n); pi.value = draft.tbCig.p || ''; }
   }
+  /* the row under the amount (expenses): AA, or 🚬 tobacco, or where this purchase's tobacco went */
+  function optRowHTML(d) {
+    if (d.tbSrc) { const c = data.entries.find((x) => x.id === d.tbSrc.cig); return c ? `<div class="opt-row"><button class="tb-note" data-act="tb-open">🚬 ${esc(tr('tb.note', { v: yen(c.amount), n: c.tb.n }))} ›</button></div>` : ''; }
+    if (d.tbCig) return `<div class="opt-row on"><span class="opt-chip on tb-btn">🚬</span><span class="tb-bar">${tbCigInner(d)}</span></div>`;
+    if (d.aa) return `<div class="opt-row on"><button class="opt-chip on aa-btn" data-act="aa-toggle" aria-pressed="true">AA</button><span class="aa-bar">${aaBarInner(d)}</span></div>`;
+    if (d.tb) return `<div class="opt-row on"><button class="opt-chip on tb-btn" data-act="tb-toggle" aria-pressed="true">🚬</button><span class="tb-bar">${tbBarInner(d)}</span></div>`;
+    return `<div class="opt-row"><button class="opt-chip aa-btn" data-act="aa-toggle" aria-pressed="false">AA</button>${ui.showTb ? `<button class="opt-chip tb-btn" data-act="tb-toggle" aria-pressed="false">🚬 ${tr('tb.btn')}</button>` : ''}</div>`;
+  }
+  /* ¥590 a pack: IQOS センティア, the "500-something" tier, since 1 Oct 2026 (テリア is ¥640) */
+  const TB_PRICE = 590;
+  const tbPrice = () => ui.tbPrice || TB_PRICE;
+  const tbBarInner = (d) => {
+    const total = parseInt(d.amt || '0', 10) || 0, cig = d.tb.n * tbPrice();
+    const info = !total ? tr('tb.perPack', { v: yen(tbPrice()) }) : cig >= total ? tr('tb.allOf') : tr('tb.splitInfo', { v: yen(cig), r: yen(total - cig) });
+    return `<button data-act="tb-n" data-v="-1" aria-label="−">−</button><b class="tb-n">${tr('tb.packs', { n: d.tb.n })}</b><button data-act="tb-n" data-v="1" aria-label="+">+</button><span class="tb-info">${info}</span>`;
+  };
+  const tbCigInner = (d) => `<button data-act="tb-n" data-v="-1" aria-label="−">−</button><b class="tb-n">${tr('tb.packs', { n: d.tbCig.n })}</b><button data-act="tb-n" data-v="1" aria-label="+">+</button><label class="tb-p">${tr('tb.each')} ¥<input class="tb-price" type="text" inputmode="numeric" data-input="tbprice" value="${d.tbCig.p || ''}" aria-label="${tr('tb.each')}"></label>`;
   /* AA bar under the amount: people count and your even share */
   const aaShare = (total, n) => Math.round(total / n);
-  const aaBarInner = (d) => `<span class="aa-tag">AA</span><button data-act="aa-n" data-v="-1" aria-label="−">−</button><b class="aa-n">${tr('aa.people', { n: d.aa.n })}</b><button data-act="aa-n" data-v="1" aria-label="+">+</button><span class="aa-mine">${tr('aa.mine', { v: yen(aaShare(parseInt(d.amt || '0', 10), d.aa.n)) })}</span>`;
+  const aaBarInner = (d) => `<button data-act="aa-n" data-v="-1" aria-label="−">−</button><b class="aa-n">${tr('aa.people', { n: d.aa.n })}</b><button data-act="aa-n" data-v="1" aria-label="+">+</button><span class="aa-mine">${tr('aa.mine', { v: yen(aaShare(parseInt(d.amt || '0', 10), d.aa.n)) })}</span>`;
   function pressKey(k) {
     let s = draft.amt;
     if (k === 'del') s = s.slice(0, -1);
@@ -1212,8 +1270,11 @@
     $$(rowSel, sheetEl).forEach((b) => b.classList.toggle('on', b.dataset[attr] === id));
   }
   /* "−¥573 便利店 · Seven-Eleven Japan" */
-  const entryDesc = (e) => `${e.kind === 'in' || e.kind === 'adj' ? '+' : e.kind === 'out' ? '−' : ''}${yen(e.amount)} ${e.kind === 'move' ? kindName('move') : e.kind === 'adj' ? tr('aa.extra') : cName(catIdx.get(e.cat))}${e.memo ? ` · ${e.memo}` : ''}${e.aa && e.aa.t ? tr('aa.descT', { t: yen(e.aa.t) }) : ''}`;
-  const sameDayAmount = (date, amount, kind) => data.entries.find((e) => e.date === date && e.kind === kind && (e.amount === amount || (e.aa && e.aa.t === amount)));
+  const entryDesc = (e) => `${e.kind === 'in' || e.kind === 'adj' ? '+' : e.kind === 'out' ? '−' : ''}${yen(e.amount)} ${e.kind === 'move' ? kindName('move') : e.kind === 'adj' ? tr('aa.extra') : cName(catIdx.get(e.cat))}${e.memo ? ` · ${e.memo}` : ''}${e.aa && e.aa.t ? tr('aa.descT', { t: yen(e.aa.t) }) : ''}${e.tb && tbMate(e) ? tr('tb.descT', { t: yen(tbTotal(e)) }) : ''}`;
+  /* a purchase split into tobacco + the rest, and its tobacco entry, both stand for the whole amount paid */
+  const tbMate = (e) => (e && e.tb ? data.entries.find((x) => x !== e && x.tb && x.tb.g === e.tb.g) : null);
+  const tbTotal = (e) => { const m = tbMate(e); return m ? e.amount + m.amount : e.amount; };
+  const sameDayAmount = (date, amount, kind) => data.entries.find((e) => e.date === date && e.kind === kind && (e.amount === amount || (e.aa && e.aa.t === amount) || (e.tb && tbTotal(e) === amount)));
   async function saveDraft(cont) {
     const d = draft;
     const amount = parseInt(d.amt || '0', 10);
@@ -1238,12 +1299,21 @@
       data.entries = data.entries.filter((e) => !(e.aa && e.aa.g === g && e.id !== existing.id));
       delete existing.aa;
     }
+    /* tobacco: a tobacco entry's new packs / price, or packs split off this purchase */
+    if (d.kind === 'out' && d.tbCig && existing) return saveTbCig(d, amount, existing);
+    if (d.kind === 'out' && d.tb) return saveTbSplit(d, amount, existing, cont);
     const rec = {
       id: d.id || uid(), date: d.date || todayStr(), amount, kind: d.kind,
       cat: d.kind === 'move' ? null : d.cat, acc: d.acc, to: d.kind === 'move' ? d.to : null,
       memo: (d.memo || '').trim(), ts: existing ? existing.ts : Date.now(),
     };
     if (existing) Object.assign(existing, rec); else data.entries.push(rec);
+    /* a purchase with tobacco split off: the tobacco follows its date and payment method */
+    if (existing && existing.tb) {
+      const m = tbMate(existing);
+      if (rec.kind !== 'out') { if (m) delete m.tb; delete existing.tb; }
+      else if (m) { m.date = rec.date; m.acc = rec.acc; }
+    }
     ui.lastAccAny = d.kind === 'move' ? ui.lastAccAny : d.acc;
     saveUI();
     saveData();
@@ -1265,6 +1335,27 @@
     if (!d || !d.id) return;
     const target = data.entries.find((e) => e.id === d.id);
     if (!target) return;
+    /* a tobacco entry: its money goes back to the purchase it was split from */
+    const tbm = tbMate(target);
+    if (tbm && target.tb.n) {
+      if (!(await askConfirm(tr('tb.delCig', { v: yen(target.amount) }), tr('common.delete'), true))) return;
+      const oldTb = tbm.tb;
+      tbm.amount += target.amount;
+      delete tbm.tb;
+      data.entries = data.entries.filter((e) => e !== target);
+      saveData(); closeSheet(); render();
+      toast(tr('entry.deleted'), { label: tr('common.undo'), fn: () => { tbm.amount -= target.amount; tbm.tb = oldTb; if (!data.entries.includes(target)) data.entries.push(target); saveData(); render(); toast(tr('entry.restored')); } });
+      return;
+    }
+    /* a purchase with tobacco split off goes together with that tobacco entry */
+    if (tbm) {
+      if (!(await askConfirm(tr('tb.delSrc', { v: yen(tbm.amount) }), tr('common.delete'), true))) return;
+      const pair = [target, tbm];
+      data.entries = data.entries.filter((e) => !pair.includes(e));
+      saveData(); closeSheet(); render();
+      toast(tr('entry.deleted'), { label: tr('common.undo'), fn: () => { data.entries.push(...pair.filter((e) => !data.entries.includes(e))); saveData(); render(); toast(tr('entry.restored')); } });
+      return;
+    }
     /* an AA expense goes together with its pay-back transfers */
     const g = target.aa && target.aa.g;
     const group = g ? data.entries.filter((e) => e.aa && e.aa.g === g) : [target];
@@ -1276,6 +1367,58 @@
     closeSheet();
     render();
     toast(tr('entry.deleted'), { label: tr('common.undo'), fn: () => { data.entries.push(...group.filter((e) => !data.entries.includes(e))); saveData(); render(); toast(tr('entry.restored')); } });
+  }
+
+  /* ================= tobacco ================= */
+  /* the 烟 category, made the first time it is needed (right after 便利店 / 咖啡 / 餐饮) */
+  function smokeCat() {
+    let c = data.categories.find((x) => x.base === 'smoke');
+    if (c) return c;
+    const b = BASE_CATS.smoke;
+    c = { id: uid(), name: b[LANG], kind: 'out', icon: b.icon, hidden: false, lang0: LANG, base: 'smoke' };
+    let at = -1;
+    for (const k of ['conbini', 'coffee', 'food']) { at = data.categories.findIndex((x) => x.base === k); if (at >= 0) break; }
+    data.categories.splice(at >= 0 ? at + 1 : data.categories.length, 0, c);
+    reindex();
+    return c;
+  }
+  /* new purchase (or one not split yet): n packs at the usual price become a 烟 entry, the rest stays as chosen;
+     if the packs cost at least the whole amount, all of it is tobacco and the real price per pack follows from it */
+  function saveTbSplit(d, total, existing, cont) {
+    const n = d.tb.n, p = tbPrice(), cig = n * p, cat = smokeCat();
+    const g = uid(), date = d.date || todayStr(), memo = (d.memo || '').trim(), ts = existing ? existing.ts : Date.now();
+    const recs = cig >= total
+      ? [{ id: d.id || uid(), date, amount: total, kind: 'out', cat: cat.id, acc: d.acc, to: null, memo, ts, tb: { g, n, p: Math.max(1, Math.round(total / n)) } }]
+      : [{ id: d.id || uid(), date, amount: total - cig, kind: 'out', cat: d.cat, acc: d.acc, to: null, memo, ts, tb: { g } },
+        { id: uid(), date, amount: cig, kind: 'out', cat: cat.id, acc: d.acc, to: null, memo, ts: ts - 1, tb: { g, n, p } }];
+    if (existing) { data.entries[data.entries.indexOf(existing)] = recs[0]; data.entries.push(...recs.slice(1)); } else data.entries.push(...recs);
+    ui.lastAccAny = d.acc;
+    saveUI();
+    saveData();
+    if (date.slice(0, 7) !== ui.month) ui.month = date.slice(0, 7);
+    const msg = recs.length > 1 ? tr('tb.saved', { n, v: yen(cig), r: yen(total - cig) }) : tr('tb.savedAll', { n, v: yen(total) });
+    const undo = existing ? null : { label: tr('common.undo'), fn: () => { data.entries = data.entries.filter((e) => !recs.includes(e)); saveData(); render(); toast(tr('entry.restored')); } };
+    if (cont && !existing) { draft = { id: null, kind: 'out', amt: '', cat: null, acc: d.acc, to: d.to, date: d.date, memo: '' }; renderEntry(); }
+    else closeSheet();
+    render();
+    toast(msg, undo);
+  }
+  /* a tobacco entry changed (packs, price or amount): the purchase it came from takes up the difference */
+  function saveTbCig(d, amount, cig) {
+    const src = tbMate(cig), n = d.tbCig.n, p = Math.max(1, Math.round(amount / n)), delta = amount - cig.amount;
+    if (src && src.amount - delta < 0) { shake($('.amount', sheetEl)); return toast(tr('tb.tooMuch', { v: yen(src.amount + cig.amount) })); }
+    const date = d.date || todayStr();
+    Object.assign(cig, { date, amount, cat: d.cat, acc: d.acc, memo: (d.memo || '').trim(), tb: { g: cig.tb.g, n, p } });
+    if (src) Object.assign(src, { amount: src.amount - delta, date, acc: d.acc });
+    /* a price set by hand is the usual price from now on */
+    if (p !== d.tbCig.p0) ui.tbPrice = p;
+    ui.lastAccAny = d.acc;
+    saveUI();
+    saveData();
+    if (date.slice(0, 7) !== ui.month) ui.month = date.slice(0, 7);
+    closeSheet();
+    render();
+    toast(src ? tr('tb.adjusted', { v: yen(amount), r: yen(src.amount) }) : tr('entry.savedEdit'));
   }
 
   /* ================= AA: split the bill ================= */
@@ -2447,7 +2590,27 @@
       case 'key': pressKey(v); break;
       case 'aa-toggle':
         draft.aa = draft.aa ? null : { n: Math.min(20, Math.max(2, Number(ui.aaN) || 2)) };
+        if (draft.aa) draft.tb = null;
         renderEntry(); break;
+      case 'tb-toggle':
+        draft.tb = draft.tb ? null : { n: 1 };
+        if (draft.tb) draft.aa = null;
+        renderEntry(); break;
+      case 'tb-n': {
+        if (draft.tb) {
+          draft.tb.n = Math.min(99, Math.max(1, draft.tb.n + Number(v)));
+          const bar = $('.tb-bar', sheetEl);
+          if (bar) bar.innerHTML = tbBarInner(draft);
+        } else if (draft.tbCig) {
+          /* more or fewer packs at the same price */
+          draft.tbCig.n = Math.min(99, Math.max(1, draft.tbCig.n + Number(v)));
+          draft.amt = String(draft.tbCig.n * (draft.tbCig.p || 0));
+          $('.tb-n', sheetEl).textContent = tr('tb.packs', { n: draft.tbCig.n });
+          updateAmount();
+        }
+        break;
+      }
+      case 'tb-open': { const c = draft && draft.tbSrc && data.entries.find((x) => x.id === draft.tbSrc.cig); if (c) openEntry(c); break; }
       case 'aa-n': {
         if (!draft.aa) break;
         draft.aa.n = Math.min(20, Math.max(2, draft.aa.n + Number(v)));
@@ -2513,6 +2676,14 @@
   document.addEventListener('input', (ev) => {
     const el = ev.target;
     if (el.dataset.input === 'memo' && draft) draft.memo = el.value;
+    else if (el.dataset.input === 'tbprice' && draft && draft.tbCig) {
+      /* price per pack typed on a tobacco entry: the amount follows */
+      const p = parseInt(el.value.replace(/[^\d]/g, ''), 10) || 0;
+      if (el.value !== (p ? String(p) : '')) el.value = p ? String(p) : '';
+      draft.tbCig.p = p;
+      draft.amt = p ? String(p * draft.tbCig.n) : '';
+      updateAmount();
+    }
     else if (el.dataset.aa === 'amt' && aaEdit) aaInput(el);
     else if (el.id === 'f-init') updateAdjNote();
   });
@@ -2528,6 +2699,8 @@
       if (t) t.textContent = shortDate(draft.date);
     } else if (el.id === 'f-adj') {
       updateAdjNote();
+    } else if (el.dataset.input === 'showtb') {
+      ui.showTb = el.checked; saveUI(); toast(tr(el.checked ? 'set.tbOn' : 'set.tbOff'));
     } else if (el.dataset.input === 'autoadd') {
       ui.autoAdd = el.checked; saveUI(); toast(tr(el.checked ? 'set.autoOn' : 'set.autoOff'));
     } else if (el.id === 'photo-in' && el.files && el.files[0]) {

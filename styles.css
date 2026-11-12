@@ -485,13 +485,18 @@ svg { display: block; }
 /* AA: split the bill */
 .amt-tools { margin-right: auto; align-self: center; display: inline-flex; align-items: center; gap: 8px; }
 .amt-tools .scan-btn { margin-right: 0; }
-.aa-btn { padding: 6px 12px; border-radius: 999px; border: 1.5px solid var(--line); background: var(--card); color: var(--ink2); font-size: 14px; font-weight: 800; letter-spacing: .5px; }
-.aa-btn.on { border-color: var(--accent); background: var(--accent-soft); color: var(--accent-ink); }
-.aa-bar { display: flex; align-items: center; gap: 8px; margin: 0 16px 6px; padding: 5px 10px; border-radius: 12px; background: var(--accent-soft); color: var(--accent-ink); font-size: 14px; font-weight: 700; }
-.aa-bar .aa-tag { font-weight: 800; letter-spacing: .5px; }
-.aa-bar button { width: 30px; height: 30px; flex: none; border-radius: 50%; background: var(--card); color: var(--ink); font-size: 18px; font-weight: 800; line-height: 1; }
-.aa-bar .aa-n { min-width: 42px; text-align: center; }
-.aa-bar .aa-mine { margin-left: auto; font-variant-numeric: tabular-nums; }
+/* AA / 🚬 row under the amount (expenses) */
+.opt-row { display: flex; align-items: center; gap: 8px; margin: 0 16px 6px; min-height: 40px; }
+.opt-row.on { background: var(--accent-soft); border-radius: 14px; padding: 4px 10px 4px 4px; color: var(--accent-ink); }
+.opt-chip { flex: none; padding: 6px 12px; border-radius: 999px; border: 1.5px solid var(--line); background: var(--card); color: var(--ink2); font-size: 14px; font-weight: 800; letter-spacing: .3px; }
+.opt-chip.on { border-color: var(--accent); color: var(--accent-ink); }
+.aa-bar, .tb-bar { flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px; color: var(--accent-ink); font-size: 14px; font-weight: 700; }
+.aa-bar button, .tb-bar button { width: 30px; height: 30px; flex: none; border-radius: 50%; background: var(--card); color: var(--ink); font-size: 18px; font-weight: 800; line-height: 1; }
+.aa-bar .aa-n, .tb-bar .tb-n { min-width: 40px; text-align: center; white-space: nowrap; }
+.aa-bar .aa-mine, .tb-bar .tb-info { margin-left: auto; min-width: 0; text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-variant-numeric: tabular-nums; }
+.tb-p { margin-left: auto; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
+.tb-price { width: 76px; min-height: 32px; border: 1px solid var(--accent); border-radius: 10px; background: var(--card); color: var(--ink); text-align: right; padding: 0 8px; font-size: 16px; font-weight: 700; outline: none; }
+.tb-note { width: 100%; text-align: left; padding: 8px 12px; border-radius: 12px; background: var(--accent-soft); color: var(--accent-ink); font-size: 14px; font-weight: 700; }
 .aa-form .aa-sum { margin: 2px 2px 4px; color: var(--ink2); font-weight: 650; }
 .aa-people { display: flex; flex-direction: column; gap: 8px; }
 .aa-p { display: grid; grid-template-columns: auto 1fr 104px; gap: 8px; align-items: center; }
