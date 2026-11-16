@@ -455,7 +455,15 @@ svg { display: block; }
 .scan-status { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; margin: 2px 0 4px; }
 .ss-thumbs { display: flex; gap: 6px; overflow-x: auto; margin-bottom: 10px; }
 .ss-thumbs:empty { display: none; }
-.ss-thumbs img { flex: none; width: 42px; height: 58px; object-fit: cover; object-position: top; border-radius: 8px; border: 1px solid var(--line); }
+.ss-thumbs img { flex: none; width: 42px; height: 58px; object-fit: cover; object-position: top; border-radius: 8px; border: 1px solid var(--line); box-sizing: border-box; }
+/* several images are read one by one: the current one is outlined, a finished one shows how many it gave */
+.ss-th { position: relative; flex: none; display: block; line-height: 0; }
+.ss-th.on img { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+.ss-th.none img, .ss-th.err img { opacity: .55; }
+.ss-th b { position: absolute; right: 3px; bottom: 3px; min-width: 17px; height: 17px; padding: 0 4px; box-sizing: border-box; border-radius: 9px; background: var(--in); color: #fff; font-size: 11px; font-weight: 800; line-height: 17px; text-align: center; font-variant-numeric: tabular-nums; }
+.ss-th b:empty { display: none; }
+.ss-th.none b { background: var(--muted); }
+.ss-th.err b { background: var(--out); }
 .ss-steps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 9px; }
 .ss-step { display: grid; grid-template-columns: 20px auto 1fr; align-items: center; column-gap: 8px; row-gap: 6px; font-size: 14px; }
 .ss-step.wait { color: var(--muted); }
@@ -479,6 +487,13 @@ svg { display: block; }
 .ss-msg .btn { flex: none; min-height: 36px; padding: 0 14px; font-size: 14px; }
 .sl-empty { text-align: center; padding: 14px 0; }
 .sl-skips:empty { display: none; }
+/* what was left out, as the AI read it */
+.sl-skipped { list-style: none; margin: 6px 2px 0; padding: 0; display: flex; flex-direction: column; gap: 4px; font-size: 12.5px; color: var(--muted); }
+.sl-skipped:empty { display: none; }
+.sl-skipped li { display: flex; gap: 8px; align-items: baseline; min-width: 0; }
+.sl-skipped li span:first-child { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--ink); }
+.sl-skipped li span:nth-child(2) { flex: none; font-variant-numeric: tabular-nums; }
+.sl-skipped em { flex: none; font-style: normal; font-size: 11.5px; padding: 0 6px; border: 1px solid var(--line); border-radius: 6px; }
 .sl-row.new { animation: sl-in .25s ease-out; }
 @keyframes sl-in { from { opacity: 0; transform: translateY(6px); } }
 

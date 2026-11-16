@@ -1,7 +1,7 @@
 /* 家计簿 — offline bookkeeping web app. Data lives only in this browser (localStorage). */
 'use strict';
 (() => {
-  const APP_VERSION = '1.0.20';
+  const APP_VERSION = '1.0.21';
   const STORE_KEY = 'kakeibo:data';
   const PREV_KEY = 'kakeibo:data:prev';
   const UI_KEY = 'kakeibo:ui';
@@ -198,6 +198,9 @@
       'aa.descT': '（AA 共{t}）', 'scan.aaSame': '可能是已记的 AA 回款：{w}',
       'scan.sk.points': '积分 {n} 笔', 'scan.sk.failed': '失败/取消 {n} 笔', 'scan.sk.foreign': '没有日元金额 {n} 笔',
       'scan.foreignHint': '支付宝、微信的账单列表只显示人民币。点开那一笔，截有日元金额的「账单详情」再识别。',
+      'scan.yuanFig': '人民币 {v}', 'scan.why.points': '积分', 'scan.why.failed': '失败/取消', 'scan.why.foreign': '不是日元', 'scan.why.yuan': '读成了人民币',
+      'scan.sk.yuan': '读成人民币 {n} 笔', 'scan.yuanHint': '有日元金额的页面，AI 却读了人民币的数字，所以没有记入。可以再识别一次，或者自己记。',
+      'ss.nth': '第 {i}/{n} 张 · ', 'ss.emptyImg': '第 {i} 张没有认出可以记的收支',
     },
     ja: {
       'app.name': '家計簿', 'nav.label': 'メインメニュー',
@@ -309,6 +312,9 @@
       'aa.descT': '（AA 合計{t}）', 'scan.aaSame': '記録済みの AA の返金かもしれません：{w}',
       'scan.sk.points': 'ポイント {n}件', 'scan.sk.failed': '失敗・取消 {n}件', 'scan.sk.foreign': '円の金額なし {n}件',
       'scan.foreignHint': 'Alipay・WeChat Pay の一覧には人民元しか表示されません。その取引を開き、円の金額が載っている「账单详情」の画面を読み取ってください。',
+      'scan.yuanFig': '人民元 {v}', 'scan.why.points': 'ポイント', 'scan.why.failed': '失敗・取消', 'scan.why.foreign': '円ではない', 'scan.why.yuan': '人民元を読み取り',
+      'scan.sk.yuan': '人民元の数字を読み取ったもの {n}件', 'scan.yuanHint': '円の金額がある画面で AI が人民元の数字を読み取ったため、記録していません。もう一度読み取るか、手入力してください。',
+      'ss.nth': '{i}/{n}枚目・', 'ss.emptyImg': '{i}枚目からは記録できる取引が見つかりませんでした',
     },
     en: {
       'app.name': 'Kakeibo', 'nav.label': 'Main menu',
@@ -426,6 +432,9 @@
       'scan.sk.points': '{n} points items', 'scan.sk.points1': '1 points item',
       'scan.sk.failed': '{n} failed or cancelled', 'scan.sk.failed1': '1 failed or cancelled', 'scan.sk.foreign': '{n} without a yen amount', 'scan.sk.foreign1': '1 without a yen amount',
       'scan.foreignHint': 'Alipay and WeChat Pay lists show only yuan. Open the transaction and scan its detail page (账单详情), which shows the yen amount.',
+      'scan.yuanFig': '{v} yuan', 'scan.why.points': 'points', 'scan.why.failed': 'failed', 'scan.why.foreign': 'not yen', 'scan.why.yuan': 'yuan figure',
+      'scan.sk.yuan': '{n} read as the yuan figure', 'scan.sk.yuan1': '1 read as the yuan figure', 'scan.yuanHint': 'The page shows a yen amount, but AI took the yuan figure, so these were left out. Scan again or enter them yourself.',
+      'ss.nth': 'Image {i}/{n} · ', 'ss.emptyImg': 'Nothing to record in images {i}', 'ss.emptyImg1': 'Nothing to record in image {i}',
     },
   };
   const HTML_LANG = { zh: 'zh-CN', ja: 'ja', en: 'en' };
@@ -1787,7 +1796,12 @@
     const back = (n) => { const x = new Date(now.getFullYear(), now.getMonth(), now.getDate() - n); return x; };
     const W = [['星期日', '周日', '日曜日', 'Sunday'], ['星期一', '周一', '月曜日', 'Monday'], ['星期二', '周二', '火曜日', 'Tuesday'], ['星期三', '周三', '水曜日', 'Wednesday'],
       ['星期四', '周四', '木曜日', 'Thursday'], ['星期五', '周五', '金曜日', 'Friday'], ['星期六', '周六', '土曜日', 'Saturday']];
-    const lines = [`- a time alone (e.g. 9:35), 今天, 今日, Today: ${ymd(now)}`, `- 昨天, 昨日, Yesterday: ${ymd(back(1))}`, `- 前天, 一昨日: ${ymd(back(2))}`];
+    /* "2時間前" is today only while that many hours have passed since midnight */
+    const today = ymd(now), yday = ymd(back(1)), mins = now.getHours() * 60 + now.getMinutes(), h = Math.floor(mins / 60);
+    const lines = [`- a time alone (e.g. 9:35), 今天, 今日, Today: ${today}`,
+      mins >= 60 ? `- N分前, N分钟前, N minutes ago: ${today}` : `- N分前, N分钟前, N minutes ago: ${today} for N up to ${mins}, ${yday} for more`,
+      h >= 1 ? `- N時間前, N小时前, N hours ago: ${today} for N up to ${h}, ${yday} for more` : `- N時間前, N小时前, N hours ago: ${yday}`,
+      `- 昨天, 昨日, Yesterday: ${yday}`, `- 前天, 一昨日: ${ymd(back(2))}`];
     for (let n = 1; n <= 7; n++) { const x = back(n); lines.push(`- ${W[x.getDay()].join(', ')}: ${ymd(x)}`); }
     return lines.join('\n');
   }
@@ -1796,26 +1810,32 @@
       .map((c) => `${c.id}: ${[...new Set(allLabels(c, 'cat'))].join(' / ')}`).join('\n');
     const accs = activeAccs().map((a) => `${a.id}: ${[...new Set(allLabels(a, 'acc'))].join(' / ')} (${a.type})`).join('\n');
     const byBase = (k) => data.categories.find((c) => c.base === k && !c.hidden);
-    const conb = byBase('conbini'), food = byBase('food');
+    const conb = byBase('conbini'), food = byBase('food'), trans = byBase('transport');
+    /* transit IC card accounts, so a Wallet / card-app history can be matched to one */
+    const ic = activeAccs().filter((a) => allLabels(a, 'acc').some((l) => /pasmo|suica|icoca|kitaca|toica|manaca|pitapa|nimoca|sugoca|はやかけん/i.test(l || '')));
+    const icName = (a) => `${a.id} (${aName(a)})`;
     return [
-      'Read this image for a household budget app kept in Japanese yen. It can be a Japanese receipt, a payment screen, a bill detail page (Alipay 支付宝 or WeChat Pay 微信支付 账单详情), or a screenshot that lists several transactions (PayPay 取引履歴, WeChat Pay 微信支付 payment notices, a card or bank app).',
-      nImages > 1 ? `There are ${nImages} images, in order. They can be consecutive screenshots or slices of one long screenshot, and they may overlap: list each transaction only once.` : '',
+      'Read this image for a household budget app kept in Japanese yen. It can be a Japanese receipt, a payment screen, a bill detail page (Alipay 支付宝 or WeChat Pay 微信支付 账单详情), a transit IC card history (PASMO, Suica: Apple Wallet 最近のご利用 or the card\'s app), or a screenshot that lists several transactions (PayPay 取引履歴, WeChat Pay 微信支付 payment notices, a card or bank app).',
+      nImages > 1 ? `There are ${nImages} images: slices of one long screenshot, in order, that overlap a little. List each transaction only once.` : '',
       'Reply with JSON only, in this shape:',
       '{"items": [{"type": "payment" | "refund" | "income" | "transfer" | "points" | "failed", "amount": integer, "date": "YYYY-MM-DD", "time": "HH:MM", "merchant": string, "via": string, "category": a category id, "account": an account id, "from": an account id, "to": an account id, "yuan": number, "currency": a currency code}]}',
       'Leave out any field that is unknown or does not apply, to keep the reply short: currency only when the amount is not in yen, yuan only on WeChat Pay and Alipay, from and to only for transfers.',
-      'One item per transaction, in the order shown. A receipt is a single transaction, and so is a bill detail page (账单详情).',
+      'One item per transaction, in the order shown. A receipt or a bill detail page (账单详情) is a single transaction.',
       'amount: in Japanese yen, digits only. On a receipt, the total actually paid, tax included, after discounts (合計, お支払い, ご請求額), not the subtotal, 預り or お釣り.',
-      'WeChat Pay (微信支付) and Alipay (支付宝) show Chinese yuan: the large figure at the top (¥47.55, -63.10) and every figure marked 元, 人民币 or CNY are yuan, never yen. For amount take the yen figure, marked 日元, 円 or JPY: on WeChat Pay the 标价 line (标价 1000日元 → 1000), on an Alipay bill the figure in brackets on the 订单金额 line (订单金额 63.14元(1500日元) → 1500). Yuan discounts (立减金, 优惠, 红包) and the exchange rate (汇率) do not change it, and reward points (积分, 支付奖励) are not a transaction.',
+      'WeChat Pay (微信支付) and Alipay (支付宝) show Chinese yuan: the large figure at the top (¥47.55, -63.10) and figures marked 元, 人民币 or CNY are yuan. 日元 means Japanese yen, not yuan. For amount take the yen figure (日元, 円, JPY): on WeChat Pay the 标价 line (标价 1000日元 → 1000), on an Alipay bill the figure in brackets on the 订单金额 line (订单金额 63.14元(1500日元) → 1500, not 63.14 or 63.10). Yuan discounts (立减金, 优惠, 红包) and the exchange rate (汇率) do not change it, and reward points (积分, 支付奖励) are not a transaction.',
       'yuan (WeChat Pay and Alipay only): the large yuan figure of that transaction, without the sign (-63.10 → 63.10). The app checks amount against it.',
       'Only if a transaction shows no yen figure at all (a WeChat Pay or Alipay bill list shows only yuan), give amount as shown, with currency.',
+      `Transit IC card history (PASMO, Suica, ICOCA …): a ride (交通機関, a station or a bus) with a yen amount is a fare: type "payment", merchant "entry station→exit station" (新宿駅 with 渋谷駅から is 渋谷駅→新宿駅)${trans ? `, category ${trans.id}` : ''}. A shop purchase on the card is a payment as usual. Rows marked 支払いなし (covered by a commuter pass) or カード照会 (a balance check) move no money: leave them out. A チャージ is a transfer to the card.`,
       'type: "payment" for money paid, including 支払い完了, 支払い受付 and money sent to a person; "refund" for 返金 / 退款; "income" for money received (受け取り, 收款, salary); "transfer" for top-ups, charges and withdrawals between the user\'s own accounts (チャージ, 充值, 提现, 出金); "points" for points or coupons (pt, ポイント付与); "failed" for failed or cancelled payments (支払い失敗, キャンセル, 取消, 失败, a struck-through amount).',
-      'date: the transaction date, in YYYY-MM-DD. Convert Japanese era years (令和8年 is 2026). Chat-style notices (WeChat Pay and similar) show only a time such as 9:35 for today, 昨天 for yesterday, a weekday for the past week and a full date for older ones. For those labels use this table:',
+      'date: the transaction date, in YYYY-MM-DD. Convert Japanese era years (令和8年 is 2026); a date without a year is the latest such date that is not after today. Many apps write recent dates relative to now: WeChat Pay shows only a time such as 9:35 for today, Apple Wallet shows N分前 or N時間前 for today, and they show 昨天 or 昨日 for yesterday, a weekday (星期五, 金曜日) for the past week and a full date for older ones. For those labels use this table:',
       dateTable(),
       'Leave the date out only when neither a date nor a time is shown for that transaction.',
       'time: the time of day if shown.',
       'merchant: the shop or other party as shown (on WeChat Pay and Alipay, the name at the top, above the amount), at most 20 characters.',
       'via: the payment source if shown (残高, 残高カード, PayPayカード, a card name).',
       'account (payments, refunds and income): the id of the account below that paid or received the money, when the image shows it (付款方式, 支付方式, 使用…支付) or the app makes it clear; for example 使用平安银行信用卡支付 or 付款方式 平安银行信用卡(1234) is the 平安信用卡 account, and PayPay 残高 or 残高カード is the PayPay account. Leave it out when unsure; the user will choose.',
+      ic.length === 1 ? `A transit IC card history is paid from ${icName(ic[0])}, unless the screen names a different card.`
+        : ic.length > 1 ? `A transit IC card history is paid from the one of ${ic.map(icName).join(', ')} that the screen names; if it names none, leave account out.` : '',
       'Leave out a transaction that is cut off so that its amount or its merchant cannot be seen.',
       'category (payments, refunds and income only): an id from the lists below, only when you are fairly sure which one fits; otherwise leave it out, and the user will choose. The payment app\'s own labels can tell you (账单分类 交通出行, 商品说明 …).',
       conb ? `Convenience stores (7-Eleven / セブン-イレブン / Seven-Eleven Japan, FamilyMart / ファミリーマート, Lawson / ローソン, Ministop, Daily Yamazaki, NewDays, Seicomart …) are ${conb.id}.` : '',
@@ -1920,10 +1940,11 @@
       const num = Number(String(x.amount != null ? x.amount : '').replace(/[^\d.]/g, ''));
       if (!(num > 0)) continue;
       const type = SCAN_TYPES.includes(x.type) ? x.type : x.kind === 'in' ? 'income' : 'payment';
+      const isYen = YEN_CODES.includes(String(x.currency || 'JPY').trim().toUpperCase()) && Number.isInteger(num);
       /* WeChat Pay and Alipay: the model also gives the yuan figure. A "yen" amount under 5 times it is that
          yuan figure copied (one yuan has never been worth under 5 yen), so it is not offered as yen. */
       const yuan = Number(String(x.yuan != null ? x.yuan : '').replace(/[^\d.]/g, ''));
-      const isYen = YEN_CODES.includes(String(x.currency || 'JPY').trim().toUpperCase()) && Number.isInteger(num) && !(yuan > 0 && num < yuan * 5);
+      const yuanCopy = isYen && yuan > 0 && num < yuan * 5;
       const kind = type === 'transfer' ? 'move' : type === 'refund' || type === 'income' ? 'in' : 'out';
       const cat = kind === 'move' ? null : data.categories.find((c) => c.id === x.category && c.kind === kind && !c.hidden);
       const to = kind === 'move' ? accOk(x.to) : null, from = kind === 'move' ? accOk(x.from) : null, acc = kind === 'move' ? null : accOk(x.account);
@@ -1934,16 +1955,26 @@
       /* a notice that shows only a time is from today (that is how chat-style payment notices write it) */
       const date = okDate(dateIn) ? dateIn : time ? todayStr() : null;
       out.push({
-        skip: !isYen ? 'foreign' : type === 'points' || type === 'failed' ? type : null,
+        skip: !isYen ? 'foreign' : yuanCopy ? 'yuan' : type === 'points' || type === 'failed' ? type : null,
         kind, amount: Math.min(Math.round(num), 9999999999), date, time,
         merchant: String(x.merchant || '').trim().slice(0, 40), via: String(x.via || '').trim().slice(0, 20),
         cat: cat ? cat.id : null, acc, from: from && from !== to ? from : null, to,
+        /* as read, to show what a skipped one was */
+        read: { num, cur: String(x.currency || '').trim().slice(0, 8), yuan: yuan > 0 ? yuan : 0 },
       });
     }
     return out;
   }
   function skipSummary(counts) {
-    return ['points', 'failed', 'foreign'].filter((k) => counts[k]).map((k) => tr(`scan.sk.${k}`, { n: counts[k] })).join(tr('scan.sep'));
+    return ['points', 'failed', 'foreign', 'yuan'].filter((k) => counts[k]).map((k) => tr(`scan.sk.${k}`, { n: counts[k] })).join(tr('scan.sep'));
+  }
+  /* what the scan left out, counted by reason */
+  const skipCounts = (j) => j.skipped.reduce((m, x) => { m[x.skip] = (m[x.skip] || 0) + 1; return m; }, {});
+  /* one skipped transaction as the AI read it: name, figure (currency, yuan) and why */
+  function skipLine(x) {
+    const r = x.read || {};
+    const fig = [String(r.num != null ? r.num : x.amount), r.cur && !YEN_CODES.includes(r.cur.toUpperCase()) ? r.cur : '', r.yuan ? `(${tr('scan.yuanFig', { v: r.yuan })})` : ''].filter(Boolean).join(' ');
+    return `<li><span>${esc(x.merchant || '—')}</span><span>${esc(fig)}</span><em>${esc(tr(`scan.why.${x.skip}`))}</em></li>`;
   }
   /* fill the entry sheet from one recognised transaction ("edit in New entry") */
   function applyScan(x, d, skipped) {
@@ -1978,13 +2009,14 @@
       <div class="f-top"><button class="icon-btn" data-act="sl-back" aria-label="${tr('common.close')}">✕</button><div class="e-title">${tr('scan.title')}</div><span class="e-sp"></span></div>
       <div class="f-body">
         <section class="scan-status">
-          <div class="ss-thumbs">${j.thumbs.map((u) => `<img src="${u}" alt="">`).join('')}</div>
+          <div class="ss-thumbs">${j.thumbs.map((u, i) => `<span class="ss-th" data-f="${i}"><img src="${u}" alt=""><b></b></span>`).join('')}</div>
           <ol class="ss-steps">${['prep', 'upload', 'ai'].map((k) => `<li class="ss-step wait" data-step="${k}"><i class="ss-i"></i><span class="ss-t">${tr(`ss.${k}`)}</span><span class="ss-v"></span>${k === 'upload' ? '<span class="ss-bar"><b></b></span>' : ''}</li>`).join('')}</ol>
           <p class="ss-note"></p>
           <div class="ss-msg"></div>
         </section>
         <div class="sl-list"><p class="hint sl-empty">${tr('ss.waiting')}</p></div>
         <p class="hint sl-skips"></p>
+        <ul class="sl-skipped"></ul>
         <p class="hint">${tr('scan.hint')}</p>
       </div>
       <div class="sl-foot"><button class="btn ghost sl-fill" data-act="sl-fill" hidden>${tr('ss.fill')}</button><button class="btn primary sl-add" data-act="sl-add" disabled>${tr('scan.add', { n: 0 })}</button></div>
@@ -2031,23 +2063,46 @@
     add.textContent = tr('scan.add', { n });
     add.disabled = !n || !ended;
     $('.sl-fill', sheetEl).hidden = !(ended && j.rows.length === 1);
-    const sk = skipSummary(j.skips);
+    const counts = skipCounts(j), sk = skipSummary(counts);
     /* items without yen are usually an Alipay or WeChat Pay list, which shows yuan only: say where the yen is */
-    $('.sl-skips', sheetEl).innerHTML = sk ? esc(tr('scan.skipped', { s: sk })) + (j.skips.foreign ? `<br>${esc(tr('scan.foreignHint'))}` : '') : '';
+    /* yuan read as yen: AI took the wrong figure on a page that has the yen one */
+    const hints = [counts.foreign ? tr('scan.foreignHint') : '', counts.yuan ? tr('scan.yuanHint') : ''].filter(Boolean);
+    $('.sl-skips', sheetEl).innerHTML = sk ? [tr('scan.skipped', { s: sk }), ...hints].map(esc).join('<br>') : '';
+    /* and each one as the AI read it, so a wrong reading can be seen */
+    $('.sl-skipped', sheetEl).innerHTML = j.skipped.slice(0, 12).map(skipLine).join('');
   }
-  /* the AI line: which model, how long it has been */
+  /* the AI line: which image (when there are several), which model, how long it has been */
   function refreshAiStep(j) {
-    if (j.phase === 'wait') setStep(j, 'ai', 'on', tr('ss.wait', { m: j.model, s: secs(j.tWait) }));
-    else if (j.phase === 'recv') setStep(j, 'ai', 'on', tr('ss.recv', { n: j.rows.length, s: secs(j.tSend) }));
+    if (j.phase === 'wait') setStep(j, 'ai', 'on', (j.pre || '') + tr('ss.wait', { m: j.model, s: secs(j.tWait) }));
+    else if (j.phase === 'recv') setStep(j, 'ai', 'on', (j.pre || '') + tr('ss.recv', { n: j.rows.length, s: secs(j.tSend) }));
   }
+  /* a thumbnail's state while several images are read one by one: the current one, or how many it gave */
+  function markThumb(j, f, state, badge) {
+    if (!onPage(j)) return;
+    const el = $(`.ss-th[data-f="${f}"]`, sheetEl);
+    if (!el) return;
+    el.className = `ss-th${state ? ` ${state}` : ''}`;
+    $('b', el).textContent = badge || '';
+  }
+  function renderScanRows(j) {
+    if (!onPage(j)) return;
+    $('.sl-list', sheetEl).innerHTML = j.rows.length ? j.rows.map(rowHTML).join('') : `<p class="hint sl-empty">${tr('ss.waiting')}</p>`;
+  }
+  /* shop names that are the same, allowing for one being cut short ("…三田" / "…三田店") */
+  const sameName = (a, b) => {
+    const n = (s) => String(s || '').toLowerCase().replace(/[\s・·\-ー－]/g, '');
+    const p = n(a), q = n(b);
+    return !p || !q || p.includes(q) || q.includes(p);
+  };
   function addScanItem(j, raw) {
     if (j !== scanJob) return;
     const [x] = scanItems([raw]);
     if (!x) return;
-    if (x.skip) { j.skips[x.skip] = (j.skips[x.skip] || 0) + 1; refreshScanFoot(j); return; }
+    x.g = j.gi;
+    if (x.skip) { j.skipped.push(x); refreshScanFoot(j); return; }
     const d = j.draft, date = x.date || d.date || todayStr(), same = sameDayAmount(date, x.amount, x.kind);
     /* the same transaction seen twice, e.g. in two overlapping screenshots */
-    const twin = j.rows.some((r) => r.date === date && r.amount === x.amount && r.kind === x.kind && (!r.time || !x.time || r.time === x.time));
+    const twin = j.rows.some((r) => r.date === date && r.amount === x.amount && r.kind === x.kind && (!r.time || !x.time || r.time === x.time) && sameName(r.merchant, x.merchant));
     const to = x.kind === 'move' ? x.to || null : null;
     /* money received that matches an AA pay-back recorded within two weeks is probably the same money */
     const days = (a, b) => Math.abs(Math.round((parseYMD(a) - parseYMD(b)) / 86400000));
@@ -2089,105 +2144,121 @@
     if (!d || sheetType !== 'entry' || scanJob || !files.length) return;
     if (files.length > MAX_FILES) return toast(tr('ai.tooMany', { n: MAX_FILES }));
     const j = {
-      draft: d, files, thumbs: files.map((f) => URL.createObjectURL(f)), parts: null,
-      phase: 'prep', rows: [], skips: {}, model: '', xhr: null, tick: null, stall: null, last: Date.now(), tWait: 0, tSend: 0,
+      draft: d, files, thumbs: files.map((f) => URL.createObjectURL(f)), groups: null, gi: 0,
+      phase: 'prep', rows: [], skipped: [], model: '', pre: '', xhr: null, tick: null, stall: null, last: Date.now(), tWait: 0, tSend: 0, t0: 0,
     };
     scanJob = j;
     openSheet('scan', scanPageHTML(j), true);
-    /* 1) images: shrink, and cut long screenshots into readable slices */
-    const parts = [];
-    let bad = 0;
+    /* 1) images: shrink, and cut long screenshots into readable slices. Each picked image is read on its own
+       (with its slices), so screenshots from different apps do not confuse each other. */
+    const groups = [];
+    let bad = 0, nParts = 0;
     for (let i = 0; i < files.length; i++) {
       setStep(j, 'prep', 'on', `${i + 1}/${files.length}`);
-      try { parts.push(...(await imageParts(files[i]))); } catch (e) { bad++; }
+      try { const parts = await imageParts(files[i]); groups.push({ f: i, parts, bytes: 0 }); nParts += parts.length; } catch (e) { bad++; markThumb(j, i, 'err', '!'); }
       if (j !== scanJob) return;
     }
-    if (!parts.length) { j.phase = 'error'; setStep(j, 'prep', 'err', ''); setScanMsg(j, tr('ai.badImage'), true); return; }
-    if (parts.length > MAX_PARTS) { j.phase = 'error'; setStep(j, 'prep', 'err', ''); setScanMsg(j, tr('ai.tooLong'), true); return; }
-    const ok = files.length - bad;
-    setStep(j, 'prep', 'ok', parts.length > ok ? tr('ss.prepSlices', { n: ok, p: parts.length }) : tr('ss.prepDone', { n: ok }));
+    if (!groups.length) { j.phase = 'error'; setStep(j, 'prep', 'err', ''); setScanMsg(j, tr('ai.badImage'), true); return; }
+    if (nParts > MAX_PARTS) { j.phase = 'error'; setStep(j, 'prep', 'err', ''); setScanMsg(j, tr('ai.tooLong'), true); return; }
+    setStep(j, 'prep', 'ok', nParts > groups.length ? tr('ss.prepSlices', { n: groups.length, p: nParts }) : tr('ss.prepDone', { n: groups.length }));
     if (bad) setScanNote(j, tr('ss.prepSkip', { n: bad }));
-    j.parts = parts;
+    j.groups = groups;
     runScan(j);
   }
-  /* 2) + 3) send to Gemini and read the reply as it streams; on a busy or retired model, try the next one */
+  /* 2) + 3) send each image to Gemini in turn and read the reply as it streams; on a busy or retired model,
+     try the next one, and keep using the one that answered for the images after */
   async function runScan(j) {
     const key = aiKey(), st = aiState();
     /* a remembered model only leads when it is one found through the model list (not one of ours) */
     const models = [...new Set([...(st.model && !AI_MODELS.includes(st.model) ? [st.model] : []), ...AI_MODELS])];
-    let listed = false, noThink = false;
-    j.rows = []; j.skips = {}; j.stall = null;
-    if (onPage(j)) { $('.sl-list', sheetEl).innerHTML = `<p class="hint sl-empty">${tr('ss.waiting')}</p>`; setScanMsg(j, ''); }
+    let listed = false, noThink = false, mi = 0;
+    const n = j.groups.length, multi = n > 1;
+    const ofImage = (k) => j.rows.filter((r) => r.g === k).length;
+    /* a retry starts again at the image that failed; what the images before it gave is kept */
+    j.rows = j.rows.filter((r) => r.g < j.gi); j.skipped = j.skipped.filter((x) => x.g < j.gi); j.stall = null;
+    if (!j.gi) j.t0 = Date.now();
+    renderScanRows(j); setScanMsg(j, '');
+    for (let k = j.gi; k < n; k++) markThumb(j, j.groups[k].f, '', '');
     clearInterval(j.tick);
     j.tick = setInterval(() => tickScan(j), 1000);
-    for (let i = 0; i < models.length; i++) {
-      const m = models[i];
-      const body = {
-        contents: [{ role: 'user', parts: [...j.parts.map((p) => ({ inline_data: { mime_type: p.mime, data: p.data } })), { text: scanPrompt(j.parts.length) }] }],
-        generationConfig: noThink ? { responseMimeType: 'application/json' } : { responseMimeType: 'application/json', thinkingConfig: { thinkingLevel: 'low' } },
-      };
-      j.model = m; j.phase = 'upload'; j.last = j.tSend = Date.now(); j.stall = null; j.slow = 0; j.hasNext = i < models.length - 1;
-      setStep(j, 'upload', 'on', '');
-      setStep(j, 'ai', 'wait', '');
-      refreshScanFoot(j);
-      const scanner = itemScanner((o) => addScanItem(j, o));
-      let gotText = false;
-      const sent = () => {
-        if (j.phase !== 'upload') return;
-        j.phase = 'wait'; j.tWait = j.last = Date.now();
-        setStep(j, 'upload', 'ok', mb(JSON.stringify(body).length));
-        refreshAiStep(j);
-      };
-      try {
-        await aiStream(j, key, m, body, {
-          up: (a, b) => {
-            j.last = Date.now();
-            setStep(j, 'upload', 'on', tr('ss.upPct', { p: Math.min(100, Math.round((a / b) * 100)), a: mb(a), b: mb(b) }));
-            if (onPage(j)) $('.ss-bar b', sheetEl).style.width = `${Math.min(100, (a / b) * 100)}%`;
-          },
-          sent,
-          alive: () => { j.last = Date.now(); },
-          text: (piece) => {
-            if (j !== scanJob) return;
-            if (!gotText) { gotText = true; sent(); j.phase = 'recv'; }
-            j.last = Date.now();
-            scanner.push(piece);
-            refreshAiStep(j);
-          },
-        });
-        if (j !== scanJob) return;
-        if (!AI_MODELS.includes(m) && m !== st.model) saveAi({ model: m });
-        /* an answer that was not an items list: read it whole */
-        if (!j.rows.length && !Object.keys(j.skips).length) {
-          const o = looseJSON(scanner.text());
-          const raws = Array.isArray(o) ? o : o && Array.isArray(o.items) ? o.items : o && typeof o === 'object' ? [o] : [];
-          raws.forEach((x) => addScanItem(j, x));
-        }
-        j.phase = 'done';
-        clearInterval(j.tick);
-        setStep(j, 'ai', 'ok', tr('ss.done', { s: secs(j.tSend) }));
-        const sk = skipSummary(j.skips);
-        setScanMsg(j, j.rows.length ? tr('scan.found', { n: j.rows.length }) : sk ? tr('scan.none', { s: sk }) : tr('ss.none'), false);
+    for (; j.gi < n; j.gi++) {
+      const g = j.groups[j.gi];
+      j.pre = multi ? tr('ss.nth', { i: j.gi + 1, n }) : '';
+      if (multi) markThumb(j, g.f, 'on', '');
+      const contents = [{ role: 'user', parts: [...g.parts.map((p) => ({ inline_data: { mime_type: p.mime, data: p.data } })), { text: scanPrompt(g.parts.length) }] }];
+      let read = false;
+      for (let i = mi; i < models.length && !read; i++) {
+        const m = models[i];
+        const body = { contents, generationConfig: noThink ? { responseMimeType: 'application/json' } : { responseMimeType: 'application/json', thinkingConfig: { thinkingLevel: 'low' } } };
+        j.model = m; j.phase = 'upload'; j.last = j.tSend = Date.now(); j.stall = null; j.slow = 0; j.hasNext = i < models.length - 1;
+        setStep(j, 'upload', 'on', j.pre);
+        setStep(j, 'ai', j.gi ? 'on' : 'wait', j.pre);
         refreshScanFoot(j);
-        return;
-      } catch (e) {
-        if (j !== scanJob) return;
-        if (e.name === 'AbortError' && j.slow && !gotText && i < models.length - 1) { setScanNote(j, tr('ss.slowSwitch', { a: m, b: models[i + 1], s: j.slow })); continue; }
-        if (e.name !== 'AbortError' && !gotText) {
-          /* a model that does not take the thinking setting: ask again without it */
-          if (e.status === 400 && /think/i.test(e.message) && !noThink) { noThink = true; i--; setScanNote(j, tr('ss.noThink')); continue; }
-          if ([404, 429, 500, 503].includes(e.status)) {
-            if (i === models.length - 1 && e.status === 404 && !listed) {
-              listed = true;
-              const more = await aiListModels(key).catch(() => []);
-              models.push(...more.filter((x) => !models.includes(x)));
-            }
-            if (i < models.length - 1) { setScanNote(j, tr('ss.switch', { a: m, b: models[i + 1], c: e.status })); continue; }
+        const scanner = itemScanner((o) => addScanItem(j, o));
+        let gotText = false;
+        const sent = () => {
+          if (j.phase !== 'upload') return;
+          j.phase = 'wait'; j.tWait = j.last = Date.now();
+          g.bytes = JSON.stringify(body).length;
+          setStep(j, 'upload', 'ok', mb(j.groups.reduce((s, x) => s + x.bytes, 0)));
+          refreshAiStep(j);
+        };
+        try {
+          await aiStream(j, key, m, body, {
+            up: (a, b) => {
+              j.last = Date.now();
+              setStep(j, 'upload', 'on', j.pre + tr('ss.upPct', { p: Math.min(100, Math.round((a / b) * 100)), a: mb(a), b: mb(b) }));
+              if (onPage(j)) $('.ss-bar b', sheetEl).style.width = `${Math.min(100, (a / b) * 100)}%`;
+            },
+            sent,
+            alive: () => { j.last = Date.now(); },
+            text: (piece) => {
+              if (j !== scanJob) return;
+              if (!gotText) { gotText = true; sent(); j.phase = 'recv'; }
+              j.last = Date.now();
+              scanner.push(piece);
+              refreshAiStep(j);
+            },
+          });
+          if (j !== scanJob) return;
+          if (!AI_MODELS.includes(m) && m !== st.model) saveAi({ model: m });
+          /* an answer that was not an items list: read it whole */
+          if (!ofImage(j.gi) && !j.skipped.some((x) => x.g === j.gi)) {
+            const o = looseJSON(scanner.text());
+            const raws = Array.isArray(o) ? o : o && Array.isArray(o.items) ? o.items : o && typeof o === 'object' ? [o] : [];
+            raws.forEach((x) => addScanItem(j, x));
           }
+          mi = i; read = true;
+        } catch (e) {
+          if (j !== scanJob) return;
+          if (e.name === 'AbortError' && j.slow && !gotText && i < models.length - 1) { setScanNote(j, tr('ss.slowSwitch', { a: m, b: models[i + 1], s: j.slow })); continue; }
+          if (e.name !== 'AbortError' && !gotText) {
+            /* a model that does not take the thinking setting: ask again without it */
+            if (e.status === 400 && /think/i.test(e.message) && !noThink) { noThink = true; i--; setScanNote(j, tr('ss.noThink')); continue; }
+            if ([404, 429, 500, 503].includes(e.status)) {
+              if (i === models.length - 1 && e.status === 404 && !listed) {
+                listed = true;
+                const more = await aiListModels(key).catch(() => []);
+                models.push(...more.filter((x) => !models.includes(x)));
+              }
+              if (i < models.length - 1) { setScanNote(j, tr('ss.switch', { a: m, b: models[i + 1], c: e.status })); continue; }
+            }
+          }
+          if (multi) markThumb(j, g.f, 'err', '!');
+          return failScan(j, e, gotText);
         }
-        return failScan(j, e, gotText);
       }
+      if (multi) { const c = ofImage(j.gi); markThumb(j, g.f, c ? 'ok' : 'none', String(c)); }
     }
+    j.phase = 'done'; j.pre = '';
+    clearInterval(j.tick);
+    setStep(j, 'ai', 'ok', tr('ss.done', { s: secs(j.t0) }));
+    const sk = skipSummary(skipCounts(j));
+    /* with several images, say which ones gave nothing (by their place among the picked images) */
+    const empty = multi && j.rows.length ? j.groups.filter((g, k) => !ofImage(k)).map((g) => g.f + 1) : [];
+    setScanMsg(j, j.rows.length ? tr('scan.found', { n: j.rows.length }) : sk ? tr('scan.none', { s: sk }) : tr('ss.none'), false, false,
+      empty.length ? tr('ss.emptyImg', { i: empty.join(tr('scan.sep')), n: empty.length }) : '');
+    refreshScanFoot(j);
   }
   function failScan(j, e, partial) {
     const step = j.phase === 'upload' ? 'upload' : 'ai';
@@ -2200,7 +2271,8 @@
     else if (e.status === 429) msg = tr('ai.quota');
     else if ([400, 401, 403].includes(e.status) && /key/i.test(e.message)) msg = tr('ai.badKey');
     else msg = tr('ai.failed', { m: e.message });
-    setScanMsg(j, msg, true, true, partial && j.rows.length ? tr('ss.cut') : '');
+    /* with several images, the message says which one; what came before it stays and can be added */
+    setScanMsg(j, (j.pre || '') + msg, true, true, partial && j.rows.some((r) => r.g === j.gi) ? tr('ss.cut') : '');
     refreshScanFoot(j);
   }
   function changeScanList(el) {
@@ -2242,7 +2314,7 @@
   function fillFromScan() {
     const j = scanJob;
     if (!j || j.rows.length !== 1) return;
-    const r = j.rows[0], sk = skipSummary(j.skips);
+    const r = j.rows[0], sk = skipSummary(skipCounts(j));
     endScanJob();
     draft = j.draft;
     openSheet('entry', entryHTML(), true);
@@ -2672,7 +2744,7 @@
       case 'sl-back': backToEntry(); break;
       case 'sl-add': addScanList(); break;
       case 'sl-fill': fillFromScan(); break;
-      case 'ss-retry': if (scanJob && scanJob.parts) runScan(scanJob); break;
+      case 'ss-retry': if (scanJob && scanJob.groups && scanJob.phase === 'error') runScan(scanJob); break;
       /* data */
       case 'export': exportBackup(); break;
       case 'copy-backup': copyBackup(); break;
