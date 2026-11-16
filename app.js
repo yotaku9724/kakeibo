@@ -1,7 +1,7 @@
 /* 家计簿 — offline bookkeeping web app. Data lives only in this browser (localStorage). */
 'use strict';
 (() => {
-  const APP_VERSION = '1.0.19';
+  const APP_VERSION = '1.0.20';
   const STORE_KEY = 'kakeibo:data';
   const PREV_KEY = 'kakeibo:data:prev';
   const UI_KEY = 'kakeibo:ui';
@@ -197,6 +197,7 @@
       'aa.saved': '已记下 AA：我的部分 {v}（共 {t} · {n} 人）', 'aa.over': '我的部分 ¥0。多出的 {x} 只进收款账户的余额，不算收入也不算支出', 'aa.extra': 'AA 多收', 'aa.extraCsv': '（AA 多收，不计入收支）', 'aa.delExtra': '删除这笔 AA 多收？', 'aa.sub': '{n}人 · 共{t}', 'aa.delAsk': '删除这笔 AA？相关的 {k} 笔（朋友还款）也会一起删除。',
       'aa.descT': '（AA 共{t}）', 'scan.aaSame': '可能是已记的 AA 回款：{w}',
       'scan.sk.points': '积分 {n} 笔', 'scan.sk.failed': '失败/取消 {n} 笔', 'scan.sk.foreign': '没有日元金额 {n} 笔',
+      'scan.foreignHint': '支付宝、微信的账单列表只显示人民币。点开那一笔，截有日元金额的「账单详情」再识别。',
     },
     ja: {
       'app.name': '家計簿', 'nav.label': 'メインメニュー',
@@ -307,6 +308,7 @@
       'aa.saved': 'AA を記録しました：自分の分 {v}（合計 {t}・{n}人）', 'aa.over': '自分の分は ¥0。超えた {x} は受取口座の残高にだけ反映し、収入にも支出にも含めません', 'aa.extra': 'AA 超過分', 'aa.extraCsv': '（AA 超過分、収支に含めない）', 'aa.delExtra': 'この AA 超過分を削除しますか？', 'aa.sub': '{n}人・合計{t}', 'aa.delAsk': 'この AA を削除しますか？関連する {k} 件（友達からの返金）も削除されます。',
       'aa.descT': '（AA 合計{t}）', 'scan.aaSame': '記録済みの AA の返金かもしれません：{w}',
       'scan.sk.points': 'ポイント {n}件', 'scan.sk.failed': '失敗・取消 {n}件', 'scan.sk.foreign': '円の金額なし {n}件',
+      'scan.foreignHint': 'Alipay・WeChat Pay の一覧には人民元しか表示されません。その取引を開き、円の金額が載っている「账单详情」の画面を読み取ってください。',
     },
     en: {
       'app.name': 'Kakeibo', 'nav.label': 'Main menu',
@@ -423,6 +425,7 @@
       'aa.descT': ' (AA, total {t})', 'scan.aaSame': 'May be an AA pay-back already recorded: {w}',
       'scan.sk.points': '{n} points items', 'scan.sk.points1': '1 points item',
       'scan.sk.failed': '{n} failed or cancelled', 'scan.sk.failed1': '1 failed or cancelled', 'scan.sk.foreign': '{n} without a yen amount', 'scan.sk.foreign1': '1 without a yen amount',
+      'scan.foreignHint': 'Alipay and WeChat Pay lists show only yuan. Open the transaction and scan its detail page (账单详情), which shows the yen amount.',
     },
   };
   const HTML_LANG = { zh: 'zh-CN', ja: 'ja', en: 'en' };
@@ -1795,24 +1798,26 @@
     const byBase = (k) => data.categories.find((c) => c.base === k && !c.hidden);
     const conb = byBase('conbini'), food = byBase('food');
     return [
-      'Read this image for a household budget app kept in Japanese yen. It can be a Japanese receipt, a payment screen, or a screenshot that lists several transactions (PayPay 取引履歴, WeChat Pay 微信支付 payment notices, a card or bank app).',
+      'Read this image for a household budget app kept in Japanese yen. It can be a Japanese receipt, a payment screen, a bill detail page (Alipay 支付宝 or WeChat Pay 微信支付 账单详情), or a screenshot that lists several transactions (PayPay 取引履歴, WeChat Pay 微信支付 payment notices, a card or bank app).',
       nImages > 1 ? `There are ${nImages} images, in order. They can be consecutive screenshots or slices of one long screenshot, and they may overlap: list each transaction only once.` : '',
       'Reply with JSON only, in this shape:',
-      '{"items": [{"type": "payment" | "refund" | "income" | "transfer" | "points" | "failed", "amount": integer, "date": "YYYY-MM-DD", "time": "HH:MM", "merchant": string, "via": string, "category": a category id, "account": an account id, "from": an account id, "to": an account id, "currency": a currency code}]}',
-      'Leave out any field that is unknown or does not apply, to keep the reply short: currency only when the amount is not in yen, from and to only for transfers.',
-      'One item per transaction, in the order shown. A receipt is a single transaction.',
+      '{"items": [{"type": "payment" | "refund" | "income" | "transfer" | "points" | "failed", "amount": integer, "date": "YYYY-MM-DD", "time": "HH:MM", "merchant": string, "via": string, "category": a category id, "account": an account id, "from": an account id, "to": an account id, "yuan": number, "currency": a currency code}]}',
+      'Leave out any field that is unknown or does not apply, to keep the reply short: currency only when the amount is not in yen, yuan only on WeChat Pay and Alipay, from and to only for transfers.',
+      'One item per transaction, in the order shown. A receipt is a single transaction, and so is a bill detail page (账单详情).',
       'amount: in Japanese yen, digits only. On a receipt, the total actually paid, tax included, after discounts (合計, お支払い, ご請求額), not the subtotal, 預り or お釣り.',
-      'On WeChat Pay or Alipay notices the large "¥" figure is Chinese yuan: use the yen price instead (标价 … 日元). Only if a transaction shows no yen amount at all, give its amount with the currency as shown.',
+      'WeChat Pay (微信支付) and Alipay (支付宝) show Chinese yuan: the large figure at the top (¥47.55, -63.10) and every figure marked 元, 人民币 or CNY are yuan, never yen. For amount take the yen figure, marked 日元, 円 or JPY: on WeChat Pay the 标价 line (标价 1000日元 → 1000), on an Alipay bill the figure in brackets on the 订单金额 line (订单金额 63.14元(1500日元) → 1500). Yuan discounts (立减金, 优惠, 红包) and the exchange rate (汇率) do not change it, and reward points (积分, 支付奖励) are not a transaction.',
+      'yuan (WeChat Pay and Alipay only): the large yuan figure of that transaction, without the sign (-63.10 → 63.10). The app checks amount against it.',
+      'Only if a transaction shows no yen figure at all (a WeChat Pay or Alipay bill list shows only yuan), give amount as shown, with currency.',
       'type: "payment" for money paid, including 支払い完了, 支払い受付 and money sent to a person; "refund" for 返金 / 退款; "income" for money received (受け取り, 收款, salary); "transfer" for top-ups, charges and withdrawals between the user\'s own accounts (チャージ, 充值, 提现, 出金); "points" for points or coupons (pt, ポイント付与); "failed" for failed or cancelled payments (支払い失敗, キャンセル, 取消, 失败, a struck-through amount).',
       'date: the transaction date, in YYYY-MM-DD. Convert Japanese era years (令和8年 is 2026). Chat-style notices (WeChat Pay and similar) show only a time such as 9:35 for today, 昨天 for yesterday, a weekday for the past week and a full date for older ones. For those labels use this table:',
       dateTable(),
       'Leave the date out only when neither a date nor a time is shown for that transaction.',
       'time: the time of day if shown.',
-      'merchant: the shop or other party as shown (on WeChat Pay, the name at the top of the notice), at most 20 characters.',
+      'merchant: the shop or other party as shown (on WeChat Pay and Alipay, the name at the top, above the amount), at most 20 characters.',
       'via: the payment source if shown (残高, 残高カード, PayPayカード, a card name).',
-      'account (payments, refunds and income): the id of the account below that paid or received the money, when the image shows it or the app makes it clear; for example 使用平安银行信用卡支付 is the 平安信用卡 account, and PayPay 残高 or 残高カード is the PayPay account. Leave it out when unsure; the user will choose.',
+      'account (payments, refunds and income): the id of the account below that paid or received the money, when the image shows it (付款方式, 支付方式, 使用…支付) or the app makes it clear; for example 使用平安银行信用卡支付 or 付款方式 平安银行信用卡(1234) is the 平安信用卡 account, and PayPay 残高 or 残高カード is the PayPay account. Leave it out when unsure; the user will choose.',
       'Leave out a transaction that is cut off so that its amount or its merchant cannot be seen.',
-      'category (payments, refunds and income only): an id from the lists below, only when you are fairly sure which one fits; otherwise leave it out, and the user will choose.',
+      'category (payments, refunds and income only): an id from the lists below, only when you are fairly sure which one fits; otherwise leave it out, and the user will choose. The payment app\'s own labels can tell you (账单分类 交通出行, 商品说明 …).',
       conb ? `Convenience stores (7-Eleven / セブン-イレブン / Seven-Eleven Japan, FamilyMart / ファミリーマート, Lawson / ローソン, Ministop, Daily Yamazaki, NewDays, Seicomart …) are ${conb.id}.` : '',
       food ? `Supermarkets and grocery stores (AEON / イオン, 西友, ライフ, まいばすけっと, OK / オーケー, サミット, マルエツ, 業務スーパー …) are ${food.id}.` : '',
       'from / to (transfers only): the ids of the accounts below that the money leaves and enters, when you can tell; for example 三菱ＵＦＪ銀行からのチャージ on a PayPay screen goes from the 三菱UFJ bank account to the PayPay account. Leave out the one you cannot tell.',
@@ -1915,7 +1920,10 @@
       const num = Number(String(x.amount != null ? x.amount : '').replace(/[^\d.]/g, ''));
       if (!(num > 0)) continue;
       const type = SCAN_TYPES.includes(x.type) ? x.type : x.kind === 'in' ? 'income' : 'payment';
-      const isYen = YEN_CODES.includes(String(x.currency || 'JPY').trim().toUpperCase()) && Number.isInteger(num);
+      /* WeChat Pay and Alipay: the model also gives the yuan figure. A "yen" amount under 5 times it is that
+         yuan figure copied (one yuan has never been worth under 5 yen), so it is not offered as yen. */
+      const yuan = Number(String(x.yuan != null ? x.yuan : '').replace(/[^\d.]/g, ''));
+      const isYen = YEN_CODES.includes(String(x.currency || 'JPY').trim().toUpperCase()) && Number.isInteger(num) && !(yuan > 0 && num < yuan * 5);
       const kind = type === 'transfer' ? 'move' : type === 'refund' || type === 'income' ? 'in' : 'out';
       const cat = kind === 'move' ? null : data.categories.find((c) => c.id === x.category && c.kind === kind && !c.hidden);
       const to = kind === 'move' ? accOk(x.to) : null, from = kind === 'move' ? accOk(x.from) : null, acc = kind === 'move' ? null : accOk(x.account);
@@ -2023,7 +2031,9 @@
     add.textContent = tr('scan.add', { n });
     add.disabled = !n || !ended;
     $('.sl-fill', sheetEl).hidden = !(ended && j.rows.length === 1);
-    $('.sl-skips', sheetEl).textContent = skipSummary(j.skips) ? tr('scan.skipped', { s: skipSummary(j.skips) }) : '';
+    const sk = skipSummary(j.skips);
+    /* items without yen are usually an Alipay or WeChat Pay list, which shows yuan only: say where the yen is */
+    $('.sl-skips', sheetEl).innerHTML = sk ? esc(tr('scan.skipped', { s: sk })) + (j.skips.foreign ? `<br>${esc(tr('scan.foreignHint'))}` : '') : '';
   }
   /* the AI line: which model, how long it has been */
   function refreshAiStep(j) {
