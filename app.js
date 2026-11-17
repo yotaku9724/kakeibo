@@ -1,7 +1,7 @@
 /* 家计簿 — offline bookkeeping web app. Data lives only in this browser (localStorage). */
 'use strict';
 (() => {
-  const APP_VERSION = '1.0.21';
+  const APP_VERSION = '1.0.22';
   const STORE_KEY = 'kakeibo:data';
   const PREV_KEY = 'kakeibo:data:prev';
   const UI_KEY = 'kakeibo:ui';
@@ -1790,9 +1790,84 @@
       img.src = url;
     });
   }
-  /* relative labels as WeChat Pay writes them, already turned into dates, so the model only has to look them up */
-  function dateTable() {
-    const now = new Date();
+  /* When a screenshot or photo was taken, from its EXIF (PNG eXIf chunk, JPEG APP1) or XMP; null when it does not say.
+     Relative labels on a screenshot (9:33, 昨日, 金曜日, 31分前) count from that moment, not from the day it is scanned. */
+  async function shotTime(file) {
+    let buf;
+    try { buf = new Uint8Array(await file.slice(0, 262144).arrayBuffer()); } catch (e) { return null; }
+    const v = new DataView(buf.buffer);
+    /* DateTimeOriginal (or DateTime) from a TIFF block starting at o */
+    const tiffDate = (o) => {
+      const le = buf[o] === 0x49, u16 = (p) => v.getUint16(o + p, le), u32 = (p) => v.getUint32(o + p, le);
+      const ifd = (p) => {
+        const out = {};
+        for (let k = 0, n = u16(p); k < n && o + p + 14 + k * 12 <= buf.length; k++) { const e = p + 2 + k * 12; out[u16(e)] = { type: u16(e + 2), count: u32(e + 4), val: u32(e + 8) }; }
+        return out;
+      };
+      const str = (t) => (t && t.type === 2 && t.count > 4 ? String.fromCharCode(...buf.subarray(o + t.val, o + t.val + t.count - 1)) : '');
+      const i0 = ifd(u32(4)), ex = i0[0x8769] ? ifd(i0[0x8769].val) : {};
+      return str(ex[0x9003]) || str(ex[0x9004]) || str(i0[0x0132]);
+    };
+    let s = '';
+    try {
+      if (buf[0] === 0x89 && buf[1] === 0x50) {
+        for (let i = 8; i + 8 <= buf.length;) {
+          const n = v.getUint32(i), t = String.fromCharCode(...buf.subarray(i + 4, i + 8));
+          if (t === 'eXIf') { s = tiffDate(i + 8); break; }
+          if (t === 'IDAT' || t === 'IEND') break;
+          i += 12 + n;
+        }
+      } else if (buf[0] === 0xFF && buf[1] === 0xD8) {
+        for (let i = 2; i + 4 <= buf.length && buf[i] === 0xFF;) {
+          const m = buf[i + 1], n = v.getUint16(i + 2);
+          if (m === 0xE1 && String.fromCharCode(...buf.subarray(i + 4, i + 8)) === 'Exif') { s = tiffDate(i + 10); break; }
+          if (m === 0xDA || m === 0xD9) break;
+          i += 2 + n;
+        }
+      }
+    } catch (e) { s = ''; }
+    /* XMP (photoshop:DateCreated) or any EXIF-style date near the start */
+    if (!s) {
+      let txt = '';
+      for (let i = 0; i < buf.length; i += 8192) txt += String.fromCharCode(...buf.subarray(i, i + 8192));
+      const x = /DateCreated>(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/.exec(txt) || /(\d{4}):(\d{2}):(\d{2}) (\d{2}):(\d{2}):\d{2}/.exec(txt);
+      if (x) s = `${x[1]}:${x[2]}:${x[3]} ${x[4]}:${x[5]}`;
+    }
+    const m = /^(\d{4}):(\d{2}):(\d{2}) (\d{2}):(\d{2})/.exec(s);
+    if (!m) return null;
+    const d = new Date(+m[1], m[2] - 1, +m[3], +m[4], +m[5]);
+    /* only a plausible moment: not in the future, not over 400 days ago */
+    return Number.isNaN(d.getTime()) || d.getTime() > Date.now() + 3600000 || Date.now() - d.getTime() > 400 * 86400000 ? null : d;
+  }
+  /* The date a label on a screenshot means, counted from `ref` (when it was taken): 9:33, 昨天 18:20, 星期五,
+     31分前, 2時間前, 11月15日, 2026-11-15 20:03:51 … null for anything else. */
+  function labelDate(label, ref) {
+    const s = String(label || '').trim();
+    if (!s) return null;
+    const at = (n) => ymd(new Date(ref.getFullYear(), ref.getMonth(), ref.getDate() - n));
+    let m;
+    if ((m = /(\d{4})\s*[-/.年]\s*(\d{1,2})\s*[-/.月]\s*(\d{1,2})/.exec(s))) return `${m[1]}-${pad2(+m[2])}-${pad2(+m[3])}`;
+    if ((m = /(\d{1,2})\s*[月/]\s*(\d{1,2})/.exec(s))) {
+      /* no year: the latest such day that is not after the screenshot */
+      const md = `${pad2(+m[1])}-${pad2(+m[2])}`, y = ref.getFullYear();
+      return `${y}-${md}` <= ymd(ref) ? `${y}-${md}` : `${y - 1}-${md}`;
+    }
+    if ((m = /(\d+)\s*(?:分前|分钟前|分鐘前|min(?:ute)?s? ago)/i.exec(s))) return ymd(new Date(ref.getTime() - m[1] * 60000));
+    if ((m = /(\d+)\s*(?:時間前|小时前|小時前|hours? ago|hrs? ago)/i.exec(s))) return ymd(new Date(ref.getTime() - m[1] * 3600000));
+    if (/前天|一昨日/.test(s)) return at(2);
+    if (/昨天|昨日|yesterday/i.test(s)) return at(1);
+    if (/今天|今日|today|刚刚|たった今|just now/i.test(s)) return at(0);
+    const W = [/星期[日天]|周[日天]|日曜|\bSun/i, /星期一|周一|月曜|\bMon/i, /星期二|周二|火曜|\bTue/i, /星期三|周三|水曜|\bWed/i, /星期四|周四|木曜|\bThu/i, /星期五|周五|金曜|\bFri/i, /星期六|周六|土曜|\bSat/i];
+    const w = W.findIndex((re) => re.test(s));
+    /* a weekday is within the past week; the screenshot's own weekday would have been shown as a time */
+    if (w >= 0) return at(((ref.getDay() - w + 7) % 7) || 7);
+    if (/^(?:上午|下午|午前|午後|AM|PM)?\s*\d{1,2}:\d{2}(?::\d{2})?\s*(?:AM|PM)?$/i.test(s)) return at(0);
+    return null;
+  }
+  /* relative labels as WeChat Pay and Apple Wallet write them, already turned into dates (counted from when
+     the screenshot was taken), so the model only has to look them up */
+  function dateTable(ref) {
+    const now = ref || new Date();
     const back = (n) => { const x = new Date(now.getFullYear(), now.getMonth(), now.getDate() - n); return x; };
     const W = [['星期日', '周日', '日曜日', 'Sunday'], ['星期一', '周一', '月曜日', 'Monday'], ['星期二', '周二', '火曜日', 'Tuesday'], ['星期三', '周三', '水曜日', 'Wednesday'],
       ['星期四', '周四', '木曜日', 'Thursday'], ['星期五', '周五', '金曜日', 'Friday'], ['星期六', '周六', '土曜日', 'Saturday']];
@@ -1805,7 +1880,9 @@
     for (let n = 1; n <= 7; n++) { const x = back(n); lines.push(`- ${W[x.getDay()].join(', ')}: ${ymd(x)}`); }
     return lines.join('\n');
   }
-  function scanPrompt(nImages = 1) {
+  /* `shot`: when the image was taken (from its EXIF), if known; relative labels on it count from then */
+  function scanPrompt(nImages = 1, shot = null) {
+    const ref = shot || new Date();
     const list = (kind) => data.categories.filter((c) => c.kind === kind && !c.hidden)
       .map((c) => `${c.id}: ${[...new Set(allLabels(c, 'cat'))].join(' / ')}`).join('\n');
     const accs = activeAccs().map((a) => `${a.id}: ${[...new Set(allLabels(a, 'acc'))].join(' / ')} (${a.type})`).join('\n');
@@ -1818,7 +1895,7 @@
       'Read this image for a household budget app kept in Japanese yen. It can be a Japanese receipt, a payment screen, a bill detail page (Alipay 支付宝 or WeChat Pay 微信支付 账单详情), a transit IC card history (PASMO, Suica: Apple Wallet 最近のご利用 or the card\'s app), or a screenshot that lists several transactions (PayPay 取引履歴, WeChat Pay 微信支付 payment notices, a card or bank app).',
       nImages > 1 ? `There are ${nImages} images: slices of one long screenshot, in order, that overlap a little. List each transaction only once.` : '',
       'Reply with JSON only, in this shape:',
-      '{"items": [{"type": "payment" | "refund" | "income" | "transfer" | "points" | "failed", "amount": integer, "date": "YYYY-MM-DD", "time": "HH:MM", "merchant": string, "via": string, "category": a category id, "account": an account id, "from": an account id, "to": an account id, "yuan": number, "currency": a currency code}]}',
+      '{"items": [{"type": "payment" | "refund" | "income" | "transfer" | "points" | "failed", "amount": integer, "date": "YYYY-MM-DD", "time": "HH:MM", "when": string, "merchant": string, "via": string, "category": a category id, "account": an account id, "from": an account id, "to": an account id, "yuan": number, "currency": a currency code}]}',
       'Leave out any field that is unknown or does not apply, to keep the reply short: currency only when the amount is not in yen, yuan only on WeChat Pay and Alipay, from and to only for transfers.',
       'One item per transaction, in the order shown. A receipt or a bill detail page (账单详情) is a single transaction.',
       'amount: in Japanese yen, digits only. On a receipt, the total actually paid, tax included, after discounts (合計, お支払い, ご請求額), not the subtotal, 預り or お釣り.',
@@ -1827,8 +1904,10 @@
       'Only if a transaction shows no yen figure at all (a WeChat Pay or Alipay bill list shows only yuan), give amount as shown, with currency.',
       `Transit IC card history (PASMO, Suica, ICOCA …): a ride (交通機関, a station or a bus) with a yen amount is a fare: type "payment", merchant "entry station→exit station" (新宿駅 with 渋谷駅から is 渋谷駅→新宿駅)${trans ? `, category ${trans.id}` : ''}. A shop purchase on the card is a payment as usual. Rows marked 支払いなし (covered by a commuter pass) or カード照会 (a balance check) move no money: leave them out. A チャージ is a transfer to the card.`,
       'type: "payment" for money paid, including 支払い完了, 支払い受付 and money sent to a person; "refund" for 返金 / 退款; "income" for money received (受け取り, 收款, salary); "transfer" for top-ups, charges and withdrawals between the user\'s own accounts (チャージ, 充值, 提现, 出金); "points" for points or coupons (pt, ポイント付与); "failed" for failed or cancelled payments (支払い失敗, キャンセル, 取消, 失败, a struck-through amount).',
-      'date: the transaction date, in YYYY-MM-DD. Convert Japanese era years (令和8年 is 2026); a date without a year is the latest such date that is not after today. Many apps write recent dates relative to now: WeChat Pay shows only a time such as 9:35 for today, Apple Wallet shows N分前 or N時間前 for today, and they show 昨天 or 昨日 for yesterday, a weekday (星期五, 金曜日) for the past week and a full date for older ones. For those labels use this table:',
-      dateTable(),
+      'when: the date or time label of that transaction, copied exactly as shown (9:33, 昨天 18:20, 星期五, 31分前, 昨日, 木曜日, 11月15日, 2026-11-15 20:03:51). The app works the date out from it.',
+      'On WeChat Pay (微信支付) the notices are cards in a chat: the grey time label centred above a card is that card\'s time (9:33 alone is the day the screenshot was taken, 昨天 9:33 the day before). A date printed inside a different card (提现时间, 到账时间 of a withdrawal above) belongs to that card only, never to the next one.',
+      'date: the transaction date, in YYYY-MM-DD. Convert Japanese era years (令和8年 is 2026); a date without a year is the latest such date that is not after the day the image was taken. Many apps write recent dates relative to the moment the screenshot was taken: WeChat Pay shows only a time such as 9:35 for that day, Apple Wallet shows N分前 or N時間前 for that day, and they show 昨天 or 昨日 for the day before, a weekday (星期五, 金曜日) for the week before and a full date for older ones. For those labels use this table:',
+      dateTable(ref),
       'Leave the date out only when neither a date nor a time is shown for that transaction.',
       'time: the time of day if shown.',
       'merchant: the shop or other party as shown (on WeChat Pay and Alipay, the name at the top, above the amount), at most 20 characters.',
@@ -1841,7 +1920,8 @@
       conb ? `Convenience stores (7-Eleven / セブン-イレブン / Seven-Eleven Japan, FamilyMart / ファミリーマート, Lawson / ローソン, Ministop, Daily Yamazaki, NewDays, Seicomart …) are ${conb.id}.` : '',
       food ? `Supermarkets and grocery stores (AEON / イオン, 西友, ライフ, まいばすけっと, OK / オーケー, サミット, マルエツ, 業務スーパー …) are ${food.id}.` : '',
       'from / to (transfers only): the ids of the accounts below that the money leaves and enters, when you can tell; for example 三菱ＵＦＪ銀行からのチャージ on a PayPay screen goes from the 三菱UFJ bank account to the PayPay account. Leave out the one you cannot tell.',
-      `Today is ${todayStr()} (${WEEK.en[new Date().getDay()]}).`,
+      shot ? `This image was taken on ${ymd(shot)} at ${pad2(shot.getHours())}:${pad2(shot.getMinutes())} (${WEEK.en[shot.getDay()]}), so labels such as 9:33, 昨日 or 金曜日 on it count from then. Today is ${todayStr()}.`
+        : `Today is ${todayStr()} (${WEEK.en[new Date().getDay()]}).`,
       'Expense categories:', list('out'), 'Income categories:', list('in'), 'Accounts:', accs,
       'If nothing can be read, reply {"items": []}.',
     ].filter(Boolean).join('\n');
@@ -1931,7 +2011,8 @@
   const SCAN_TYPES = ['payment', 'refund', 'income', 'transfer', 'points', 'failed'];
   const YEN_CODES = ['JPY', 'YEN', '円', '日元', '¥', '￥', 'JP¥'];
   /* every transaction the model listed, tidied; `skip` says why one is not offered (points, failed, no yen amount) */
-  function scanItems(o) {
+  /* `ref`: when the image was taken (or now), for labels such as 9:33, 昨日 or 金曜日 */
+  function scanItems(o, ref = new Date()) {
     const raw = Array.isArray(o) ? o : o && Array.isArray(o.items) ? o.items : o && typeof o === 'object' && o.amount != null ? [o] : [];
     const accOk = (v) => (v != null && accIdx.has(String(v)) && !accIdx.get(String(v)).hidden ? String(v) : null);
     const out = [];
@@ -1948,12 +2029,16 @@
       const kind = type === 'transfer' ? 'move' : type === 'refund' || type === 'income' ? 'in' : 'out';
       const cat = kind === 'move' ? null : data.categories.find((c) => c.id === x.category && c.kind === kind && !c.hidden);
       const to = kind === 'move' ? accOk(x.to) : null, from = kind === 'move' ? accOk(x.from) : null, acc = kind === 'move' ? null : accOk(x.account);
-      const time = /^\d{1,2}:\d{2}$/.test(String(x.time || '')) ? String(x.time).padStart(5, '0') : null;
+      /* the label as shown next to the transaction (9:33, 昨日, 金曜日 …): its date is worked out here, from when
+         the screenshot was taken, rather than trusting the model's arithmetic */
+      const when = String(x.when || '').trim().slice(0, 40), wt = /(\d{1,2}):(\d{2})/.exec(when);
+      const time = /^\d{1,2}:\d{2}$/.test(String(x.time || '')) ? String(x.time).padStart(5, '0') : wt ? `${pad2(+wt[1])}:${wt[2]}` : null;
+      const fromLabel = labelDate(when, ref);
       /* 2026/11/10, 2026.11.10 and 2026年11月10日 are read as dates too */
       const dm = /^(\d{4})[-/.年](\d{1,2})[-/.月](\d{1,2})日?$/.exec(String(x.date || '').trim());
       const dateIn = dm ? `${dm[1]}-${pad2(Number(dm[2]))}-${pad2(Number(dm[3]))}` : '';
-      /* a notice that shows only a time is from today (that is how chat-style payment notices write it) */
-      const date = okDate(dateIn) ? dateIn : time ? todayStr() : null;
+      /* a notice that shows only a time is from the day the screenshot was taken (that is how chat-style notices write it) */
+      const date = fromLabel && okDate(fromLabel) ? fromLabel : okDate(dateIn) ? dateIn : time ? ymd(ref) : null;
       out.push({
         skip: !isYen ? 'foreign' : yuanCopy ? 'yuan' : type === 'points' || type === 'failed' ? type : null,
         kind, amount: Math.min(Math.round(num), 9999999999), date, time,
@@ -2009,7 +2094,7 @@
       <div class="f-top"><button class="icon-btn" data-act="sl-back" aria-label="${tr('common.close')}">✕</button><div class="e-title">${tr('scan.title')}</div><span class="e-sp"></span></div>
       <div class="f-body">
         <section class="scan-status">
-          <div class="ss-thumbs">${j.thumbs.map((u, i) => `<span class="ss-th" data-f="${i}"><img src="${u}" alt=""><b></b></span>`).join('')}</div>
+          <div class="ss-thumbs">${j.thumbs.map((u, i) => `<span class="ss-th" data-f="${i}"><img src="${u}" alt=""><i></i><b></b></span>`).join('')}</div>
           <ol class="ss-steps">${['prep', 'upload', 'ai'].map((k) => `<li class="ss-step wait" data-step="${k}"><i class="ss-i"></i><span class="ss-t">${tr(`ss.${k}`)}</span><span class="ss-v"></span>${k === 'upload' ? '<span class="ss-bar"><b></b></span>' : ''}</li>`).join('')}</ol>
           <p class="ss-note"></p>
           <div class="ss-msg"></div>
@@ -2096,7 +2181,8 @@
   };
   function addScanItem(j, raw) {
     if (j !== scanJob) return;
-    const [x] = scanItems([raw]);
+    const g = j.groups && j.groups[j.gi];
+    const [x] = scanItems([raw], (g && g.shot) || new Date());
     if (!x) return;
     x.g = j.gi;
     if (x.skip) { j.skipped.push(x); refreshScanFoot(j); return; }
@@ -2155,7 +2241,14 @@
     let bad = 0, nParts = 0;
     for (let i = 0; i < files.length; i++) {
       setStep(j, 'prep', 'on', `${i + 1}/${files.length}`);
-      try { const parts = await imageParts(files[i]); groups.push({ f: i, parts, bytes: 0 }); nParts += parts.length; } catch (e) { bad++; markThumb(j, i, 'err', '!'); }
+      try {
+        const parts = await imageParts(files[i]);
+        /* when the screenshot was taken: an older one shows its date on the thumbnail */
+        const shot = await shotTime(files[i]);
+        groups.push({ f: i, parts, bytes: 0, shot });
+        nParts += parts.length;
+        if (shot && ymd(shot) !== todayStr() && onPage(j)) $(`.ss-th[data-f="${i}"] i`, sheetEl).textContent = `${shot.getMonth() + 1}/${shot.getDate()}`;
+      } catch (e) { bad++; markThumb(j, i, 'err', '!'); }
       if (j !== scanJob) return;
     }
     if (!groups.length) { j.phase = 'error'; setStep(j, 'prep', 'err', ''); setScanMsg(j, tr('ai.badImage'), true); return; }
@@ -2185,7 +2278,7 @@
       const g = j.groups[j.gi];
       j.pre = multi ? tr('ss.nth', { i: j.gi + 1, n }) : '';
       if (multi) markThumb(j, g.f, 'on', '');
-      const contents = [{ role: 'user', parts: [...g.parts.map((p) => ({ inline_data: { mime_type: p.mime, data: p.data } })), { text: scanPrompt(g.parts.length) }] }];
+      const contents = [{ role: 'user', parts: [...g.parts.map((p) => ({ inline_data: { mime_type: p.mime, data: p.data } })), { text: scanPrompt(g.parts.length, g.shot) }] }];
       let read = false;
       for (let i = mi; i < models.length && !read; i++) {
         const m = models[i];

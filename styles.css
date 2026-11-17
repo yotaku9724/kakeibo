@@ -460,6 +460,9 @@ svg { display: block; }
 .ss-th { position: relative; flex: none; display: block; line-height: 0; }
 .ss-th.on img { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
 .ss-th.none img, .ss-th.err img { opacity: .55; }
+/* an older screenshot: the day it was taken, which its 9:33 / 昨日 / 金曜日 count from */
+.ss-th i { position: absolute; left: 2px; top: 2px; padding: 0 4px; border-radius: 5px; background: rgba(0, 0, 0, .62); color: #fff; font-style: normal; font-size: 10px; font-weight: 700; line-height: 15px; font-variant-numeric: tabular-nums; }
+.ss-th i:empty { display: none; }
 .ss-th b { position: absolute; right: 3px; bottom: 3px; min-width: 17px; height: 17px; padding: 0 4px; box-sizing: border-box; border-radius: 9px; background: var(--in); color: #fff; font-size: 11px; font-weight: 800; line-height: 17px; text-align: center; font-variant-numeric: tabular-nums; }
 .ss-th b:empty { display: none; }
 .ss-th.none b { background: var(--muted); }
