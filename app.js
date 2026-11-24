@@ -1,7 +1,7 @@
 /* 家计簿 — offline bookkeeping web app. Data lives only in this browser (localStorage). */
 'use strict';
 (() => {
-  const APP_VERSION = '1.0.22';
+  const APP_VERSION = '1.0.23';
   const STORE_KEY = 'kakeibo:data';
   const PREV_KEY = 'kakeibo:data:prev';
   const UI_KEY = 'kakeibo:ui';
@@ -176,7 +176,7 @@
       'ai.quota': '免费额度暂时用完了，过一会儿再试', 'ai.failed': '识别失败：{m}', 'ai.timeout': '识别超时了，请再试一次', 'ai.badImage': '这张图片打不开',
       'ai.doneSkip': '已按照片填好，确认后保存（已跳过：{s}）',
       'scan.found': '识别到 {n} 笔', 'scan.add': '添加 {n} 笔', 'scan.added': '已添加 {n} 笔', 'scan.undone': '已撤销',
-      'scan.same': '这天已有同金额：{w}', 'scan.twin': '和上面一笔日期、金额相同', 'scan.from': '转出账户', 'scan.to': '转入账户', 'scan.needMove': '勾选的转移还没选好转出和转入账户',
+      'scan.same': '这天已有同金额：{w}', 'scan.twin': '另一张截图里已有这一笔', 'scan.pair': '和另一张截图里的转移是同一笔', 'scan.maybe': '可能和另一张截图重复（同金额连着好几笔），请对照截图确认', 'scan.more': '这天同金额已记 {n} 笔，这笔可能漏了', 'scan.from': '转出账户', 'scan.to': '转入账户', 'scan.needMove': '勾选的转移还没选好转出和转入账户',
       'scan.noDate': '没认出日期，请确认', 'scan.pickCat': '选择分类', 'scan.needCat': '勾选的项目里还有没选分类的',
       'scan.skipped': '已跳过：{s}', 'scan.none': '没有可以记的收支（已跳过：{s}）', 'scan.sep': '、',
       'scan.hint': '每一笔的支付方式是 AI 认出来的，可以改；认不出的留空，要你自己选。金额和备注可以保存后在「明细」里改。', 'scan.payPh': '选择支付方式', 'scan.recvPh': '选择入账账户', 'scan.needPay': '勾选的项目里还有没选支付方式的',
@@ -290,7 +290,7 @@
       'ai.quota': '無料枠の上限に達しました。しばらくしてから試してください', 'ai.failed': '読み取りに失敗しました：{m}', 'ai.timeout': '時間切れになりました。もう一度お試しください', 'ai.badImage': 'この画像は開けません',
       'ai.doneSkip': '写真から入力しました。確認して保存してください（スキップ：{s}）',
       'scan.found': '{n}件見つかりました', 'scan.add': '{n}件を追加', 'scan.added': '{n}件を追加しました', 'scan.undone': '元に戻しました',
-      'scan.same': 'この日に同じ金額あり：{w}', 'scan.twin': '上の項目と日付・金額が同じ', 'scan.from': '振替元', 'scan.to': '振替先', 'scan.needMove': 'チェックした振替の振替元と振替先を選んでください',
+      'scan.same': 'この日に同じ金額あり：{w}', 'scan.twin': '別のスクリーンショットにある同じ取引', 'scan.pair': '別のスクリーンショットの振替と同じもの', 'scan.maybe': '別のスクリーンショットと重複かもしれません（同じ金額が続いています）。画面と照らし合わせてください', 'scan.more': 'この日の同じ金額は{n}件記録済み。この分は未記録かもしれません', 'scan.from': '振替元', 'scan.to': '振替先', 'scan.needMove': 'チェックした振替の振替元と振替先を選んでください',
       'scan.noDate': '日付が読み取れません。確認してください', 'scan.pickCat': 'カテゴリを選択', 'scan.needCat': 'チェックした項目にカテゴリを選んでください',
       'scan.skipped': 'スキップ：{s}', 'scan.none': '記録できる取引がありません（スキップ：{s}）', 'scan.sep': '、',
       'scan.hint': '各項目の支払い方法は AI が読み取ったもので、変更できます。読み取れなかったものは空欄なので選んでください。金額やメモは保存後に「明細」で変更できます。', 'scan.payPh': '支払い方法を選択', 'scan.recvPh': '入金先を選択', 'scan.needPay': 'チェックした項目に支払い方法を選んでください',
@@ -409,7 +409,7 @@
       'ai.doneSkip': 'Filled in from the photo. Check it, then save (skipped: {s})',
       'scan.found': 'Found {n} transactions', 'scan.found1': 'Found 1 transaction', 'scan.add': 'Add {n} entries', 'scan.add1': 'Add 1 entry',
       'scan.added': 'Added {n} entries', 'scan.added1': 'Added 1 entry', 'scan.undone': 'Undone',
-      'scan.same': 'Same amount already on this day: {w}', 'scan.twin': 'Same date and amount as one above', 'scan.from': 'From', 'scan.to': 'To', 'scan.needMove': 'Choose both accounts for every checked transfer',
+      'scan.same': 'Same amount already on this day: {w}', 'scan.twin': 'Already in another screenshot', 'scan.pair': 'Same transfer as in another screenshot', 'scan.maybe': 'May repeat a row of another screenshot (several identical rows in a row): check against the screenshots', 'scan.more': '{n} with this amount already recorded on this day; this one may be missing', 'scan.more1': '1 with this amount already recorded on this day; this one may be missing', 'scan.from': 'From', 'scan.to': 'To', 'scan.needMove': 'Choose both accounts for every checked transfer',
       'scan.noDate': 'No date found, please check', 'scan.pickCat': 'Choose a category', 'scan.needCat': 'Choose a category for every checked item',
       'scan.skipped': 'Skipped: {s}', 'scan.none': 'Nothing to record (skipped: {s})', 'scan.sep': ', ',
       'scan.hint': 'Each payment method is the one AI read, and you can change it; where AI could not tell, it is left empty for you to choose. Amounts and notes can be changed later under Entries.', 'scan.payPh': 'Choose payment method', 'scan.recvPh': 'Choose account', 'scan.needPay': 'Choose a payment method for every checked item',
@@ -505,6 +505,7 @@
     daily: { kind: 'out', icon: '🧻', zh: '日用品', ja: '日用品', en: 'Household' },
     hobby: { kind: 'out', icon: '🎮', zh: '兴趣娱乐', ja: '趣味・娯楽', en: 'Hobbies' },
     social: { kind: 'out', icon: '🍻', zh: '交际', ja: '交際費', en: 'Social' },
+    travel: { kind: 'out', icon: '🧳', zh: '旅游', ja: '旅行', en: 'Travel', after: ['social', 'hobby'] },
     transport: { kind: 'out', icon: '🚃', zh: '交通', ja: '交通費', en: 'Transport' },
     clothes: { kind: 'out', icon: '👕', zh: '服装美容', ja: '衣服・美容', en: 'Clothes & beauty' },
     health: { kind: 'out', icon: '💊', zh: '健康医疗', ja: '健康・医療', en: 'Health' },
@@ -528,7 +529,7 @@
     smoke: { kind: 'out', icon: '🚬', zh: '烟', ja: 'タバコ', en: 'Tobacco', extra: true },
   };
   /* built-ins introduced after the first release: added once to existing data, right after `after` */
-  const LATER_CATS = ['coffee', 'conbini'];
+  const LATER_CATS = ['coffee', 'conbini', 'travel'];
   let laterAdded = false;
   const BASE_ACCS = {
     cash: { type: 'cash', zh: '现金', ja: '現金', en: 'Cash' },
@@ -1887,7 +1888,13 @@
       .map((c) => `${c.id}: ${[...new Set(allLabels(c, 'cat'))].join(' / ')}`).join('\n');
     const accs = activeAccs().map((a) => `${a.id}: ${[...new Set(allLabels(a, 'acc'))].join(' / ')} (${a.type})`).join('\n');
     const byBase = (k) => data.categories.find((c) => c.base === k && !c.hidden);
-    const conb = byBase('conbini'), food = byBase('food'), trans = byBase('transport');
+    const conb = byBase('conbini'), food = byBase('food'), trans = byBase('transport'), travel = byBase('travel');
+    /* the user's own wallets and cash, as a bank statement names them when money goes there */
+    const own = (re) => activeAccs().find((a) => allLabels(a, 'acc').some((l) => re.test(l || '')));
+    const banks = activeAccs().filter((a) => a.type === 'bank'), cashes = activeAccs().filter((a) => a.type === 'cash');
+    const pp = own(/paypay|ペイペイ/i), pasmo = own(/pasmo/i), suica = own(/suica|スイカ/i), aeon = own(/aeon|イオン/i);
+    const dests = [pp && `ペイペイ / PayPay → ${pp.id}`, pasmo && `ＰＡＳＭＯ → ${pasmo.id}`, suica && `Ｓｕｉｃａ → ${suica.id}`,
+      aeon && `ＡＥＯＮ ＰＡＹ / イオンペイ → ${aeon.id}`, cashes.length === 1 && `ＡＴＭ (a cash withdrawal) → ${cashes[0].id}`].filter(Boolean);
     /* transit IC card accounts, so a Wallet / card-app history can be matched to one */
     const ic = activeAccs().filter((a) => allLabels(a, 'acc').some((l) => /pasmo|suica|icoca|kitaca|toica|manaca|pitapa|nimoca|sugoca|はやかけん/i.test(l || '')));
     const icName = (a) => `${a.id} (${aName(a)})`;
@@ -1913,12 +1920,14 @@
       'merchant: the shop or other party as shown (on WeChat Pay and Alipay, the name at the top, above the amount), at most 20 characters.',
       'via: the payment source if shown (残高, 残高カード, PayPayカード, a card name).',
       'account (payments, refunds and income): the id of the account below that paid or received the money, when the image shows it (付款方式, 支付方式, 使用…支付) or the app makes it clear; for example 使用平安银行信用卡支付 or 付款方式 平安银行信用卡(1234) is the 平安信用卡 account, and PayPay 残高 or 残高カード is the PayPay account. Leave it out when unsure; the user will choose.',
+      `Bank statement (入出金明細, 普通預金): every row is money out of or into the bank account${banks.length === 1 ? ` ${icName(banks[0])}, unless the screen names another bank` : ''}. Money moved to the user's own wallets or cash is a "transfer" from the bank account (from) to that account (to)${dests.length ? `, named in the row: ${dests.join('; ')}` : ''}. For example 口座振替｜ＲＴＫ ペイペイ, デビット｜… ＰＡＳＭＯ and ＪＤ支払｜ＪＤ／ＡＥＯＮ ＰＡＹ are transfers. Other debits (デビット card purchases, ＰＥ／ＩＮ bill payments, 口座振替 to a company) are payments from the bank account, and deposits (振込, 給与, 利息) are income to it. The same amount can appear several times on one day: list every row.`,
       ic.length === 1 ? `A transit IC card history is paid from ${icName(ic[0])}, unless the screen names a different card.`
         : ic.length > 1 ? `A transit IC card history is paid from the one of ${ic.map(icName).join(', ')} that the screen names; if it names none, leave account out.` : '',
       'Leave out a transaction that is cut off so that its amount or its merchant cannot be seen.',
       'category (payments, refunds and income only): an id from the lists below, only when you are fairly sure which one fits; otherwise leave it out, and the user will choose. The payment app\'s own labels can tell you (账单分类 交通出行, 商品说明 …).',
       conb ? `Convenience stores (7-Eleven / セブン-イレブン / Seven-Eleven Japan, FamilyMart / ファミリーマート, Lawson / ローソン, Ministop, Daily Yamazaki, NewDays, Seicomart …) are ${conb.id}.` : '',
       food ? `Supermarkets and grocery stores (AEON / イオン, 西友, ライフ, まいばすけっと, OK / オーケー, サミット, マルエツ, 業務スーパー …) are ${food.id}.` : '',
+      travel ? `Hotels, 旅館 and travel bookings (Booking.com, じゃらん, 楽天トラベル, Agoda, Trip.com, Expedia …) are ${travel.id}.` : '',
       'from / to (transfers only): the ids of the accounts below that the money leaves and enters, when you can tell; for example 三菱ＵＦＪ銀行からのチャージ on a PayPay screen goes from the 三菱UFJ bank account to the PayPay account. Leave out the one you cannot tell.',
       shot ? `This image was taken on ${ymd(shot)} at ${pad2(shot.getHours())}:${pad2(shot.getMinutes())} (${WEEK.en[shot.getDay()]}), so labels such as 9:33, 昨日 or 金曜日 on it count from then. Today is ${todayStr()}.`
         : `Today is ${todayStr()} (${WEEK.en[new Date().getDay()]}).`,
@@ -2109,8 +2118,10 @@
   }
   const rowNotes = (r) => [
     r.same ? `<em class="tag warn">${esc(tr('scan.same', { w: r.same }))}</em>` : '',
+    r.moreOf ? `<em class="tag new">${esc(tr('scan.more', { n: r.moreOf }))}</em>` : '',
     r.aaSame ? `<em class="tag warn">${esc(tr('scan.aaSame', { w: r.aaSame }))}</em>` : '',
-    r.twin ? `<em class="tag warn">${tr('scan.twin')}</em>` : '',
+    r.twin ? `<em class="tag warn">${tr(r.twin === 'pair' ? 'scan.pair' : 'scan.twin')}</em>` : '',
+    r.maybe ? `<em class="tag warn">${tr('scan.maybe')}</em>` : '',
     r.noDate ? `<em class="tag warn">${tr('scan.noDate')}</em>` : '',
     r.via ? `<span>${esc(r.via)}</span>` : ''].join('');
   function rowHTML(r, i) {
@@ -2179,6 +2190,75 @@
     const p = n(a), q = n(b);
     return !p || !q || p.includes(q) || q.includes(p);
   };
+  /* the same row seen in two screenshots: same day, kind and amount, the same name (one may be cut short), and the same time if both show one */
+  const sameRow = (a, b) => a.date === b.date && a.kind === b.kind && a.amount === b.amount && (!a.time || !b.time || a.time === b.time) && sameName(a.merchant, b.merchant);
+  /* how many rows at the start of b repeat the rows at the end of a, as when one list is screenshotted twice with some overlap */
+  function overlap(a, b) {
+    for (let L = Math.min(a.length, b.length); L > 0; L--) {
+      let ok = true;
+      for (let t = 0; t < L && ok; t++) ok = sameRow(a[a.length - L + t], b[t]);
+      if (ok) return L;
+    }
+    return 0;
+  }
+  /* a recorded entry that a scanned row could be: same day, kind and amount (an AA bill or a split purchase by its
+     total); a transfer also needs the same accounts where both say */
+  const isEntryOf = (e, r) => e.date === r.date && e.kind === r.kind && (e.amount === r.amount || (e.aa && e.aa.t === r.amount) || (e.tb && tbTotal(e) === r.amount))
+    && (r.kind !== 'move' || ((!r.to || e.to === r.to) && (!r.from || e.acc === r.from)));
+  /* Duplicates, counted one for one.
+     - Rows inside one screenshot are never duplicates of each other: three ¥10,000 charges on a day are three charges.
+     - Two screenshots of one list overlap: the rows at the end of one repeat at the start of the other, in the same
+       order, and those are left out. An overlap made only of identical rows could just as well be new rows that look
+       the same, so those are kept and flagged instead.
+     - A transfer seen from both ends (the bank's 口座振替 and the wallet's チャージ, under other names) pairs one for one.
+     - Against what is already recorded: with three ¥10,000 transfers recorded on a day and five in the screenshots,
+       three are marked as recorded and the other two stay ticked, as possibly missed. */
+  function reconcile(j) {
+    const rows = j.rows, by = new Map();
+    for (const r of rows) { r.twin = ''; r.maybe = false; if (!by.has(r.g)) by.set(r.g, []); by.get(r.g).push(r); }
+    /* the image still being read is compared once it is complete */
+    const imgs = [...by.keys()].filter((g) => g !== j.reading).sort((a, b) => a - b);
+    const mark = (part, a, b) => {
+      const key = part[0], unsure = part.every((r) => sameRow(r, key)) && (a.filter((r) => sameRow(r, key)).length > part.length || b.filter((r) => sameRow(r, key)).length > part.length);
+      part.forEach((r) => { if (unsure) r.maybe = true; else r.twin = 'ovl'; });
+    };
+    for (let k = 1; k < imgs.length; k++) {
+      const b = by.get(imgs[k]);
+      for (let p = 0; p < k; p++) {
+        const a = by.get(imgs[p]);
+        const fwd = overlap(a, b);
+        if (fwd) mark(b.slice(0, fwd), a, b);
+        /* the other way round, for screenshots picked bottom first */
+        const back = overlap(b, a);
+        if (back) mark(b.slice(b.length - back), a, b);
+      }
+    }
+    const paired = new Set();
+    for (const r of rows) {
+      if (r.twin || r.kind !== 'move' || !r.from || !r.to || r.g === j.reading) continue;
+      const m = rows.find((x) => x.g < r.g && x.g !== j.reading && x.kind === 'move' && !x.twin && !paired.has(x) && x.date === r.date && x.amount === r.amount && x.from === r.from && x.to === r.to && !sameName(x.merchant, r.merchant));
+      if (m) { paired.add(m); r.twin = 'pair'; r.maybe = false; }
+    }
+    /* recorded entries, each standing for one scanned row */
+    const taken = new Set();
+    for (const r of rows) {
+      r.same = ''; r.moreOf = 0;
+      if (r.twin) continue;
+      const list = data.entries.filter((e) => isEntryOf(e, r));
+      const e = list.find((x) => !taken.has(x));
+      if (e) { taken.add(e); r.same = entryDesc(e); } else if (list.length) r.moreOf = list.length;
+    }
+    const els = onPage(j) ? $$('.sl-row', sheetEl) : [];
+    rows.forEach((r, i) => {
+      if (!r.touched) r.on = !r.same && !r.twin && !r.aaSame;
+      const el = els[i];
+      if (!el) return;
+      $('input[data-sl="on"]', el).checked = r.on;
+      el.classList.toggle('off', !r.on);
+      $('.sl-notes', el).innerHTML = rowNotes(r);
+    });
+    refreshScanFoot(j);
+  }
   function addScanItem(j, raw) {
     if (j !== scanJob) return;
     const g = j.groups && j.groups[j.gi];
@@ -2186,15 +2266,14 @@
     if (!x) return;
     x.g = j.gi;
     if (x.skip) { j.skipped.push(x); refreshScanFoot(j); return; }
-    const d = j.draft, date = x.date || d.date || todayStr(), same = sameDayAmount(date, x.amount, x.kind);
-    /* the same transaction seen twice, e.g. in two overlapping screenshots */
-    const twin = j.rows.some((r) => r.date === date && r.amount === x.amount && r.kind === x.kind && (!r.time || !x.time || r.time === x.time) && sameName(r.merchant, x.merchant));
+    const d = j.draft, date = x.date || d.date || todayStr();
     const to = x.kind === 'move' ? x.to || null : null;
     /* money received that matches an AA pay-back recorded within two weeks is probably the same money */
     const days = (a, b) => Math.abs(Math.round((parseYMD(a) - parseYMD(b)) / 86400000));
     const aaHit = x.kind === 'in' ? data.entries.find((e) => e.kind === 'out' && e.aa && (e.aa.p || []).some((q) => q.v === x.amount) && days(e.date, date) <= 14) : null;
-    const r = Object.assign({}, x, { date, noDate: !x.date, same: same ? entryDesc(same) : '', twin, aaSame: aaHit ? `${yen(x.amount)} · ${aaHit.memo || cName(catIdx.get(aaHit.cat))}` : '', on: !same && !twin && !aaHit, to, from: x.from && x.from !== to ? x.from : null });
+    const r = Object.assign({}, x, { date, noDate: !x.date, same: '', moreOf: 0, twin: '', maybe: false, aaSame: aaHit ? `${yen(x.amount)} · ${aaHit.memo || cName(catIdx.get(aaHit.cat))}` : '', on: true, touched: false, to, from: x.from && x.from !== to ? x.from : null });
     j.rows.push(r);
+    reconcile(j);
     if (onPage(j)) {
       const list = $('.sl-list', sheetEl), ph = $('.sl-empty', list);
       if (ph) ph.remove();
@@ -2270,13 +2349,15 @@
     /* a retry starts again at the image that failed; what the images before it gave is kept */
     j.rows = j.rows.filter((r) => r.g < j.gi); j.skipped = j.skipped.filter((x) => x.g < j.gi); j.stall = null;
     if (!j.gi) j.t0 = Date.now();
-    renderScanRows(j); setScanMsg(j, '');
+    j.reading = -1;
+    renderScanRows(j); reconcile(j); setScanMsg(j, '');
     for (let k = j.gi; k < n; k++) markThumb(j, j.groups[k].f, '', '');
     clearInterval(j.tick);
     j.tick = setInterval(() => tickScan(j), 1000);
     for (; j.gi < n; j.gi++) {
       const g = j.groups[j.gi];
       j.pre = multi ? tr('ss.nth', { i: j.gi + 1, n }) : '';
+      j.reading = j.gi;
       if (multi) markThumb(j, g.f, 'on', '');
       const contents = [{ role: 'user', parts: [...g.parts.map((p) => ({ inline_data: { mime_type: p.mime, data: p.data } })), { text: scanPrompt(g.parts.length, g.shot) }] }];
       let read = false;
@@ -2341,6 +2422,8 @@
           return failScan(j, e, gotText);
         }
       }
+      j.reading = -1;
+      reconcile(j);
       if (multi) { const c = ofImage(j.gi); markThumb(j, g.f, c ? 'ok' : 'none', String(c)); }
     }
     j.phase = 'done'; j.pre = '';
@@ -2373,19 +2456,15 @@
     const r = j.rows[Number(el.dataset.i)], rowEl = el.closest('.sl-row');
     if (!r) return;
     if (f === 'on') {
-      r.on = el.checked;
+      r.on = el.checked; r.touched = true;
       rowEl.classList.toggle('off', !r.on);
       refreshScanFoot(j);
     } else if (f === 'date') {
-      if (/^\d{4}-\d{2}-\d{2}$/.test(el.value)) {
-        r.date = el.value; r.noDate = false;
-        const same = sameDayAmount(r.date, r.amount, r.kind);
-        r.same = same ? entryDesc(same) : '';
-      }
+      if (/^\d{4}-\d{2}-\d{2}$/.test(el.value)) { r.date = el.value; r.noDate = false; }
       const chip = el.closest('.date-chip');
       $('.date-text', chip).textContent = shortDate(r.date);
       chip.classList.remove('warn');
-      $('.sl-notes', rowEl).innerHTML = rowNotes(r);
+      reconcile(j);
     } else if (f === 'cat') {
       r.cat = el.value || null;
     } else if (f === 'from' || f === 'to') {

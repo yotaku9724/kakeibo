@@ -446,6 +446,8 @@ svg { display: block; }
 .sl-notes .tag { margin-left: 0; }
 .sl-notes:empty { display: none; }
 .tag.warn { color: var(--accent-ink); border-color: var(--accent); }
+/* a scanned row the day has fewer of on record: probably not recorded yet */
+.tag.new { color: var(--in); border-color: var(--in); }
 .sl-foot { position: sticky; bottom: 0; z-index: 2; display: flex; gap: 10px; background: var(--bg); padding: 10px 16px calc(12px + env(safe-area-inset-bottom)); border-top: 1px solid var(--line); margin-top: 14px; }
 .sl-foot .btn { flex: 1; }
 .sl-foot [hidden] { display: none; }
