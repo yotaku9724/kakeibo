@@ -1,7 +1,7 @@
 /* 家计簿 — offline bookkeeping web app. Data lives only in this browser (localStorage). */
 'use strict';
 (() => {
-  const APP_VERSION = '1.0.23';
+  const APP_VERSION = '1.0.24';
   const STORE_KEY = 'kakeibo:data';
   const PREV_KEY = 'kakeibo:data:prev';
   const UI_KEY = 'kakeibo:ui';
@@ -185,7 +185,7 @@
       'scan.title': 'AI 识别', 'ss.prep': '处理图片', 'ss.upload': '上传', 'ss.ai': 'AI 识别',
       'ss.prepDone': '{n} 张', 'ss.prepSlices': '{n} 张 · 长图切成 {p} 段', 'ss.prepSkip': '{n} 张打不开，已跳过',
       'ss.upPct': '{p}% · {a} / {b}', 'ss.wait': '{m} · 等待回复 {s} 秒', 'ss.recv': '已识别 {n} 笔 · {s} 秒', 'ss.done': '完成 · {s} 秒',
-      'ss.switch': '{a} 暂时用不了（{c}），改用 {b}', 'ss.slowSwitch': '{a} {s} 秒没回复，改用 {b}', 'ss.noThink': '这个模型不支持思考设置，已重新发送',
+      'ss.switch': '{a} 暂时用不了（{c}），改用 {b}', 'ss.switchMid': '{a} 回答到一半出错（{c}），改用 {b} 重新识别这张', 'ss.stalled': '没有回复', 'ss.slowSwitch': '{a} {s} 秒没回复，改用 {b}', 'ss.noThink': '这个模型不支持思考设置，已重新发送',
       'ss.waiting': '识别出的会一条一条出现在这里', 'ss.none': '没有可以记的收支',
       'ss.stallUp': '上传卡住了，网络可能不好', 'ss.stallAi': 'AI {s} 秒没有回复', 'ss.net': '网络连接断了',
       'ss.cut': '已识别的可以先添加，也可以重试。', 'ss.retry': '重试', 'ss.fill': '填到记一笔里改',
@@ -299,7 +299,7 @@
       'scan.title': 'AI 読み取り', 'ss.prep': '画像の準備', 'ss.upload': 'アップロード', 'ss.ai': 'AI 読み取り',
       'ss.prepDone': '{n}枚', 'ss.prepSlices': '{n}枚・縦長を{p}分割', 'ss.prepSkip': '{n}枚は開けないため除外しました',
       'ss.upPct': '{p}%・{a} / {b}', 'ss.wait': '{m}・応答待ち {s}秒', 'ss.recv': '{n}件読み取り済み・{s}秒', 'ss.done': '完了・{s}秒',
-      'ss.switch': '{a} が使えないため（{c}）、{b} に切り替えました', 'ss.slowSwitch': '{a} が{s}秒応答しないため、{b} に切り替えました', 'ss.noThink': 'このモデルは思考設定に未対応のため、送り直しました',
+      'ss.switch': '{a} が使えないため（{c}）、{b} に切り替えました', 'ss.switchMid': '{a} が応答の途中で止まったため（{c}）、{b} でこの画像を読み直しています', 'ss.stalled': '応答なし', 'ss.slowSwitch': '{a} が{s}秒応答しないため、{b} に切り替えました', 'ss.noThink': 'このモデルは思考設定に未対応のため、送り直しました',
       'ss.waiting': '読み取れた取引がここに順に表示されます', 'ss.none': '記録できる取引がありません',
       'ss.stallUp': 'アップロードが進みません。通信状況を確認してください', 'ss.stallAi': 'AI から {s}秒応答がありません', 'ss.net': '通信が切れました',
       'ss.cut': '読み取れた分は追加できます。再試行もできます。', 'ss.retry': '再試行', 'ss.fill': '入力画面で編集',
@@ -418,7 +418,7 @@
       'scan.title': 'AI scan', 'ss.prep': 'Preparing images', 'ss.upload': 'Uploading', 'ss.ai': 'AI reading',
       'ss.prepDone': '{n} images', 'ss.prepDone1': '1 image', 'ss.prepSlices': '{n} images · long ones cut into {p} parts', 'ss.prepSlices1': '1 image · cut into {p} parts', 'ss.prepSkip': '{n} could not be opened and were left out', 'ss.prepSkip1': '1 could not be opened and was left out',
       'ss.upPct': '{p}% · {a} / {b}', 'ss.wait': '{m} · waiting {s}s', 'ss.recv': '{n} found · {s}s', 'ss.done': 'Done · {s}s',
-      'ss.switch': '{a} unavailable ({c}), switched to {b}', 'ss.slowSwitch': '{a} gave no reply for {s}s, switched to {b}', 'ss.noThink': 'This model does not take the thinking setting; sent again',
+      'ss.switch': '{a} unavailable ({c}), switched to {b}', 'ss.switchMid': '{a} failed part-way ({c}); {b} is reading this image again', 'ss.stalled': 'no reply', 'ss.slowSwitch': '{a} gave no reply for {s}s, switched to {b}', 'ss.noThink': 'This model does not take the thinking setting; sent again',
       'ss.waiting': 'Transactions appear here as they are found', 'ss.none': 'Nothing to record',
       'ss.stallUp': 'The upload is stuck. Check your connection', 'ss.stallAi': 'No reply from AI for {s}s', 'ss.net': 'The connection dropped',
       'ss.cut': 'You can add what was found, or try again.', 'ss.retry': 'Try again', 'ss.fill': 'Edit in New entry',
@@ -2300,7 +2300,7 @@
     let why = null;
     if (j.phase === 'upload' && now - j.last > L.upStall * 1000) why = tr('ss.stallUp');
     else if (j.phase === 'wait' && now - j.tWait > L.firstReply * 1000) why = tr('ss.stallAi', { s: L.firstReply });
-    else if (j.phase === 'recv' && now - j.last > L.idle * 1000) why = tr('ss.stallAi', { s: L.idle });
+    else if (j.phase === 'recv' && now - j.last > L.idle * 1000) { why = tr('ss.stallAi', { s: L.idle }); j.stallMid = true; }
     if (why && j.xhr) { j.stall = why; try { j.xhr.abort(); } catch (e) { /* gone */ } }
   }
   async function scanReceipt(fileList) {
@@ -2364,7 +2364,7 @@
       for (let i = mi; i < models.length && !read; i++) {
         const m = models[i];
         const body = { contents, generationConfig: noThink ? { responseMimeType: 'application/json' } : { responseMimeType: 'application/json', thinkingConfig: { thinkingLevel: 'low' } } };
-        j.model = m; j.phase = 'upload'; j.last = j.tSend = Date.now(); j.stall = null; j.slow = 0; j.hasNext = i < models.length - 1;
+        j.model = m; j.phase = 'upload'; j.last = j.tSend = Date.now(); j.stall = null; j.stallMid = false; j.slow = 0; j.hasNext = i < models.length - 1;
         setStep(j, 'upload', 'on', j.pre);
         setStep(j, 'ai', j.gi ? 'on' : 'wait', j.pre);
         refreshScanFoot(j);
@@ -2417,6 +2417,15 @@
               }
               if (i < models.length - 1) { setScanNote(j, tr('ss.switch', { a: m, b: models[i + 1], c: e.status })); continue; }
             }
+          }
+          /* a busy model can also give up part-way through its answer ("high demand", 503), or stop sending:
+             what it gave for this image is dropped and the next model reads the image again */
+          const busy = e.name !== 'AbortError' && [429, 500, 502, 503, 504].includes(e.status);
+          if (gotText && (busy || (e.name === 'AbortError' && j.stallMid)) && i < models.length - 1) {
+            j.rows = j.rows.filter((r) => r.g !== j.gi); j.skipped = j.skipped.filter((x) => x.g !== j.gi);
+            renderScanRows(j); reconcile(j);
+            setScanNote(j, tr('ss.switchMid', { a: m, b: models[i + 1], c: busy ? e.status : tr('ss.stalled') }));
+            continue;
           }
           if (multi) markThumb(j, g.f, 'err', '!');
           return failScan(j, e, gotText);
